@@ -1,0 +1,71 @@
+import React from 'react';
+import { User } from 'lucide-react';
+import { useGym } from '@/hooks/useGym';
+import { useI18n } from '@/i18n/useI18n';
+
+const LoginView: React.FC = () => {
+  const { login, isLoading, authError } = useGym();
+  const { t } = useI18n();
+
+  if (isLoading) {
+    return (
+      <div className="h-full bg-white dark:bg-gray-950 px-8 pt-[calc(2rem+var(--standalone-safe-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] animate-pulse transition-colors">
+        <div className="h-full flex flex-col justify-between gap-8">
+          <div className="pt-8 space-y-3">
+            <div className="h-10 rounded-2xl bg-gray-100 dark:bg-gray-800" />
+            <div className="h-10 rounded-2xl bg-gray-100 dark:bg-gray-800" />
+            <div className="h-10 rounded-2xl bg-gray-100 dark:bg-gray-800" />
+          </div>
+          <div className="space-y-4">
+            <div className="h-16 rounded-2xl bg-gray-100 dark:bg-gray-800" />
+            <div className="h-14 rounded-2xl bg-gray-100 dark:bg-gray-800" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-white dark:bg-gray-950 px-8 pt-[calc(2rem+var(--standalone-safe-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
+      <div className="flex-1 flex flex-col justify-center min-h-0">
+        <div className="pt-4">
+          <h1 className="text-5xl font-black text-center leading-tight tracking-tight text-gray-900 dark:text-gray-100">
+            {t('login.headlineLine1')}
+            <br />
+            {t('login.headlineLine2')}
+            <br />
+            {t('login.headlineLine3')}
+          </h1>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center w-full gap-6 shrink-0">
+        <div className="w-full flex flex-col items-center">
+          <div className="flex gap-2 justify-center mb-6">
+            <div className="flex items-center text-brand">
+              <User size={32} />
+              <User size={32} className="-ml-2 opacity-60" />
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center leading-relaxed max-w-xs mx-auto">
+            {t('login.description')}
+          </p>
+          {authError && (
+            <div className="mt-4 w-full max-w-xs rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-[11px] text-red-600 text-center">
+              {authError}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={login}
+          className="pressable w-full bg-brand text-gray-900 py-4 rounded-2xl font-bold text-lg shadow-xl shadow-brand-soft active:scale-95 transition-all hover:brightness-95"
+        >
+          {t('login.signIn')}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default LoginView;
