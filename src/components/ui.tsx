@@ -137,7 +137,7 @@ export const MediaResolver: React.FC<{
       <div ref={containerRef} className={wrapperClass}>
         <video
           src={src}
-          className="w-full h-full object-cover"
+          className="block w-full h-full object-cover"
           autoPlay
           muted
           loop
@@ -154,7 +154,7 @@ export const MediaResolver: React.FC<{
       <img
         src={src}
         alt="Media"
-        className="w-full h-full object-cover"
+        className="block w-full h-full object-cover"
         onError={(e) => {
           console.warn("Media failed to render", e);
           setIsError(true);
