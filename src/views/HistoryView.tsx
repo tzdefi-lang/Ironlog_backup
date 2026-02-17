@@ -176,7 +176,7 @@ const HistoryView: React.FC = () => {
     return (
       <div
         {...longPress}
-        className="card-lift bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-lg shadow-gray-100 dark:shadow-black/20 border border-gray-50 dark:border-gray-800 flex justify-between items-center active:scale-[0.99] transition-transform cursor-pointer select-none"
+        className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-5 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center active:scale-[0.99] transition-transform cursor-pointer select-none"
       >
         <div className="flex items-center gap-4">
           <div className="bg-brand-tint text-brand border border-brand w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg">
@@ -200,7 +200,7 @@ const HistoryView: React.FC = () => {
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 flex flex-col overflow-hidden view-enter transition-colors">
+    <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] flex flex-col overflow-hidden view-enter transition-colors">
       <div className="shrink-0 px-6 pt-8">
         <header className="flex justify-between items-center mb-8 gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -212,7 +212,7 @@ const HistoryView: React.FC = () => {
             >
               <ArrowLeft size={20} />
             </button>
-            <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight truncate">{t('history.title')}</h1>
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight truncate display-serif">{t('history.title')}</h1>
           </div>
           <button
             onClick={() => {
@@ -332,7 +332,7 @@ const HistoryView: React.FC = () => {
           onDelete={() => setDeleteModalOpen(true)}
         />
 
-        <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('history.copyWorkoutTitle')}>
+        <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('history.copyWorkoutTitle')} position="bottom">
           <p className="mb-4 text-gray-600 dark:text-gray-300">{t('history.copyPrompt')}</p>
           <Input type="date" value={targetDate} min={today} onChange={(e) => setTargetDate(e.target.value)} />
           <Button className="w-full mb-3" onClick={confirmCopy}>
@@ -343,7 +343,7 @@ const HistoryView: React.FC = () => {
           </Button>
         </Modal>
 
-        <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={t('history.deleteWorkoutTitle')}>
+        <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={t('history.deleteWorkoutTitle')} position="bottom">
           <div className="text-center">
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <Trash2 size={32} />
@@ -358,7 +358,7 @@ const HistoryView: React.FC = () => {
           </div>
         </Modal>
 
-        <Modal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} title={t('history.filterTitle')}>
+        <Modal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} title={t('history.filterTitle')} position="bottom">
           <div className="flex flex-col gap-4">
             <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('history.workoutNameLabel')}</label>

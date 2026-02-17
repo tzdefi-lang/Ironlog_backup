@@ -43,7 +43,7 @@ type LoadTrendPoint = {
   isCurrent: boolean;
 };
 
-const PIE_COLORS = ['#14b8a6', '#ffff8c', '#ef4444', '#3b82f6', '#84cc16', '#8b5cf6', '#f97316'];
+const PIE_COLORS = ['#8C9A84', '#7F9B97', '#C27B66', '#6F8D73', '#AFBCAA', '#9FB298', '#D49B87'];
 const LOAD_GUARDRAILS = {
   minBaselineVolume: 3000,
   minAbsoluteIncrease: 1200,
@@ -225,7 +225,7 @@ const StatsView: React.FC = () => {
       case 'high':
         return 'bg-red-100 text-red-700 dark:bg-red-950/70 dark:text-red-300 border-red-200 dark:border-red-900';
       case 'elevated':
-        return 'bg-brand-tint-strong text-brand border-brand';
+        return 'bg-brand-tint-strong text-[var(--botanical-text)] border-brand';
       case 'low':
         return 'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border-sky-200 dark:border-sky-900';
       case 'normal':
@@ -319,8 +319,8 @@ const StatsView: React.FC = () => {
 
   if (completedWorkouts.length === 0) {
     return (
-      <div className="h-full bg-white dark:bg-gray-950 overflow-y-auto overflow-x-hidden scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
-        <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight mb-8">{t('stats.title')}</h1>
+      <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] overflow-y-auto overflow-x-hidden scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
+        <h1 className="text-4xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mb-8 display-serif">{t('stats.title')}</h1>
         <div className="rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-6 py-16 text-center transition-colors">
           <p className="text-gray-500 dark:text-gray-400 font-medium">{t('stats.empty')}</p>
         </div>
@@ -329,13 +329,13 @@ const StatsView: React.FC = () => {
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 overflow-y-auto overflow-x-hidden scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
-      <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight mb-8">{t('stats.title')}</h1>
+    <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] overflow-y-auto overflow-x-hidden scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
+      <h1 className="text-4xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mb-8 display-serif">{t('stats.title')}</h1>
 
       <div className="space-y-4 list-stagger">
-        <section className="card-lift relative overflow-hidden rounded-3xl border border-brand bg-gradient-to-br from-[rgba(255,255,140,0.26)] via-white to-sky-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 p-4 transition-colors">
-          <div className="pointer-events-none absolute -top-12 -right-10 h-36 w-36 rounded-full bg-[rgba(255,255,140,0.36)] blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-500/10" />
+        <section className="card-lift relative overflow-hidden rounded-3xl border border-brand bg-gradient-to-br from-[rgba(140,154,132,0.23)] via-[var(--surface-card)] to-[rgba(220,207,194,0.28)] p-4 transition-colors">
+          <div className="pointer-events-none absolute -top-12 -right-10 h-36 w-36 rounded-full bg-[rgba(140,154,132,0.32)] blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-12 -left-10 h-32 w-32 rounded-full bg-[rgba(194,123,102,0.24)] blur-3xl" />
           <div className="relative">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
@@ -352,15 +352,15 @@ const StatsView: React.FC = () => {
             <div className="grid grid-cols-3 gap-2 mb-3">
               <div className="rounded-2xl border border-white/70 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 px-3 py-2">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{t('stats.acuteLoad')}</p>
-                <p className="text-sm font-black text-gray-900 dark:text-gray-100 mt-1">{numberFormatter.format(loadInsight.acuteVolume)}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-1 data-serif">{numberFormatter.format(loadInsight.acuteVolume)}</p>
               </div>
               <div className="rounded-2xl border border-white/70 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 px-3 py-2">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{t('stats.baselineLoad')}</p>
-                <p className="text-sm font-black text-gray-900 dark:text-gray-100 mt-1">{numberFormatter.format(loadInsight.baselineVolume)}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-1 data-serif">{numberFormatter.format(loadInsight.baselineVolume)}</p>
               </div>
               <div className="rounded-2xl border border-white/70 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 px-3 py-2">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{t('stats.loadRatio')}</p>
-                <p className="text-sm font-black text-gray-900 dark:text-gray-100 mt-1">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-1 data-serif">
                   {loadInsight.ratio === null ? '—' : loadInsight.ratio.toFixed(2)}
                 </p>
               </div>
@@ -395,6 +395,7 @@ const StatsView: React.FC = () => {
                     dataKey="baseline"
                     stroke="var(--stats-line-secondary)"
                     strokeWidth={2.5}
+                    strokeLinecap="round"
                     strokeDasharray="5 4"
                     dot={false}
                     animationDuration={760}
@@ -408,7 +409,7 @@ const StatsView: React.FC = () => {
           </div>
         </section>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
+        <section className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-3xl p-4 border border-[var(--surface-border)] transition-colors">
           <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-3">{t('stats.weeklyFrequency')}</h2>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
@@ -426,6 +427,7 @@ const StatsView: React.FC = () => {
                   dataKey="workoutCount"
                   stroke="var(--stats-line-primary)"
                   strokeWidth={4}
+                  strokeLinecap="round"
                   dot={{ r: 3.2, fill: 'var(--stats-line-primary)', strokeWidth: 0 }}
                   activeDot={{ r: 4.5 }}
                   animationDuration={560}
@@ -436,7 +438,7 @@ const StatsView: React.FC = () => {
           </div>
         </section>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
+        <section className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-3xl p-4 border border-[var(--surface-border)] transition-colors">
           <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-3">{t('stats.weeklyVolume')}</h2>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
@@ -461,7 +463,7 @@ const StatsView: React.FC = () => {
           </div>
         </section>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
+        <section className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-3xl p-4 border border-[var(--surface-border)] transition-colors">
           <div className="flex items-center justify-between gap-3 mb-3">
             <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest shrink-0">
               {t('stats.oneRmTrend')}
@@ -505,6 +507,7 @@ const StatsView: React.FC = () => {
                     dataKey="oneRM"
                     stroke="var(--stats-line-danger)"
                     strokeWidth={3.6}
+                    strokeLinecap="round"
                     dot={{ r: 3, fill: 'var(--stats-line-danger)', strokeWidth: 0 }}
                     animationDuration={560}
                     animationEasing="ease-out"
@@ -515,7 +518,7 @@ const StatsView: React.FC = () => {
           )}
         </section>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
+        <section className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-3xl p-4 border border-[var(--surface-border)] transition-colors">
           <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-3">{t('stats.workoutDuration')}</h2>
           {durationData.length === 0 ? (
             <div className="text-sm text-gray-400 dark:text-gray-500 py-10 text-center">{t('stats.noElapsedTime')}</div>
@@ -544,7 +547,7 @@ const StatsView: React.FC = () => {
           )}
         </section>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
+        <section className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-3xl p-4 border border-[var(--surface-border)] transition-colors">
           <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-3">{t('stats.bodyPartSplit')}</h2>
           {bodyPartData.length === 0 ? (
             <div className="text-sm text-gray-400 dark:text-gray-500 py-10 text-center">{t('stats.noCategoryData')}</div>

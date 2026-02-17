@@ -12,7 +12,7 @@ type BottomSheetProps = {
   contentClassName?: string;
 };
 
-const CLOSE_MS = 420;
+const CLOSE_MS = 520;
 
 const BottomSheet: React.FC<BottomSheetProps> = ({
   isOpen,
@@ -150,7 +150,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
 
         <div
           ref={panelRef}
-          className={`bottom-sheet-panel relative w-full ${maxWidthClassName} mx-auto rounded-t-[32px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-2xl flex flex-col ${
+          className={`bottom-sheet-panel relative w-full ${maxWidthClassName} mx-auto rounded-t-[40px] border border-[var(--surface-border)] bg-[var(--surface-card)] dark:bg-[var(--surface-card)] shadow-[var(--surface-shadow-strong)] flex flex-col ${
             phase === 'open' ? 'is-open' : ''
           } ${isDragging ? 'is-dragging' : ''} ${panelClassName ?? ''}`}
           style={{
@@ -174,10 +174,10 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
             aria-label={title ?? 'Sheet'}
           >
             <div className="flex items-center justify-center">
-              <div className="h-1.5 w-12 rounded-full bg-gray-200 dark:bg-gray-800" />
+              <div className="h-1.5 w-12 rounded-full bg-[var(--surface-border-strong)]" />
             </div>
             {title && (
-              <h3 className="mt-4 text-center font-black text-xl text-gray-900 dark:text-gray-100 tracking-tight">
+              <h3 className="mt-4 text-center text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight display-serif">
                 {title}
               </h3>
             )}
@@ -197,4 +197,3 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
 };
 
 export default BottomSheet;
-

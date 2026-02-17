@@ -9,7 +9,7 @@ const LoginView: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="h-full bg-white dark:bg-gray-950 px-8 pt-[calc(2rem+var(--standalone-safe-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] animate-pulse transition-colors">
+      <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] px-8 pt-[calc(2rem+var(--standalone-safe-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] animate-pulse transition-colors">
         <div className="h-full flex flex-col justify-between gap-8">
           <div className="pt-8 space-y-3">
             <div className="h-10 rounded-2xl bg-gray-100 dark:bg-gray-800" />
@@ -26,10 +26,10 @@ const LoginView: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-950 px-8 pt-[calc(2rem+var(--standalone-safe-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
+    <div className="h-full flex flex-col bg-[var(--app-bg)] dark:bg-[var(--app-bg)] px-8 pt-[calc(2rem+var(--standalone-safe-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
       <div className="flex-1 flex flex-col justify-center min-h-0">
         <div className="pt-4">
-          <h1 className="text-5xl font-black text-center leading-tight tracking-tight text-gray-900 dark:text-gray-100">
+          <h1 className="text-5xl font-semibold text-center leading-tight tracking-tight text-gray-900 dark:text-gray-100 display-serif">
             {t('login.headlineLine1')}
             <br />
             {t('login.headlineLine2')}
@@ -59,7 +59,7 @@ const LoginView: React.FC = () => {
 
         <button
           onClick={login}
-          className="pressable w-full bg-brand text-gray-900 py-4 rounded-2xl font-bold text-lg shadow-xl shadow-brand-soft active:scale-95 transition-all hover:brightness-95"
+          className="pressable w-full bg-brand text-[var(--botanical-text)] py-4 rounded-3xl font-semibold text-lg shadow-[var(--surface-shadow-strong)] active:scale-[0.98] transition-all duration-500 ease-out hover:brightness-95"
         >
           {t('login.signIn')}
         </button>

@@ -10,7 +10,7 @@ import RestTimer from '@/components/RestTimer';
 import SessionReport from '@/components/SessionReport';
 import SetNumberInput from '@/components/SetNumberInput';
 import { shareWorkoutReportCanvas } from '@/components/WorkoutReportCanvas';
-import { Button, Input, Modal, pushToast } from '@/components/ui';
+import { Button, Input, pushToast } from '@/components/ui';
 import { BODY_PART_OPTIONS, getDefaultBarbellWeight, normalizeCategory } from '@/constants';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useGym } from '@/hooks/useGym';
@@ -1085,7 +1085,7 @@ const WorkoutEditor: React.FC = () => {
           data-testid="workout-title-input"
           value={workout.title}
           onChange={e => handleTitleChange(e.target.value)}
-          className="text-3xl font-black bg-transparent w-full mb-2 outline-none text-gray-900 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600"
+          className="text-3xl font-semibold bg-transparent w-full mb-2 outline-none text-gray-900 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600 display-serif"
           placeholder={t('workoutEditor.workoutTitlePlaceholder')}
         />
         <input
@@ -1266,7 +1266,12 @@ const WorkoutEditor: React.FC = () => {
         </div>
       </BottomSheet>
 
-      <Modal isOpen={showCreateExModal} onClose={() => setShowCreateExModal(false)} title={t('workoutEditor.newExerciseTitle')}>
+      <BottomSheet
+        isOpen={showCreateExModal}
+        onClose={() => setShowCreateExModal(false)}
+        title={t('workoutEditor.newExerciseTitle')}
+        topGapPx={20}
+      >
          <Input placeholder={t('workoutEditor.name')} value={newExName} onChange={e => setNewExName(e.target.value)} />
          <Input placeholder={t('workoutEditor.description')} value={newExDesc} onChange={e => setNewExDesc(e.target.value)} />
          <CategoryPicker value={newExCategory} onChange={setNewExCategory} />
@@ -1422,9 +1427,9 @@ const WorkoutEditor: React.FC = () => {
          <Button onClick={handleCreateExercise} disabled={isProcessing} className="w-full">
            {isProcessing ? t('workoutEditor.processing') : t('workoutEditor.save')}
          </Button>
-      </Modal>
+      </BottomSheet>
 
-      <Modal
+      <BottomSheet
         isOpen={showEditExModal}
         onClose={() => {
           setShowEditExModal(false);
@@ -1433,6 +1438,7 @@ const WorkoutEditor: React.FC = () => {
           setEditExYoutubeInput('');
         }}
         title={t('workoutEditor.editExerciseTitle')}
+        topGapPx={20}
       >
          <Input placeholder={t('workoutEditor.name')} value={editExName} onChange={e => setEditExName(e.target.value)} />
          <Input placeholder={t('workoutEditor.description')} value={editExDesc} onChange={e => setEditExDesc(e.target.value)} />
@@ -1587,7 +1593,7 @@ const WorkoutEditor: React.FC = () => {
            </div>
          </div>
          <Button onClick={handleUpdateExercise} className="w-full">{t('workoutEditor.saveChanges')}</Button>
-      </Modal>
+      </BottomSheet>
 
       <SessionReport
         isOpen={showReport}

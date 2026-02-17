@@ -68,30 +68,10 @@ const RestTimer: React.FC<RestTimerProps> = ({
   onDurationChange,
 }) => {
   const { t } = useI18n();
-  const [shouldRender, setShouldRender] = useState(isOpen);
-  const [isClosing, setIsClosing] = useState(false);
   const [activeDuration, setActiveDuration] = useState(normalizeDuration(durationSeconds));
   const [remainingSeconds, setRemainingSeconds] = useState(normalizeDuration(durationSeconds));
   const [isPaused, setIsPaused] = useState(false);
   const didCompleteRef = useRef(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShouldRender(true);
-      setIsClosing(false);
-      return;
-    }
-
-    if (!shouldRender) return;
-
-    setIsClosing(true);
-    const timer = window.setTimeout(() => {
-      setShouldRender(false);
-      setIsClosing(false);
-    }, 220);
-
-    return () => window.clearTimeout(timer);
-  }, [isOpen, shouldRender]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -119,7 +99,7 @@ const RestTimer: React.FC<RestTimerProps> = ({
     return () => window.clearTimeout(closeTimer);
   }, [isOpen, remainingSeconds, onClose]);
 
-  if (!shouldRender) return null;
+  if (!isOpen) return null;
 
   const radius = 58;
   const circumference = 2 * Math.PI * radius;
@@ -137,26 +117,22 @@ const RestTimer: React.FC<RestTimerProps> = ({
   return (
     <Portal>
       <div
-        className={`fixed inset-0 z-[950] bg-black/45 backdrop-blur-sm px-6 flex items-center justify-center modal-backdrop ${
-          isClosing ? 'modal-backdrop--exit' : 'modal-backdrop--enter'
-        }`}
+        className="fixed inset-0 z-[950] bg-black/45 backdrop-blur-sm px-6 flex items-center justify-center"
         onClick={onClose}
       >
         <div
-          className={`w-full max-w-sm rounded-[28px] bg-white dark:bg-gray-900 p-6 shadow-2xl dark:shadow-black/60 transition-colors modal-panel ${
-            isClosing ? 'modal-panel--exit' : 'modal-panel--enter'
-          }`}
+          className="w-full max-w-sm rounded-[32px] border border-[var(--surface-border)] bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-6 shadow-[var(--surface-shadow-strong)] transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('restTimer.title')}</h3>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight display-serif">{t('restTimer.title')}</h3>
               <p className="text-xs text-gray-400 dark:text-gray-500">{t('restTimer.subtitle')}</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="w-8 h-8 rounded-full bg-[var(--surface-muted)] text-gray-500 dark:text-gray-300 flex items-center justify-center hover:brightness-95 transition-colors"
               aria-label={t('restTimer.close')}
             >
               <X size={16} />
@@ -177,7 +153,7 @@ const RestTimer: React.FC<RestTimerProps> = ({
                   cy="70"
                   r={radius}
                   fill="none"
-                  stroke="var(--brand-yellow)"
+                  stroke="var(--stats-line-primary)"
                   strokeWidth="10"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
@@ -208,8 +184,8 @@ const RestTimer: React.FC<RestTimerProps> = ({
                 onClick={() => chooseDuration(seconds)}
                 className={`py-2 rounded-lg text-xs font-bold transition-colors ${
                   activeDuration === seconds
-                    ? 'bg-brand text-gray-900'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    ? 'bg-brand text-[var(--botanical-text)]'
+                    : 'bg-[var(--surface-muted)] text-gray-500 dark:text-gray-300 hover:brightness-95'
                 }`}
               >
                 {seconds}s
@@ -222,7 +198,7 @@ const RestTimer: React.FC<RestTimerProps> = ({
               type="button"
               onClick={() => setIsPaused((prev) => !prev)}
               disabled={remainingSeconds === 0}
-              className="h-11 rounded-xl bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+              className="h-11 rounded-2xl bg-[var(--botanical-accent)] text-[var(--botanical-text)] font-semibold flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
             >
               {isPaused ? <Play size={16} /> : <Pause size={16} />}
               {isPaused ? t('restTimer.resume') : t('restTimer.pause')}
@@ -230,7 +206,7 @@ const RestTimer: React.FC<RestTimerProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="h-11 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-semibold flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="h-11 rounded-2xl bg-[var(--surface-muted)] text-gray-700 dark:text-gray-300 font-semibold flex items-center justify-center gap-2 hover:brightness-95 transition-colors"
             >
               <SkipForward size={16} />
               {t('restTimer.skip')}

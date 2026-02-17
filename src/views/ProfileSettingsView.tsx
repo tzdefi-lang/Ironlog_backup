@@ -98,7 +98,7 @@ const ProfileSettingsView: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 overflow-y-auto scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
+    <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] overflow-y-auto scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
       <header className="flex items-center gap-3 mb-8">
         <button
           type="button"
@@ -109,13 +109,13 @@ const ProfileSettingsView: React.FC = () => {
           <ChevronLeft size={20} />
         </button>
         <div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('profile.settingsTitle')}</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight display-serif">{t('profile.settingsTitle')}</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500">{t('profile.settingsSubtitle')}</p>
         </div>
       </header>
 
       <div className="space-y-3 list-stagger">
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center transition-colors">
+        <div className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center transition-colors">
           <span className="font-medium text-gray-700 dark:text-gray-300">{t('profile.units')}</span>
           <button
             onClick={toggleUnit}
@@ -126,7 +126,7 @@ const ProfileSettingsView: React.FC = () => {
           </button>
         </div>
 
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center gap-3 transition-colors">
+        <div className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center gap-3 transition-colors">
           <span className="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('profile.appearance')}</span>
           <div className="flex flex-wrap justify-end gap-2">
             {THEME_OPTIONS.map((option) => (
@@ -146,7 +146,7 @@ const ProfileSettingsView: React.FC = () => {
           </div>
         </div>
 
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center gap-3 transition-colors">
+        <div className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center gap-3 transition-colors">
           <span className="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('profile.language')}</span>
           <div className="flex flex-wrap justify-end gap-2">
             {LOCALE_OPTIONS.map((option) => (
@@ -166,7 +166,7 @@ const ProfileSettingsView: React.FC = () => {
           </div>
         </div>
 
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center gap-3 transition-colors">
+        <div className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center gap-3 transition-colors">
           <div className="flex flex-col">
             <span className="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('profile.notifications')}</span>
             {!isNotificationSupported() && (
@@ -188,7 +188,7 @@ const ProfileSettingsView: React.FC = () => {
           </button>
         </div>
 
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl transition-colors">
+        <div className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] transition-colors">
           <div className="font-medium text-gray-700 dark:text-gray-300 mb-3">{t('profile.exportData')}</div>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="secondary" className="w-full" onClick={handleExportJSON}>
@@ -203,7 +203,7 @@ const ProfileSettingsView: React.FC = () => {
         <button
           type="button"
           onClick={() => void handleClearCache()}
-          className="pressable card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center transition-colors w-full text-left active:scale-[0.98]"
+          className="pressable card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center transition-colors w-full text-left active:scale-[0.98]"
         >
           <span className="flex items-center gap-3">
             <Trash2 size={20} className="text-gray-400 dark:text-gray-500" />
@@ -219,7 +219,7 @@ const ProfileSettingsView: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/manage')}
-            className="pressable card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center transition-colors w-full text-left active:scale-[0.98]"
+            className="pressable card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center transition-colors w-full text-left active:scale-[0.98]"
           >
             <span className="flex items-center gap-3">
               <ShieldCheck size={20} className="text-brand" />

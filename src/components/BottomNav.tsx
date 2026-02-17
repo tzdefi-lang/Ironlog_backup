@@ -44,7 +44,7 @@ const BottomNav: React.FC = () => {
         aria-label={item.label}
         title={item.label}
         data-active={active ? 'true' : 'false'}
-        className={`bottom-nav-link pressable min-w-0 justify-self-center flex flex-col items-center gap-1 transition-all active:scale-90 ${active ? 'text-gray-900 dark:text-gray-100' : 'text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-300'} ${popped === item.path ? 'tap-pop' : ''}`}
+        className={`bottom-nav-link pressable min-w-0 justify-self-center flex flex-col items-center gap-1 transition-all active:scale-[0.96] ${active ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'} ${popped === item.path ? 'tap-pop' : ''}`}
       >
         <Icon size={24} strokeWidth={active ? 3 : 2} />
       </Link>
@@ -52,7 +52,7 @@ const BottomNav: React.FC = () => {
   };
 
   return (
-    <div className="bottom-nav-shell fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/92 dark:bg-gray-950/92 backdrop-blur-md border-t border-gray-100 dark:border-gray-800 grid grid-cols-5 items-center px-6 pt-3 pb-[calc(1.1rem+env(safe-area-inset-bottom))] z-50">
+    <div className="bottom-nav-shell fixed bottom-[calc(0.65rem+env(safe-area-inset-bottom))] left-3 right-3 max-w-[calc(28rem-1.5rem)] mx-auto bg-[var(--surface-card)] dark:bg-[var(--surface-card)] border border-[var(--surface-border)] rounded-[28px] grid grid-cols-5 items-center px-5 pt-3 pb-3 z-50">
       {renderItem(navItems[0])}
       {renderItem(navItems[1])}
       <button
@@ -61,7 +61,7 @@ const BottomNav: React.FC = () => {
         aria-label={t('fab.addWorkout')}
         title={t('fab.addWorkout')}
         onClick={() => navigate('/workout/new')}
-        className="pressable justify-self-center w-10 h-10 rounded-full bg-brand text-gray-900 hover:brightness-95 active:scale-90 transition-all flex items-center justify-center"
+        className="pressable justify-self-center w-11 h-11 rounded-full bg-[var(--botanical-emphasis)] text-white hover:brightness-95 active:scale-[0.96] transition-all flex items-center justify-center shadow-[var(--surface-shadow)]"
       >
         <Plus size={22} strokeWidth={2.5} />
       </button>

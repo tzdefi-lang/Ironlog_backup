@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
+import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack';
 import Dashboard from '@/views/Dashboard';
 const CalendarView = lazy(() => import('@/views/CalendarView'));
 const StatsView = lazy(() => import('@/views/StatsView'));
@@ -19,13 +20,32 @@ const RouteFallback: React.FC = () => (
   </div>
 );
 
+const routeDepth = (pathname: string) => {
+  if (pathname === '/') return 0;
+  if (pathname === '/calendar' || pathname === '/stats' || pathname === '/profile') return 1;
+  if (pathname === '/history') return 2;
+  if (pathname.startsWith('/profile/')) return 3;
+  if (pathname.startsWith('/manage')) return 3;
+  if (pathname.startsWith('/workout/')) return 4;
+  return 1;
+};
+
+const canEdgeSwipeBack = (pathname: string) => {
+  return pathname !== '/' && pathname !== '/calendar' && pathname !== '/stats' && pathname !== '/profile';
+};
+
 const AnimatedRoutes: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [displayLocation, setDisplayLocation] = useState(location);
   const [stage, setStage] = useState<'enter' | 'exit'>('enter');
+  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
 
   useEffect(() => {
     if (location.pathname !== displayLocation.pathname) {
+      const nextDepth = routeDepth(location.pathname);
+      const currentDepth = routeDepth(displayLocation.pathname);
+      setDirection(nextDepth < currentDepth ? 'back' : 'forward');
       setStage('exit');
     }
   }, [location, displayLocation.pathname]);
@@ -39,10 +59,28 @@ const AnimatedRoutes: React.FC = () => {
     }
   };
 
+  const stageClass =
+    stage === 'enter'
+      ? direction === 'forward'
+        ? 'page-shell--enter-forward'
+        : 'page-shell--enter-back'
+      : direction === 'forward'
+        ? 'page-shell--exit-forward'
+        : 'page-shell--exit-back';
+
+  const edgeSwipeHandlers = useEdgeSwipeBack({
+    enabled: canEdgeSwipeBack(displayLocation.pathname),
+    onBack: () => navigate(-1),
+  });
+
   return (
     <div
-      className={`page-shell ${stage === 'enter' ? 'page-shell--enter' : 'page-shell--exit'}`}
+      className={`page-shell ${stageClass}`}
       onAnimationEnd={handleAnimationEnd}
+      onPointerDown={edgeSwipeHandlers.onPointerDown}
+      onPointerMove={edgeSwipeHandlers.onPointerMove}
+      onPointerUp={edgeSwipeHandlers.onPointerUp}
+      onPointerCancel={edgeSwipeHandlers.onPointerCancel}
     >
       <Suspense fallback={<RouteFallback />}>
         <Routes location={displayLocation}>

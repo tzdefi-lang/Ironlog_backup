@@ -96,10 +96,10 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 flex flex-col overflow-hidden view-enter transition-colors">
+    <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] flex flex-col overflow-hidden view-enter transition-colors">
       <div className="shrink-0 px-6 pt-8">
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('dashboard.title')}</h1>
+          <h1 className="text-4xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight display-serif">{t('dashboard.title')}</h1>
           <button className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:bg-gray-200 dark:active:bg-gray-700 transition-colors">
             <Menu size={20} />
           </button>
@@ -128,7 +128,7 @@ const Dashboard: React.FC = () => {
               ))
             ) : (
               <div className="min-w-full snap-start snap-stop-always">
-                <div className="rounded-[32px] bg-gray-50 dark:bg-gray-900 p-8 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 h-56 flex flex-col items-center justify-center transition-colors">
+                <div className="rounded-[32px] bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-8 text-center border-2 border-dashed border-[var(--surface-border)] h-56 flex flex-col items-center justify-center transition-colors">
                   <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 mb-2">
                     {t('dashboard.restDayTitle')}
                   </h3>
@@ -178,7 +178,7 @@ const Dashboard: React.FC = () => {
         onDelete={() => setDeleteModalOpen(true)}
       />
 
-      <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('dashboard.copyWorkoutTitle')}>
+      <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('dashboard.copyWorkoutTitle')} position="bottom">
         <p className="mb-4 text-gray-600 dark:text-gray-300">{t('dashboard.copyWorkoutPrompt')}</p>
         <Input type="date" value={targetDate} min={today} onChange={(e) => setTargetDate(e.target.value)} />
         <Button className="w-full mb-3" onClick={confirmCopy}>
@@ -189,7 +189,7 @@ const Dashboard: React.FC = () => {
         </Button>
       </Modal>
 
-      <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={t('history.deleteWorkoutTitle')}>
+      <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={t('history.deleteWorkoutTitle')} position="bottom">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Trash2 size={32} />
@@ -204,7 +204,7 @@ const Dashboard: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal isOpen={templateModalOpen} onClose={() => setTemplateModalOpen(false)} title={t('dashboard.startFromTemplateTitle')}>
+      <Modal isOpen={templateModalOpen} onClose={() => setTemplateModalOpen(false)} title={t('dashboard.startFromTemplateTitle')} position="bottom">
         {templates.length === 0 ? (
           <div className="text-center py-6 text-gray-400 dark:text-gray-500 text-sm">{t('dashboard.noTemplatesYet')}</div>
         ) : (

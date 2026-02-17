@@ -442,7 +442,7 @@ export const SwipeableItem: React.FC<{
                 {onSwipeRight ? (
                   <button
                       type="button"
-                      className={`${actionCommon} ${showRightAction ? 'opacity-100' : 'opacity-0'} transition-opacity duration-150 bg-green-50 text-green-600`}
+                      className={`${actionCommon} ${showRightAction ? 'opacity-100' : 'opacity-0'} transition-opacity duration-150 bg-[var(--brand-tint)] text-[var(--botanical-text)]`}
                       style={{ width: ACTION_WIDTH }}
                       onClick={() => { haptic(10); onSwipeRight(); close(); }}
                       aria-label={rightActionLabel}
@@ -455,7 +455,7 @@ export const SwipeableItem: React.FC<{
                 {onSwipeLeft ? (
                   <button
                       type="button"
-                      className={`${actionCommon} ${showLeftAction ? 'opacity-100' : 'opacity-0'} transition-opacity duration-150 bg-red-50 text-red-500`}
+                      className={`${actionCommon} ${showLeftAction ? 'opacity-100' : 'opacity-0'} transition-opacity duration-150 bg-red-100/80 text-red-700 dark:bg-red-950/65 dark:text-red-300`}
                       style={{ width: ACTION_WIDTH }}
                       onClick={() => { haptic(10); onSwipeLeft(); close(); }}
                       aria-label={leftActionLabel}
@@ -469,7 +469,7 @@ export const SwipeableItem: React.FC<{
 
             {/* Foreground content */}
             <div
-                className={`relative bg-white dark:bg-gray-900 will-change-transform ${isDragging ? '' : 'transition-transform duration-200 ease-out'} ${className || ''}`}
+                className={`relative bg-[var(--surface-card)] dark:bg-[var(--surface-card)] will-change-transform ${isDragging ? '' : 'transition-transform duration-200 ease-out'} ${className || ''}`}
                 style={{ transform: `translate3d(${offsetX}px, 0, 0)`, willChange: 'transform', touchAction: 'pan-y' }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
@@ -488,12 +488,12 @@ export const SwipeableItem: React.FC<{
 export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' }> = ({ 
   className = '', variant = 'primary', onClick, ...props 
 }) => {
-  const base = "px-6 py-3 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 pressable";
+  const base = "min-h-11 px-6 py-3 rounded-3xl font-semibold transition-all duration-500 ease-out flex items-center justify-center gap-2 pressable";
   const variants = {
-    primary: "bg-brand text-gray-900 shadow-lg shadow-brand-soft hover:brightness-95",
-    secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700",
-    danger: "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/45 dark:text-red-300 dark:hover:bg-red-900/45 dark:border dark:border-red-900/55",
-    ghost: "bg-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+    primary: "bg-[var(--botanical-accent)] text-[var(--botanical-text)] shadow-[var(--surface-shadow)] hover:brightness-[0.98] active:scale-[0.98]",
+    secondary: "bg-[var(--surface-muted)] text-[var(--botanical-text)] border border-[var(--surface-border)] hover:brightness-[0.985] dark:bg-[var(--surface-muted)] dark:text-[var(--botanical-text)] dark:border-[var(--surface-border)]",
+    danger: "bg-[var(--botanical-emphasis)] text-white shadow-[var(--surface-shadow)] hover:brightness-95 active:scale-[0.98]",
+    ghost: "bg-transparent text-[var(--botanical-text-soft)] hover:bg-[var(--surface-muted)] dark:hover:bg-[var(--surface-muted)]"
   };
   return (
     <button
@@ -563,30 +563,30 @@ export const Modal: React.FC<{
   const phaseClass = isClosing ? 'modal-backdrop--exit' : 'modal-backdrop--enter';
   const panelPhaseClass = isClosing ? 'modal-panel--exit' : 'modal-panel--enter';
   const overlayPositionClass = position === 'bottom' ? 'items-end' : 'items-center';
-  const panelShapeClass = position === 'bottom' ? 'rounded-t-[32px] rounded-b-none' : 'rounded-[32px]';
+  const panelShapeClass = position === 'bottom' ? 'rounded-t-[40px] rounded-b-none' : 'rounded-[32px]';
 
   const overlay = (
     <div
       className={`fixed inset-0 z-[1000] flex justify-center ${overlayPositionClass} ${
         overlayClassName ??
-        'bg-gradient-to-t from-black/40 via-black/25 to-black/10 backdrop-blur-sm'
+        'bg-gradient-to-t from-black/45 via-black/20 to-black/8 backdrop-blur-sm'
       } modal-backdrop ${phaseClass}`}
       onMouseDown={onClose}
       role="presentation"
     >
       <div
-        className={`bg-white dark:bg-gray-900 ${panelShapeClass} shadow-2xl dark:shadow-black/60 w-full max-w-md mx-4 max-h-[92vh] overflow-hidden flex flex-col modal-panel ${panelPhaseClass} ${
+        className={`bg-[var(--surface-card)] dark:bg-[var(--surface-card)] border border-[var(--surface-border)] ${panelShapeClass} shadow-[var(--surface-shadow-strong)] w-full max-w-md mx-4 max-h-[92vh] overflow-hidden flex flex-col modal-panel ${panelPhaseClass} ${
           panelClassName ?? ''
         }`}
         onMouseDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 rounded-t-[32px]">
-          <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 tracking-tight">{title}</h3>
+        <div className="px-6 py-5 border-b border-[var(--surface-border)] flex justify-between items-center bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-t-[40px]">
+          <h3 className="font-semibold text-2xl text-gray-900 dark:text-gray-100 tracking-tight display-serif">{title}</h3>
           <button
             onClick={onClose}
-            className="pressable w-8 h-8 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-all"
+            className="pressable w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-[var(--surface-muted)] active:scale-[0.98] transition-all"
             aria-label="Close"
           >
             ✕
@@ -606,8 +606,11 @@ export const Modal: React.FC<{
 
 export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({ label, className = '', ...props }) => (
   <div className="flex flex-col gap-2 mb-4">
-    {label && <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 ml-1">{label}</label>}
-    <input className={`bg-gray-50 dark:bg-gray-800 border-none rounded-2xl px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 ring-brand outline-none transition-all ${className}`} {...props} />
+    {label && <label className="text-sm font-semibold text-gray-600 dark:text-gray-300 ml-1">{label}</label>}
+    <input
+      className={`min-h-11 bg-[var(--surface-muted)] dark:bg-[var(--surface-muted)] border border-[var(--surface-border)] rounded-full px-4 py-2.5 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus-visible:outline-none focus-visible:border-[var(--botanical-accent)] focus-visible:ring-2 focus-visible:ring-[var(--brand-ring)] transition-all duration-500 ease-out ${className}`}
+      {...props}
+    />
   </div>
 );
 
@@ -676,16 +679,14 @@ export const Toast: React.FC<{
   if (!open) return null;
 
   const styleByKind: Record<ToastKind, string> = {
-    success: 'bg-green-600 text-white',
-    error: 'bg-red-600 text-white',
-    info: 'bg-gray-900 text-white',
+    success: 'bg-[var(--botanical-accent)] text-[var(--botanical-text)]',
+    error: 'bg-[var(--botanical-emphasis)] text-white',
+    info: 'bg-[var(--surface-card)] text-[var(--botanical-text)] border border-[var(--surface-border)]',
   };
 
   const toast = (
     <div className="fixed inset-x-0 bottom-[calc(5.8rem+env(safe-area-inset-bottom))] z-[1200] px-6 flex justify-center pointer-events-none">
-      <div
-        className={`max-w-md w-full rounded-2xl px-4 py-3 text-sm font-semibold shadow-2xl ${styleByKind[kind]}`}
-      >
+      <div className={`max-w-md w-full rounded-3xl px-4 py-3 text-sm font-semibold shadow-[var(--surface-shadow-strong)] ${styleByKind[kind]}`}>
         {message}
       </div>
     </div>

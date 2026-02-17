@@ -330,7 +330,7 @@ const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
 
       <div
         ref={sheetRef}
-        className={`exercise-detail-sheet relative w-full max-w-4xl rounded-t-[28px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-2xl flex flex-col ${phase === 'open' ? 'is-open' : ''} ${
+        className={`exercise-detail-sheet relative w-full max-w-4xl rounded-t-[40px] border border-[var(--surface-border)] bg-[var(--surface-card)] dark:bg-[var(--surface-card)] shadow-[var(--surface-shadow-strong)] flex flex-col ${phase === 'open' ? 'is-open' : ''} ${
           isDragging ? 'is-dragging' : ''
         }`}
         style={{
@@ -360,7 +360,7 @@ const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
             type="button"
             onClick={requestClose}
             onPointerDown={(event) => event.stopPropagation()}
-            className="w-10 h-10 -mr-1 rounded-full bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex items-center justify-center"
+            className="w-10 h-10 -mr-1 rounded-full bg-[var(--surface-muted)] text-gray-600 dark:text-gray-300 flex items-center justify-center"
             aria-label={t('exerciseDetail.close')}
           >
             <X size={18} />
@@ -406,7 +406,7 @@ const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
             <section className="pt-1">
             <div className="flex items-center gap-2">
               <Info size={16} className="text-brand" />
-              <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight display-serif">
                 {renderExercise.name}
               </h2>
             </div>
@@ -508,7 +508,7 @@ const ExerciseDetailModal: React.FC<ExerciseDetailModalProps> = ({
             )}
 
             {hasMarkdown && (
-              <article className="prose prose-sm max-w-none dark:prose-invert prose-a:text-[var(--brand-yellow-text)] dark:prose-a:text-[var(--brand-yellow)] prose-a:font-semibold mt-4">
+              <article className="prose prose-sm max-w-none dark:prose-invert prose-a:text-[var(--botanical-accent)] dark:prose-a:text-[var(--botanical-accent)] prose-a:font-semibold mt-4">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeSanitize]}

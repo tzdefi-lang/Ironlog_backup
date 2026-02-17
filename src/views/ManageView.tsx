@@ -377,10 +377,10 @@ const ManageView: React.FC = () => {
 
   if (!adminUser) {
     return (
-      <div className="h-full bg-white dark:bg-gray-950 flex items-center justify-center px-6 text-center">
+      <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] flex items-center justify-center px-6 text-center">
         <div className="max-w-lg rounded-3xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 p-8">
           <ShieldAlert size={28} className="mx-auto text-red-500 mb-3" />
-          <h1 className="text-2xl font-black text-gray-900 dark:text-gray-100">{t('manage.unauthorizedTitle')}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 display-serif">{t('manage.unauthorizedTitle')}</h1>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{t('manage.unauthorizedMessage')}</p>
           <Button className="mt-6" onClick={() => navigate('/profile/settings')}>
             {t('manage.backToSettings')}
@@ -392,10 +392,10 @@ const ManageView: React.FC = () => {
 
   if (!isDesktop) {
     return (
-      <div className="h-full bg-white dark:bg-gray-950 flex items-center justify-center px-6 text-center">
+      <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] flex items-center justify-center px-6 text-center">
         <div className="max-w-lg rounded-3xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-8">
           <Monitor size={28} className="mx-auto text-brand mb-3" />
-          <h1 className="text-2xl font-black text-gray-900 dark:text-gray-100">{t('manage.desktopOnlyTitle')}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 display-serif">{t('manage.desktopOnlyTitle')}</h1>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{t('manage.desktopOnlyMessage')}</p>
           <Button className="mt-6" onClick={() => navigate('/profile/settings')}>
             {t('manage.backToSettings')}
@@ -784,7 +784,7 @@ const ManageView: React.FC = () => {
   );
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 overflow-y-auto scroll-area px-8 pt-8 pb-12">
+    <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] overflow-y-auto scroll-area px-8 pt-8 pb-12">
       <header className="mb-6 flex items-start justify-between gap-4">
         <div>
           <button
@@ -794,7 +794,7 @@ const ManageView: React.FC = () => {
           >
             <ArrowLeft size={16} /> {t('manage.backToSettings')}
           </button>
-          <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight mt-2">{t('manage.title')}</h1>
+          <h1 className="text-4xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mt-2 display-serif">{t('manage.title')}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('manage.subtitle')}</p>
         </div>
 

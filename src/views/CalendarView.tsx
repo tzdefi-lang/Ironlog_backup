@@ -101,7 +101,7 @@ const CalendarView: React.FC = () => {
     return (
       <div
         {...longPress}
-        className="card-lift bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-lg shadow-gray-100 dark:shadow-black/20 border border-gray-50 dark:border-gray-800 flex justify-between items-center active:scale-[0.99] transition-transform cursor-pointer select-none"
+        className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-5 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center active:scale-[0.99] transition-transform cursor-pointer select-none"
       >
         <div>
           <h3 className="font-bold text-gray-900 dark:text-gray-100">{workout.title}</h3>
@@ -115,9 +115,9 @@ const CalendarView: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 flex flex-col overflow-hidden view-enter transition-colors">
+    <div className="h-full bg-[var(--app-bg)] dark:bg-[var(--app-bg)] flex flex-col overflow-hidden view-enter transition-colors">
       <div className="shrink-0 px-6 pt-8 pb-4">
-        <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight mb-8">{t('calendar.title')}</h1>
+        <h1 className="text-4xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mb-8 display-serif">{t('calendar.title')}</h1>
         <div {...monthSwipeHandlers}>
           <div
             key={`${year}-${month}-${monthAnimation.tick}`}
@@ -227,7 +227,7 @@ const CalendarView: React.FC = () => {
         onDelete={() => setDeleteModalOpen(true)}
       />
 
-      <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={t('calendar.deleteWorkoutTitle')}>
+      <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={t('calendar.deleteWorkoutTitle')} position="bottom">
         <div className="text-center">
           <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
             <Trash2 size={32} />
@@ -242,7 +242,7 @@ const CalendarView: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('calendar.copyWorkoutTitle')}>
+      <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('calendar.copyWorkoutTitle')} position="bottom">
         <p className="mb-4 text-gray-600 dark:text-gray-300">{t('calendar.copyPrompt')}</p>
         <Input type="date" value={targetDate} min={today} onChange={(e) => setTargetDate(e.target.value)} />
         <Button className="w-full mb-3" onClick={confirmCopy}>
