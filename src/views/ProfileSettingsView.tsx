@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { FilterChip, ScreenShell, SurfaceCard } from '@/components/botanical-ui';
 import { Button, pushToast } from '@/components/ui';
 import { useGym } from '@/hooks/useGym';
 import type { Locale } from '@/i18n/I18nProvider';
@@ -78,97 +79,83 @@ const ProfileSettingsView: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 overflow-y-auto scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
-      <header className="flex items-center gap-3 mb-8">
+    <ScreenShell
+      title={t('profile.settingsTitle')}
+      subtitle={t('profile.settingsSubtitle')}
+      leading={
         <button
           type="button"
           onClick={() => navigate('/profile')}
           aria-label={t('profile.back')}
-          className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          className="w-10 h-10 rounded-full bg-[var(--surface-muted)] border border-[var(--surface-border)] text-gray-700 dark:text-gray-200 flex items-center justify-center transition-all duration-500 ease-out active:scale-[0.98]"
         >
           <ChevronLeft size={20} />
         </button>
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('profile.settingsTitle')}</h1>
-          <p className="text-sm text-gray-400 dark:text-gray-500">{t('profile.settingsSubtitle')}</p>
-        </div>
-      </header>
-
+      }
+      contentClassName="pb-[calc(8.9rem+env(safe-area-inset-bottom))]"
+    >
       <div className="space-y-3 list-stagger">
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center transition-colors">
+        <SurfaceCard tone="muted" className="card-lift p-4 flex justify-between items-center">
           <span className="font-medium text-gray-700 dark:text-gray-300">{t('profile.units')}</span>
           <button
             onClick={toggleUnit}
-            className="pressable font-bold text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 px-4 py-2 rounded-xl shadow-sm shadow-gray-200/70 dark:shadow-none hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all flex items-center gap-2"
+            className="pressable font-semibold text-gray-900 dark:text-gray-100 bg-[var(--surface-card)] border border-[var(--surface-border)] px-4 py-2 rounded-xl shadow-[var(--surface-shadow)] hover:bg-[var(--surface-muted)] transition-all flex items-center gap-2"
           >
             {user?.preferences.defaultUnit.toUpperCase()}
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-1 rounded">{t('common.tapToChange')}</span>
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 bg-[var(--surface-muted)] px-1 rounded">
+              {t('common.tapToChange')}
+            </span>
           </button>
-        </div>
+        </SurfaceCard>
 
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center gap-3 transition-colors">
+        <SurfaceCard tone="muted" className="card-lift p-4 flex justify-between items-center gap-3">
           <span className="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('profile.appearance')}</span>
           <div className="flex flex-wrap justify-end gap-2">
             {THEME_OPTIONS.map((option) => (
-              <button
+              <FilterChip
                 key={option}
-                type="button"
                 onClick={() => setThemeMode(option)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  user?.preferences.themeMode === option
-                    ? 'bg-amber-400 text-gray-900'
-                    : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                active={user?.preferences.themeMode === option}
               >
                 {getThemeLabel(option)}
-              </button>
+              </FilterChip>
             ))}
           </div>
-        </div>
+        </SurfaceCard>
 
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center gap-3 transition-colors">
+        <SurfaceCard tone="muted" className="card-lift p-4 flex justify-between items-center gap-3">
           <span className="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('profile.language')}</span>
           <div className="flex flex-wrap justify-end gap-2">
             {LOCALE_OPTIONS.map((option) => (
-              <button
+              <FilterChip
                 key={option}
-                type="button"
                 onClick={() => setLocale(option)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  locale === option
-                    ? 'bg-amber-400 text-gray-900'
-                    : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                active={locale === option}
               >
                 {getLocaleLabel(option)}
-              </button>
+              </FilterChip>
             ))}
           </div>
-        </div>
+        </SurfaceCard>
 
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center gap-3 transition-colors">
+        <SurfaceCard tone="muted" className="card-lift p-4 flex justify-between items-center gap-3">
           <div className="flex flex-col">
             <span className="font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('profile.notifications')}</span>
             {!isNotificationSupported() && (
-              <span className="text-xs text-gray-400 dark:text-gray-500">{t('profile.notificationsUnsupported')}</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">{t('profile.notificationsUnsupported')}</span>
             )}
           </div>
-          <button
-            type="button"
+          <FilterChip
+            active={!!user?.preferences.notificationsEnabled}
             onClick={() => {
               void handleNotificationToggle();
             }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              user?.preferences.notificationsEnabled
-                ? 'bg-amber-400 text-gray-900'
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
           >
             {user?.preferences.notificationsEnabled ? t('common.enabled') : t('common.disabled')}
-          </button>
-        </div>
+          </FilterChip>
+        </SurfaceCard>
 
-        <div className="card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl transition-colors">
+        <SurfaceCard tone="muted" className="card-lift p-4">
           <div className="font-medium text-gray-700 dark:text-gray-300 mb-3">{t('profile.exportData')}</div>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="secondary" className="w-full" onClick={handleExportJSON}>
@@ -178,14 +165,14 @@ const ProfileSettingsView: React.FC = () => {
               CSV
             </Button>
           </div>
-        </div>
+        </SurfaceCard>
       </div>
 
       <Button variant="danger" className="w-full mt-10 rounded-2xl" onClick={logout}>
         {t('common.signOut')}
       </Button>
-      <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">v{__APP_VERSION__}</p>
-    </div>
+      <p className="mt-4 text-center text-xs text-gray-500 dark:text-gray-400">v{__APP_VERSION__}</p>
+    </ScreenShell>
   );
 };
 

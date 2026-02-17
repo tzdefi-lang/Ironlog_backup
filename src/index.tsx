@@ -4,15 +4,21 @@ import * as Sentry from '@sentry/react';
 import { registerSW } from 'virtual:pwa-register';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import AppRoot from '@/AppRoot';
+import {
+  BOTANICAL_APP_BACKGROUND,
+  BOTANICAL_DARK_APP_BACKGROUND,
+  BOTANICAL_DARK_THEME_COLOR,
+  BOTANICAL_THEME_COLOR,
+} from '@/design/tokens';
 import '@/index.css';
 
 const DEFAULT_PRIVY_APP_ID = 'cmlib187t04f3jo0cy0ffgof8';
 const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || DEFAULT_PRIVY_APP_ID;
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
-const LIGHT_THEME_COLOR = '#ffffff';
-const DARK_THEME_COLOR = '#111827';
-const LIGHT_APP_BACKGROUND = '#ffffff';
-const DARK_APP_BACKGROUND = '#030712';
+const LIGHT_THEME_COLOR = BOTANICAL_THEME_COLOR;
+const DARK_THEME_COLOR = BOTANICAL_DARK_THEME_COLOR;
+const LIGHT_APP_BACKGROUND = BOTANICAL_APP_BACKGROUND;
+const DARK_APP_BACKGROUND = BOTANICAL_DARK_APP_BACKGROUND;
 
 if (import.meta.env.PROD && SENTRY_DSN) {
   Sentry.init({

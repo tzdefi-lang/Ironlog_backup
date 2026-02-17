@@ -25,22 +25,22 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col justify-end bg-gradient-to-t from-black/40 via-black/25 to-black/10 backdrop-blur-sm action-sheet-overlay"
+      className="fixed inset-0 z-[100] flex flex-col justify-end bg-gradient-to-t from-black/35 via-black/20 to-black/6 backdrop-blur-sm action-sheet-overlay"
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-gray-900 rounded-t-[32px] p-6 pb-[calc(8rem+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto action-sheet-panel transition-colors"
+        className="bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-t-[40px] p-6 pb-[calc(8rem+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto action-sheet-panel transition-colors border border-[var(--surface-border)] border-b-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-12 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6" />
-        <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 mb-6 text-center">{resolvedTitle}</h3>
+        <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6" />
+        <h3 className="font-semibold text-2xl text-gray-900 dark:text-gray-100 mb-6 text-center display-serif">{resolvedTitle}</h3>
         <div className="space-y-3">
           <Button
             onClick={() => {
               onCopy();
               onClose();
             }}
-            className="w-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 shadow-none hover:bg-amber-100 dark:hover:bg-amber-900/40 justify-start"
+            className="w-full bg-amber-100/80 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 shadow-none hover:bg-amber-200/85 dark:hover:bg-amber-900/40 justify-start"
           >
             <Copy size={20} /> {t('actionMenu.scheduleCopy')}
           </Button>

@@ -45,7 +45,7 @@ const SessionReport: React.FC<SessionReportProps> = ({
         <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 mb-3 ring-8 ring-amber-50/50">
           <Check size={34} strokeWidth={4} />
         </div>
-        <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 mb-1">{t('sessionReport.completeTitle')}</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1 display-serif">{t('sessionReport.completeTitle')}</h2>
         <p className="text-gray-400 dark:text-gray-500 text-sm mb-5">{t('sessionReport.completeSubtitle')}</p>
 
         <div className="w-full grid grid-cols-2 gap-3 mb-5">

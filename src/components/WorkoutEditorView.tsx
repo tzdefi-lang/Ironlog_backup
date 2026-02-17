@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, Check, Clock3, Pause, Play } from 'lucide-react';
 import type { CSSProperties } from 'react';
+import { SurfaceCard } from '@/components/botanical-ui';
 import CreateExerciseModal, { type CreateExerciseInput } from '@/components/CreateExerciseModal';
 import EditExerciseModal, { type EditExerciseInput } from '@/components/EditExerciseModal';
 import ExerciseCard from '@/components/ExerciseCard';
@@ -124,13 +125,13 @@ const WorkoutEditorView: React.FC<WorkoutEditorViewProps> = ({
   onDurationChange,
 }) => {
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-950 view-enter transition-colors">
-      <div className="bg-white/80 dark:bg-gray-950/85 backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-20 border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
+    <div className="flex flex-col h-full bg-[var(--surface-card)] dark:bg-[var(--surface-card)] view-enter transition-colors">
+      <div className="bg-[var(--surface-card)]/90 dark:bg-[var(--surface-card)]/90 backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-20 border-b border-[var(--surface-border)] shadow-[var(--surface-shadow)] transition-colors">
         <button
           onClick={onBack}
           aria-label={t('workoutEditor.back')}
           title={t('workoutEditor.back')}
-          className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:scale-95 transition-transform"
+          className="w-10 h-10 bg-[var(--surface-muted)] border border-[var(--surface-border)] rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:scale-[0.98] transition-transform"
         >
           <ArrowLeft size={20} />
         </button>
@@ -143,7 +144,7 @@ const WorkoutEditorView: React.FC<WorkoutEditorViewProps> = ({
         <div className="flex gap-2">
           <button
             onClick={onStartRestTimer}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-sky-500 shadow-lg shadow-sky-300/45 dark:shadow-sky-900/45 active:scale-95 transition-all"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-[var(--chart-secondary)] shadow-[var(--surface-shadow)] active:scale-[0.98] transition-all"
             aria-label={`${t('workoutEditor.restTimer')} (${restTimerSeconds}s)`}
             title={`${t('workoutEditor.restTimer')} (${restTimerSeconds}s)`}
           >
@@ -154,7 +155,7 @@ const WorkoutEditorView: React.FC<WorkoutEditorViewProps> = ({
               onClick={onToggleTimer}
               aria-label={workout.startTimestamp ? t('workoutEditor.pauseTimer') : t('workoutEditor.startTimer')}
               title={workout.startTimestamp ? t('workoutEditor.pauseTimer') : t('workoutEditor.startTimer')}
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-white active:scale-95 transition-all ${workout.startTimestamp ? 'bg-amber-400 shadow-amber-300/55 dark:shadow-amber-900/45' : 'bg-green-400 shadow-green-300/55 dark:shadow-green-900/45'} shadow-lg`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center text-white active:scale-[0.98] transition-all ${workout.startTimestamp ? 'bg-amber-400' : 'bg-green-500'} shadow-[var(--surface-shadow)]`}
             >
               {workout.startTimestamp ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5" />}
             </button>
@@ -164,7 +165,7 @@ const WorkoutEditorView: React.FC<WorkoutEditorViewProps> = ({
             data-testid="finish-workout-button"
             aria-label={t('workoutEditor.finishWorkout')}
             title={t('workoutEditor.finishWorkout')}
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-lg active:scale-95 transition-all ${workout.completed ? 'bg-gray-300 dark:bg-gray-700' : 'bg-amber-400 shadow-amber-300/55 dark:shadow-amber-900/45'}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-[var(--surface-shadow)] active:scale-[0.98] transition-all ${workout.completed ? 'bg-gray-300 dark:bg-gray-700' : 'bg-red-500'}`}
           >
             <Check size={20} strokeWidth={3} />
           </button>
@@ -172,19 +173,21 @@ const WorkoutEditorView: React.FC<WorkoutEditorViewProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto scroll-area p-6 pb-[calc(8rem+env(safe-area-inset-bottom))]">
-        <input
-          data-testid="workout-title-input"
-          value={workout.title}
-          onChange={e => onTitleChange(e.target.value)}
-          className="text-3xl font-black bg-transparent w-full mb-2 outline-none text-gray-900 dark:text-gray-100 placeholder-gray-300 dark:placeholder-gray-600"
-          placeholder={t('workoutEditor.workoutTitlePlaceholder')}
-        />
-        <input
-          value={workout.note}
-          onChange={e => onNoteChange(e.target.value)}
-          className="text-base text-gray-500 dark:text-gray-400 bg-transparent w-full mb-8 outline-none placeholder-gray-300 dark:placeholder-gray-600"
-          placeholder={t('workoutEditor.workoutNotePlaceholder')}
-        />
+        <SurfaceCard tone="muted" className="p-4 mb-6">
+          <input
+            data-testid="workout-title-input"
+            value={workout.title}
+            onChange={e => onTitleChange(e.target.value)}
+            className="min-h-11 text-3xl font-semibold display-serif bg-transparent w-full mb-2 outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 border-b border-[var(--surface-border)]"
+            placeholder={t('workoutEditor.workoutTitlePlaceholder')}
+          />
+          <input
+            value={workout.note}
+            onChange={e => onNoteChange(e.target.value)}
+            className="min-h-11 text-base text-gray-600 dark:text-gray-300 bg-transparent w-full outline-none placeholder-gray-400 dark:placeholder-gray-500"
+            placeholder={t('workoutEditor.workoutNotePlaceholder')}
+          />
+        </SurfaceCard>
         <div className="space-y-6">
           {workout.exercises.map((ex, index) => {
             const def = exerciseDefs.find(d => d.id === ex.defId);
@@ -221,12 +224,12 @@ const WorkoutEditorView: React.FC<WorkoutEditorViewProps> = ({
             data-testid="add-exercise-button"
             onClick={onOpenExercisePicker}
             variant="secondary"
-            className="w-full py-4 bg-gray-200 text-gray-600"
+            className="w-full py-4"
           >
             {t('workoutEditor.addExercise')}
           </Button>
           {workout.completed && (
-            <Button onClick={onResume} variant="primary" className="w-full py-4 bg-amber-400 shadow-amber-300/55 dark:shadow-amber-900/45 mt-4">
+            <Button onClick={onResume} variant="primary" className="w-full py-4 mt-4">
               {t('workoutEditor.resumeWorkout')}
             </Button>
           )}

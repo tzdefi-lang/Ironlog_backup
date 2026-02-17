@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ArrowLeft, Filter, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ActionMenu from '@/components/ActionMenu';
+import { FilterChip, ScreenShell, SurfaceCard } from '@/components/botanical-ui';
 import { HistorySkeleton } from '@/components/Skeleton';
 import { Button, Input, Modal, SwipeableItem, useLongPress } from '@/components/ui';
 import { BODY_PART_OPTIONS, normalizeCategory } from '@/constants';
@@ -174,24 +175,25 @@ const HistoryView: React.FC = () => {
     );
 
     return (
-      <div
+      <SurfaceCard
         {...longPress}
-        className="card-lift bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-lg shadow-gray-100 dark:shadow-black/20 border border-gray-50 dark:border-gray-800 flex justify-between items-center active:scale-[0.99] transition-transform cursor-pointer select-none"
+        interactive
+        className="card-lift p-5 flex justify-between items-center select-none"
       >
         <div className="flex items-center gap-4">
-          <div className="bg-amber-50 text-amber-500 w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg">
+          <div className="bg-amber-100 text-amber-700 w-12 h-12 rounded-2xl flex items-center justify-center font-semibold text-lg display-serif">
             {getDayNumber(workout.date)}
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">{workout.title}</h3>
-            <p className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wide">
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-xl display-serif">{workout.title}</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wide">
               {getMonthName(workout.date)} • {workout.exercises.length} {t('history.exercises')}
               {workout.completed && <span className="ml-2 text-green-500">✓ {t('history.done')}</span>}
             </p>
           </div>
         </div>
         <div className={`w-2 h-2 rounded-full ${workout.completed ? 'bg-green-400' : 'bg-orange-300'}`} />
-      </div>
+      </SurfaceCard>
     );
   };
 
@@ -200,90 +202,87 @@ const HistoryView: React.FC = () => {
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 flex flex-col overflow-hidden view-enter transition-colors">
-      <div className="shrink-0 px-6 pt-8">
-        <header className="flex justify-between items-center mb-8 gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <button
-              type="button"
-              onClick={handleBack}
-              aria-label={t('profile.back')}
-              className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight truncate">{t('history.title')}</h1>
-          </div>
-          <button
-            onClick={() => {
-              setDraftFilters(filters);
-              setIsFilterModalOpen(true);
-            }}
-            data-testid="history-filter-button"
-            aria-label={t('history.filterButtonAria')}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-              hasActiveFilters ? 'bg-amber-400 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
-            }`}
-          >
-            <Filter size={20} />
-          </button>
-        </header>
-      </div>
-
-      <div className="flex-1 px-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))] overflow-hidden flex flex-col">
+    <ScreenShell
+      title={t('history.title')}
+      leading={
+        <button
+          type="button"
+          onClick={handleBack}
+          aria-label={t('profile.back')}
+          className="w-10 h-10 rounded-full bg-[var(--surface-muted)] border border-[var(--surface-border)] text-gray-700 dark:text-gray-200 flex items-center justify-center transition-all duration-500 ease-out active:scale-[0.98] shrink-0"
+        >
+          <ArrowLeft size={20} />
+        </button>
+      }
+      trailing={
+        <button
+          type="button"
+          onClick={() => {
+            setDraftFilters(filters);
+            setIsFilterModalOpen(true);
+          }}
+          data-testid="history-filter-button"
+          aria-label={t('history.filterButtonAria')}
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ease-out active:scale-[0.98] border ${
+            hasActiveFilters
+              ? 'bg-amber-400 text-white border-amber-300'
+              : 'bg-[var(--surface-muted)] border-[var(--surface-border)] text-gray-600 dark:text-gray-300'
+          }`}
+        >
+          <Filter size={20} />
+        </button>
+      }
+      contentClassName="pb-[calc(8.9rem+env(safe-area-inset-bottom))] overflow-hidden flex flex-col"
+    >
+      <div className="overflow-hidden flex flex-col h-full">
         {hasActiveFilters && (
           <div className="flex flex-wrap gap-2 mb-4 shrink-0">
             {filters.query.trim() !== '' && (
-              <button
+              <FilterChip
                 onClick={() => setFilters((prev) => ({ ...prev, query: '' }))}
-                className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300"
               >
                 {t('history.nameChip')}: {filters.query}
                 <X size={12} />
-              </button>
+              </FilterChip>
             )}
             {filters.year !== 'all' && (
-              <button
+              <FilterChip
                 onClick={() => setFilters((prev) => ({ ...prev, year: 'all' }))}
-                className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300"
               >
                 {t('history.yearChip')}: {filters.year}
                 <X size={12} />
-              </button>
+              </FilterChip>
             )}
             {filters.month !== 'all' && (
-              <button
+              <FilterChip
                 onClick={() => setFilters((prev) => ({ ...prev, month: 'all' }))}
-                className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300"
               >
                 {t('history.monthChip')}: {monthOptions.find((m) => m.value === filters.month)?.label || filters.month}
                 <X size={12} />
-              </button>
+              </FilterChip>
             )}
             {filters.category !== 'all' && (
-              <button
+              <FilterChip
                 onClick={() => setFilters((prev) => ({ ...prev, category: 'all' }))}
-                className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300"
               >
                 {t('history.categoryChip')}: {filters.category}
                 <X size={12} />
-              </button>
+              </FilterChip>
             )}
             {filters.status !== 'all' && (
-              <button
+              <FilterChip
                 onClick={() => setFilters((prev) => ({ ...prev, status: 'all' }))}
-                className="inline-flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300"
               >
                 {t('history.statusChip')}: {filters.status === 'completed' ? t('history.statusCompleted') : t('history.statusInProgress')}
                 <X size={12} />
-              </button>
+              </FilterChip>
             )}
           </div>
         )}
 
         <div ref={listParentRef} className="flex-1 overflow-y-auto scroll-area">
           {filteredWorkouts.length === 0 ? (
-            <div className="text-center py-20 text-gray-400 dark:text-gray-500">
+            <div className="text-center py-20 text-gray-500 dark:text-gray-400">
               <p>{t('history.empty')}</p>
             </div>
           ) : (
@@ -321,45 +320,46 @@ const HistoryView: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
 
-        <ActionMenu
-          isOpen={actionMenuOpen}
-          onClose={() => setActionMenuOpen(false)}
-          onCopy={() => {
-            setTargetDate(today);
-            setCopyModalOpen(true);
-          }}
-          onDelete={() => setDeleteModalOpen(true)}
-        />
+      <ActionMenu
+        isOpen={actionMenuOpen}
+        onClose={() => setActionMenuOpen(false)}
+        onCopy={() => {
+          setTargetDate(today);
+          setCopyModalOpen(true);
+        }}
+        onDelete={() => setDeleteModalOpen(true)}
+      />
 
-        <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('history.copyWorkoutTitle')}>
-          <p className="mb-4 text-gray-600 dark:text-gray-300">{t('history.copyPrompt')}</p>
-          <Input type="date" value={targetDate} min={today} onChange={(e) => setTargetDate(e.target.value)} />
-          <Button className="w-full mb-3" onClick={confirmCopy}>
-            {t('history.schedule')}
+      <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('history.copyWorkoutTitle')}>
+        <p className="mb-4 text-gray-600 dark:text-gray-300">{t('history.copyPrompt')}</p>
+        <Input type="date" value={targetDate} min={today} onChange={(e) => setTargetDate(e.target.value)} />
+        <Button className="w-full mb-3" onClick={confirmCopy}>
+          {t('history.schedule')}
+        </Button>
+        <Button variant="secondary" className="w-full" onClick={() => setCopyModalOpen(false)}>
+          {t('history.cancel')}
+        </Button>
+      </Modal>
+
+      <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={t('history.deleteWorkoutTitle')}>
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Trash2 size={32} />
+          </div>
+          <p className="mb-6 text-gray-600 dark:text-gray-300">{t('history.deletePrompt')}</p>
+          <Button variant="danger" className="w-full mb-3" onClick={confirmDelete}>
+            {t('history.deleteConfirm')}
           </Button>
-          <Button variant="secondary" className="w-full" onClick={() => setCopyModalOpen(false)}>
+          <Button variant="secondary" className="w-full" onClick={() => setDeleteModalOpen(false)}>
             {t('history.cancel')}
           </Button>
-        </Modal>
+        </div>
+      </Modal>
 
-        <Modal isOpen={deleteModalOpen} onClose={() => setDeleteModalOpen(false)} title={t('history.deleteWorkoutTitle')}>
-          <div className="text-center">
-            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Trash2 size={32} />
-            </div>
-            <p className="mb-6 text-gray-600 dark:text-gray-300">{t('history.deletePrompt')}</p>
-            <Button variant="danger" className="w-full mb-3" onClick={confirmDelete}>
-              {t('history.deleteConfirm')}
-            </Button>
-            <Button variant="secondary" className="w-full" onClick={() => setDeleteModalOpen(false)}>
-              {t('history.cancel')}
-            </Button>
-          </div>
-        </Modal>
-
-        <Modal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} title={t('history.filterTitle')}>
-          <div className="flex flex-col gap-4">
+      <Modal isOpen={isFilterModalOpen} onClose={() => setIsFilterModalOpen(false)} title={t('history.filterTitle')}>
+        <div className="flex flex-col gap-4">
             <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{t('history.workoutNameLabel')}</label>
               <Input
@@ -376,7 +376,7 @@ const HistoryView: React.FC = () => {
                 <select
                   value={draftFilters.year}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, year: e.target.value }))}
-                  className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus:border-amber-200"
+                  className="w-full min-h-11 bg-[var(--surface-card)] text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-[var(--surface-border)] focus:border-amber-300"
                 >
                   <option value="all">{t('history.allYears')}</option>
                   {yearOptions.map((year) => (
@@ -392,7 +392,7 @@ const HistoryView: React.FC = () => {
                 <select
                   value={draftFilters.month}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, month: e.target.value }))}
-                  className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus:border-amber-200"
+                  className="w-full min-h-11 bg-[var(--surface-card)] text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-[var(--surface-border)] focus:border-amber-300"
                 >
                   <option value="all">{t('history.allMonths')}</option>
                   {monthOptions.map((month) => (
@@ -409,7 +409,7 @@ const HistoryView: React.FC = () => {
               <select
                 value={draftFilters.category}
                 onChange={(e) => setDraftFilters((prev) => ({ ...prev, category: e.target.value }))}
-                className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus:border-amber-200"
+                className="w-full min-h-11 bg-[var(--surface-card)] text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-[var(--surface-border)] focus:border-amber-300"
               >
                 <option value="all">{t('history.allCategories')}</option>
                 {categoryOptions.map((category) => (
@@ -427,7 +427,7 @@ const HistoryView: React.FC = () => {
                 onChange={(e) =>
                   setDraftFilters((prev) => ({ ...prev, status: e.target.value as StatusFilter }))
                 }
-                className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus:border-amber-200"
+                className="w-full min-h-11 bg-[var(--surface-card)] text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-[var(--surface-border)] focus:border-amber-300"
               >
                 <option value="all">{t('history.all')}</option>
                 <option value="completed">{t('history.statusCompleted')}</option>
@@ -441,10 +441,9 @@ const HistoryView: React.FC = () => {
             <Button variant="secondary" className="w-full" onClick={clearFilters}>
               {t('history.clearFilters')}
             </Button>
-          </div>
-        </Modal>
-      </div>
-    </div>
+        </div>
+      </Modal>
+    </ScreenShell>
   );
 };
 

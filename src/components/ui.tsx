@@ -488,13 +488,17 @@ export const SwipeableItem: React.FC<{
 export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'secondary' | 'danger' | 'ghost' }> = ({ 
   className = '', variant = 'primary', onClick, ...props 
 }) => {
-  const base = "px-6 py-3 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 pressable";
+  const base =
+    "min-h-11 px-6 py-2.5 rounded-2xl font-semibold transition-all duration-500 ease-out flex items-center justify-center gap-2 pressable active:scale-[0.98]";
   const variants = {
-    // Warm "yellow" accent (amber) reads better than pure yellow on white and keeps contrast.
-    primary: "bg-amber-400 text-gray-900 shadow-lg shadow-amber-100 hover:bg-amber-500 dark:shadow-amber-900/30",
-    secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700",
-    danger: "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/45 dark:text-red-300 dark:hover:bg-red-900/45 dark:border dark:border-red-900/55",
-    ghost: "bg-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+    primary:
+      "bg-amber-400 text-gray-900 shadow-[var(--surface-shadow)] hover:bg-amber-500",
+    secondary:
+      "bg-[var(--surface-card)] border border-[var(--surface-border)] text-gray-900 dark:text-gray-100 hover:bg-gray-100",
+    danger:
+      "bg-red-500 text-white shadow-[var(--surface-shadow)] hover:bg-red-600",
+    ghost:
+      "bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
   };
   return (
     <button
@@ -527,11 +531,19 @@ export const Modal: React.FC<{
 }) => {
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartYRef = useRef<number | null>(null);
+  const dragOffsetRef = useRef(0);
 
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
       setIsClosing(false);
+      setDragOffset(0);
+      dragOffsetRef.current = 0;
+      setIsDragging(false);
+      dragStartYRef.current = null;
       return;
     }
 
@@ -541,7 +553,9 @@ export const Modal: React.FC<{
     const timer = window.setTimeout(() => {
       setShouldRender(false);
       setIsClosing(false);
-    }, 220);
+      setDragOffset(0);
+      dragOffsetRef.current = 0;
+    }, 360);
 
     return () => window.clearTimeout(timer);
   }, [isOpen, shouldRender]);
@@ -562,34 +576,81 @@ export const Modal: React.FC<{
   const phaseClass = isClosing ? 'modal-backdrop--exit' : 'modal-backdrop--enter';
   const panelPhaseClass = isClosing ? 'modal-panel--exit' : 'modal-panel--enter';
 
+  const onHandlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    dragStartYRef.current = event.clientY;
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const onHandlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging || dragStartYRef.current === null) return;
+    const raw = Math.max(0, event.clientY - dragStartYRef.current);
+    const damped = raw <= 120 ? raw : 120 + (raw - 120) * 0.34;
+    dragOffsetRef.current = damped;
+    setDragOffset(damped);
+  };
+
+  const onHandlePointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    dragStartYRef.current = null;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // no-op
+    }
+    const shouldClose = dragOffsetRef.current > 92;
+    dragOffsetRef.current = 0;
+    setDragOffset(0);
+    if (shouldClose) onClose();
+  };
+
   const overlay = (
     <div
-      className={`fixed inset-0 z-[1000] flex items-center justify-center ${
+      className={`fixed inset-0 z-[1000] flex items-end justify-center ${
         overlayClassName ??
-        'bg-gradient-to-t from-black/40 via-black/25 to-black/10 backdrop-blur-sm'
+        'bg-gradient-to-t from-black/35 via-black/18 to-black/6 backdrop-blur-sm'
       } modal-backdrop ${phaseClass}`}
-      onMouseDown={onClose}
+      onPointerDown={onClose}
       role="presentation"
     >
       <div
-        className={`bg-white dark:bg-gray-900 rounded-[32px] shadow-2xl dark:shadow-black/60 w-full max-w-md mx-4 max-h-[92vh] overflow-hidden flex flex-col modal-panel ${panelPhaseClass} ${
+        className={`bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-t-[40px] rounded-b-none shadow-[var(--surface-shadow-strong)] w-full max-w-md mx-auto max-h-[92vh] border border-[var(--surface-border)] border-b-0 overflow-hidden flex flex-col modal-panel ${panelPhaseClass} ${
           panelClassName ?? ''
-        }`}
-        onMouseDown={(e) => e.stopPropagation()}
+        } ${isDragging ? '' : 'transition-transform duration-200 ease-out'}`}
+        style={dragOffset > 0 ? { transform: `translate3d(0, ${dragOffset}px, 0)` } : undefined}
+        onPointerDown={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900 rounded-t-[32px]">
-          <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 tracking-tight">{title}</h3>
-          <button
-            onClick={onClose}
-            className="pressable w-8 h-8 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-all"
-            aria-label="Close"
-          >
-            ✕
-          </button>
+        <div className="px-6 pt-3 pb-4 border-b border-[var(--surface-border)] flex flex-col bg-[var(--surface-card)] dark:bg-[var(--surface-card)] rounded-t-[40px]">
+          <div
+            className="mx-auto mb-3 w-12 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 cursor-grab active:cursor-grabbing"
+            onPointerDown={onHandlePointerDown}
+            onPointerMove={onHandlePointerMove}
+            onPointerUp={onHandlePointerEnd}
+            onPointerCancel={onHandlePointerEnd}
+            style={{ touchAction: 'none' }}
+            role="presentation"
+          />
+          <div className="flex justify-between items-center">
+            <h3 className="font-semibold text-2xl text-gray-900 dark:text-gray-100 tracking-tight display-serif">
+              {title}
+            </h3>
+            <button
+              onClick={onClose}
+              className="pressable w-8 h-8 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-all"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+          </div>
         </div>
-        <div className={`flex-1 ${contentClassName ?? 'p-6 overflow-y-auto scroll-area'}`}>
+        <div
+          className={`flex-1 ${
+            contentClassName ?? 'p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] overflow-y-auto scroll-area'
+          }`}
+        >
           {children}
         </div>
       </div>
@@ -604,7 +665,10 @@ export const Modal: React.FC<{
 export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({ label, className = '', ...props }) => (
   <div className="flex flex-col gap-2 mb-4">
     {label && <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 ml-1">{label}</label>}
-    <input className={`bg-gray-50 dark:bg-gray-800 border-none rounded-2xl px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all ${className}`} {...props} />
+    <input
+      className={`min-h-11 bg-[var(--surface-card)] dark:bg-[var(--surface-card)] border border-transparent border-b-[1.5px] border-b-[var(--surface-border-strong)] rounded-[999px] px-4 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 focus:border-amber-400 outline-none transition-all duration-500 ease-out ${className}`}
+      {...props}
+    />
   </div>
 );
 
@@ -673,15 +737,15 @@ export const Toast: React.FC<{
   if (!open) return null;
 
   const styleByKind: Record<ToastKind, string> = {
-    success: 'bg-green-600 text-white',
-    error: 'bg-red-600 text-white',
-    info: 'bg-gray-900 text-white',
+    success: 'bg-amber-400/95 text-gray-900 border border-amber-300',
+    error: 'bg-red-500/95 text-white border border-red-400/80',
+    info: 'bg-[var(--surface-card)] text-gray-900 dark:text-gray-100 border border-[var(--surface-border)]',
   };
 
   const toast = (
     <div className="fixed inset-x-0 bottom-[calc(5.8rem+env(safe-area-inset-bottom))] z-[1200] px-6 flex justify-center pointer-events-none">
       <div
-        className={`max-w-md w-full rounded-2xl px-4 py-3 text-sm font-semibold shadow-2xl ${styleByKind[kind]}`}
+        className={`max-w-md w-full rounded-2xl px-4 py-3 text-sm font-semibold shadow-[var(--surface-shadow-strong)] backdrop-blur-sm ${styleByKind[kind]}`}
       >
         {message}
       </div>

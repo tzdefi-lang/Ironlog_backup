@@ -121,12 +121,12 @@ const RestTimer: React.FC<RestTimerProps> = ({
         onClick={onClose}
       >
         <div
-          className="w-full max-w-sm rounded-[28px] bg-white dark:bg-gray-900 p-6 shadow-2xl dark:shadow-black/60 transition-colors"
+          className="w-full max-w-sm rounded-[28px] bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-6 shadow-[var(--surface-shadow-strong)] transition-colors border border-[var(--surface-border)]"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('restTimer.title')}</h3>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight display-serif">{t('restTimer.title')}</h3>
               <p className="text-xs text-gray-400 dark:text-gray-500">{t('restTimer.subtitle')}</p>
             </div>
             <button
@@ -153,7 +153,7 @@ const RestTimer: React.FC<RestTimerProps> = ({
                   cy="70"
                   r={radius}
                   fill="none"
-                  stroke="#F59E0B"
+                  stroke="var(--chart-primary)"
                   strokeWidth="10"
                   strokeLinecap="round"
                   strokeDasharray={circumference}

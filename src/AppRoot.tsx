@@ -1,6 +1,7 @@
 import React from 'react';
 import { PrivyProvider } from '@privy-io/react-auth';
 import App from '@/App';
+import { botanicalDesignTokens } from '@/design/tokens';
 
 type AppRootProps = {
   appId: string;
@@ -13,7 +14,7 @@ const AppRoot: React.FC<AppRootProps> = ({ appId }) => {
       config={{
         appearance: {
           theme: 'light',
-          accentColor: '#F59E0B',
+          accentColor: botanicalDesignTokens.color.accent.primary,
           logo: '/icons/icon-192x192.png',
         },
         loginMethods: ['google', 'email', 'wallet'],

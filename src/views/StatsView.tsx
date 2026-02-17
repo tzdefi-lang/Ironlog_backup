@@ -13,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { ScreenShell, SectionTitle, SurfaceCard } from '@/components/botanical-ui';
 import { normalizeCategory } from '@/constants';
 import { useGymData } from '@/hooks/useGymData';
 import { useI18n } from '@/i18n/useI18n';
@@ -26,7 +27,7 @@ type WeeklyStatsPoint = {
   totalVolume: number;
 };
 
-const PIE_COLORS = ['#14b8a6', '#f59e0b', '#ef4444', '#3b82f6', '#84cc16', '#8b5cf6', '#f97316'];
+const PIE_COLORS = ['#8c9a84', '#c27b66', '#7f9b97', '#6f8d73', '#a8b79f', '#6f7f70', '#d4a08e'];
 
 const toDateKey = (date: Date) => {
   const y = date.getFullYear();
@@ -59,11 +60,11 @@ const StatsView: React.FC = () => {
   const { workouts, exerciseDefs } = useGymData();
   const { t } = useI18n();
   const lineTooltipCursor = {
-    stroke: 'rgba(100, 116, 139, 0.45)',
+    stroke: 'rgba(141, 130, 119, 0.55)',
     strokeWidth: 1,
     strokeDasharray: '4 4',
   };
-  const barTooltipCursor = { fill: 'rgba(15, 23, 42, 0.04)' };
+  const barTooltipCursor = { fill: 'rgba(220, 207, 194, 0.34)' };
   const tooltipWrapperStyle = { outline: 'none', boxShadow: 'none' };
 
   const completedWorkouts = useMemo(() => {
@@ -182,22 +183,19 @@ const StatsView: React.FC = () => {
 
   if (completedWorkouts.length === 0) {
     return (
-      <div className="h-full bg-white dark:bg-gray-950 overflow-y-auto scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
-        <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight mb-8">{t('stats.title')}</h1>
-        <div className="rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-6 py-16 text-center transition-colors">
+      <ScreenShell title={t('stats.title')}>
+        <SurfaceCard tone="muted" className="border-2 border-dashed border-[var(--surface-border)] px-6 py-16 text-center">
           <p className="text-gray-500 dark:text-gray-400 font-medium">{t('stats.empty')}</p>
-        </div>
-      </div>
+        </SurfaceCard>
+      </ScreenShell>
     );
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 overflow-y-auto scroll-area px-6 pt-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
-      <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight mb-8">{t('stats.title')}</h1>
-
+    <ScreenShell title={t('stats.title')} contentClassName="pb-[calc(8.9rem+env(safe-area-inset-bottom))]">
       <div className="space-y-4 list-stagger">
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
-          <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-3">{t('stats.weeklyFrequency')}</h2>
+        <SurfaceCard tone="muted" className="card-lift p-4">
+          <SectionTitle title={t('stats.weeklyFrequency')} />
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={weeklyStats} accessibilityLayer={false}>
@@ -209,14 +207,14 @@ const StatsView: React.FC = () => {
                   cursor={lineTooltipCursor}
                   separator=" · "
                 />
-                <Line type="monotone" dataKey="workoutCount" stroke="#0f766e" strokeWidth={2.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="workoutCount" stroke="var(--chart-primary)" strokeWidth={2.5} strokeLinecap="round" dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </section>
+        </SurfaceCard>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
-          <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-3">{t('stats.weeklyVolume')}</h2>
+        <SurfaceCard tone="muted" className="card-lift p-4">
+          <SectionTitle title={t('stats.weeklyVolume')} />
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weeklyStats} accessibilityLayer={false}>
@@ -228,20 +226,20 @@ const StatsView: React.FC = () => {
                   cursor={barTooltipCursor}
                   separator=" · "
                 />
-                <Bar dataKey="totalVolume" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="totalVolume" fill="var(--chart-primary)" radius={[12, 12, 8, 8]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </section>
+        </SurfaceCard>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
+        <SurfaceCard tone="muted" className="card-lift p-4">
           <div className="flex items-center justify-between gap-3 mb-3">
             <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest">{t('stats.oneRmTrend')}</h2>
             <select
               value={selectedExerciseId}
               onChange={(event) => setSelectedExerciseId(event.target.value)}
               disabled={selectableExercises.length === 0}
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none"
+              className="bg-[var(--surface-card)] dark:bg-[var(--surface-card)] border border-[var(--surface-border)] rounded-xl px-3 py-2 text-sm text-gray-700 dark:text-gray-200 outline-none"
             >
               {selectableExercises.length === 0 ? (
                 <option value="">{t('stats.noExerciseData')}</option>
@@ -269,15 +267,15 @@ const StatsView: React.FC = () => {
                     cursor={lineTooltipCursor}
                     separator=" · "
                   />
-                  <Line type="monotone" dataKey="oneRM" stroke="#ef4444" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="oneRM" stroke="var(--chart-warning)" strokeWidth={2.5} strokeLinecap="round" dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           )}
-        </section>
+        </SurfaceCard>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
-          <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-3">{t('stats.workoutDuration')}</h2>
+        <SurfaceCard tone="muted" className="card-lift p-4">
+          <SectionTitle title={t('stats.workoutDuration')} />
           {durationData.length === 0 ? (
             <div className="text-sm text-gray-400 dark:text-gray-500 py-10 text-center">{t('stats.noElapsedTime')}</div>
           ) : (
@@ -292,15 +290,15 @@ const StatsView: React.FC = () => {
                     cursor={barTooltipCursor}
                     separator=" · "
                   />
-                  <Bar dataKey="minutes" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="minutes" fill="var(--chart-secondary)" radius={[12, 12, 8, 8]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           )}
-        </section>
+        </SurfaceCard>
 
-        <section className="card-lift bg-gray-50 dark:bg-gray-900 rounded-3xl p-4 border border-gray-100 dark:border-gray-800 transition-colors">
-          <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-widest mb-3">{t('stats.bodyPartSplit')}</h2>
+        <SurfaceCard tone="muted" className="card-lift p-4">
+          <SectionTitle title={t('stats.bodyPartSplit')} />
           {bodyPartData.length === 0 ? (
             <div className="text-sm text-gray-400 dark:text-gray-500 py-10 text-center">{t('stats.noCategoryData')}</div>
           ) : (
@@ -346,9 +344,9 @@ const StatsView: React.FC = () => {
               </div>
             </div>
           )}
-        </section>
+        </SurfaceCard>
       </div>
-    </div>
+    </ScreenShell>
   );
 };
 

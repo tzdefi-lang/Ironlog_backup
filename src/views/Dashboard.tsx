@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Menu } from 'lucide-react';
+import { ScreenShell, SectionTitle, SurfaceCard } from '@/components/botanical-ui';
 import { useNavigate } from 'react-router-dom';
 import WorkoutCard from '@/components/WorkoutCard';
 import { Button, Input, Modal, useSwipe } from '@/components/ui';
@@ -73,17 +74,19 @@ const Dashboard: React.FC = () => {
   });
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 flex flex-col overflow-hidden view-enter transition-colors">
-      <div className="shrink-0 px-6 pt-8">
-        <header className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('dashboard.title')}</h1>
-          <button className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:bg-gray-200 dark:active:bg-gray-700 transition-colors">
-            <Menu size={20} />
-          </button>
-        </header>
-      </div>
-
-      <div className="flex-1 overflow-y-auto scroll-area px-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))]">
+    <ScreenShell
+      title={t('dashboard.title')}
+      trailing={
+        <button
+          type="button"
+          className="w-10 h-10 bg-[var(--surface-muted)] border border-[var(--surface-border)] rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:scale-[0.98] transition-all duration-500 ease-out"
+        >
+          <Menu size={20} />
+        </button>
+      }
+      contentClassName="pb-[calc(8.9rem+env(safe-area-inset-bottom))]"
+    >
+      <div>
         <div className="relative min-h-[240px]" {...stackSwipeHandlers}>
           {todaysActiveWorkouts.length > 0 ? (
             <div className="relative w-full h-56">
@@ -134,8 +137,11 @@ const Dashboard: React.FC = () => {
               })}
             </div>
           ) : (
-            <div className="rounded-[32px] bg-gray-50 dark:bg-gray-900 p-8 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 h-56 flex flex-col items-center justify-center transition-colors">
-              <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 mb-2">{t('dashboard.restDayTitle')}</h3>
+            <SurfaceCard
+              tone="muted"
+              className="p-8 text-center border-2 border-dashed border-[var(--surface-border)] h-56 flex flex-col items-center justify-center"
+            >
+              <h3 className="font-semibold text-xl text-gray-900 dark:text-gray-100 mb-2 display-serif">{t('dashboard.restDayTitle')}</h3>
               <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm">{t('dashboard.restDayDesc')}</p>
               <div className="grid grid-cols-2 gap-2 w-full max-w-[260px]">
                 <Button onClick={() => navigate('/workout/new')} className="rounded-full px-6">
@@ -149,13 +155,13 @@ const Dashboard: React.FC = () => {
                   {t('dashboard.fromTemplate')}
                 </Button>
               </div>
-            </div>
+            </SurfaceCard>
           )}
         </div>
 
         {lastWorkout && (
           <div className="mt-12">
-            <h2 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4 ml-2">{t('dashboard.lastCompleted')}</h2>
+            <SectionTitle title={t('dashboard.lastCompleted')} className="ml-2" />
             <WorkoutCard
               workout={lastWorkout}
               onClick={() => handleWorkoutClick(lastWorkout.id)}
@@ -164,7 +170,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
-
+      
       <Modal isOpen={copyModalOpen} onClose={() => setCopyModalOpen(false)} title={t('dashboard.copyWorkoutTitle')}>
         <p className="mb-4 text-gray-600 dark:text-gray-300">{t('dashboard.copyWorkoutPrompt')}</p>
         <Input type="date" value={targetDate} min={today} onChange={(e) => setTargetDate(e.target.value)} />
@@ -212,7 +218,7 @@ const Dashboard: React.FC = () => {
           </>
         )}
       </Modal>
-    </div>
+    </ScreenShell>
   );
 };
 

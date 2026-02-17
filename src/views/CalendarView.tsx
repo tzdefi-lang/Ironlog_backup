@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ActionMenu from '@/components/ActionMenu';
+import { ScreenShell, SectionTitle, SurfaceCard } from '@/components/botanical-ui';
 import { Button, Input, Modal, useLongPress, useSwipe } from '@/components/ui';
 import { useGym } from '@/hooks/useGym';
 import { useI18n } from '@/i18n/useI18n';
@@ -45,6 +46,7 @@ const CalendarView: React.FC = () => {
     onSwipeLeft: handleNextMonth,
     onSwipeRight: handlePrevMonth,
   });
+
   const monthAnimationClass =
     monthAnimation.tick === 0
       ? ''
@@ -54,19 +56,18 @@ const CalendarView: React.FC = () => {
 
   const getWorkoutsForDay = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return workouts.filter(w => w.date === dateStr);
+    return workouts.filter((workout) => workout.date === dateStr);
   };
 
   const handleDayClick = (day: number) => {
-    const w = getWorkoutsForDay(day);
-    setSelectedDayWorkouts(w);
+    setSelectedDayWorkouts(getWorkoutsForDay(day));
   };
 
   useEffect(() => {
     const now = new Date();
     if (now.getMonth() === month && now.getFullYear() === year) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      const todayWorkouts = workouts.filter(w => w.date === dateStr);
+      const todayWorkouts = workouts.filter((workout) => workout.date === dateStr);
       setSelectedDayWorkouts(todayWorkouts);
     } else {
       setSelectedDayWorkouts([]);
@@ -77,19 +78,19 @@ const CalendarView: React.FC = () => {
     setSelectedActionId(id);
     setActionMenuOpen(true);
   };
+
   const confirmDelete = () => {
-    if (selectedActionId) {
-      void deleteWorkout(selectedActionId);
-      setDeleteModalOpen(false);
-      setSelectedActionId(null);
-    }
+    if (!selectedActionId) return;
+    void deleteWorkout(selectedActionId);
+    setDeleteModalOpen(false);
+    setSelectedActionId(null);
   };
+
   const confirmCopy = () => {
-    if (selectedActionId) {
-      copyWorkout(selectedActionId, targetDate);
-      setCopyModalOpen(false);
-      setSelectedActionId(null);
-    }
+    if (!selectedActionId) return;
+    copyWorkout(selectedActionId, targetDate);
+    setCopyModalOpen(false);
+    setSelectedActionId(null);
   };
 
   const CalendarWorkoutRow: React.FC<{ workout: Workout }> = ({ workout }) => {
@@ -99,62 +100,64 @@ const CalendarView: React.FC = () => {
     );
 
     return (
-      <div
-        {...longPress}
-        className="card-lift bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-lg shadow-gray-100 dark:shadow-black/20 border border-gray-50 dark:border-gray-800 flex justify-between items-center active:scale-[0.99] transition-transform cursor-pointer select-none"
-      >
+      <SurfaceCard {...longPress} interactive className="card-lift p-5 flex justify-between items-center select-none">
         <div>
-          <h3 className="font-bold text-gray-900 dark:text-gray-100">{workout.title}</h3>
-          <p className="text-xs text-gray-400 dark:text-gray-500">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 display-serif">{workout.title}</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {workout.exercises.length} {t('calendar.exercises')} {workout.completed && '✓'}
           </p>
         </div>
-        <MoreHorizontal className="text-gray-300 dark:text-gray-600" size={20} />
-      </div>
+        <MoreHorizontal className="text-gray-400 dark:text-gray-500" size={20} />
+      </SurfaceCard>
     );
   };
 
   return (
-    <div className="h-full bg-white dark:bg-gray-950 flex flex-col overflow-hidden view-enter transition-colors">
-      <div className="shrink-0 px-6 pt-8 pb-4">
-        <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight mb-8">{t('calendar.title')}</h1>
+    <ScreenShell
+      title={t('calendar.title')}
+      headerClassName="pb-1"
+      contentClassName="pb-[calc(8.9rem+env(safe-area-inset-bottom))]"
+    >
+      <div>
         <div {...monthSwipeHandlers}>
           <div
             key={`${year}-${month}-${monthAnimation.tick}`}
-            className={`calendar-month-frame ${monthAnimationClass}`}
+            className={`calendar-month-frame ${monthAnimationClass} p-5 rounded-[32px] border border-[var(--surface-border)] bg-[var(--surface-card)] shadow-[var(--surface-shadow)] mb-6`}
           >
             <div className="flex justify-between items-center mb-1">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 display-serif">
                 {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
               </h2>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={handlePrevMonth}
-                  className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-10 h-10 rounded-full bg-[var(--surface-muted)] border border-[var(--surface-border)] flex items-center justify-center text-gray-600 dark:text-gray-300 transition-all duration-500 ease-out active:scale-[0.98]"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 <button
+                  type="button"
                   onClick={handleNextMonth}
-                  className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-10 h-10 rounded-full bg-[var(--surface-muted)] border border-[var(--surface-border)] flex items-center justify-center text-gray-600 dark:text-gray-300 transition-all duration-500 ease-out active:scale-[0.98]"
                 >
                   <ChevronRight size={20} />
                 </button>
               </div>
             </div>
-            <p className="text-[11px] text-gray-400 dark:text-gray-500 font-semibold mb-5">{t('calendar.swipeHint')}</p>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-semibold mb-5">{t('calendar.swipeHint')}</p>
 
             <div className="grid grid-cols-7 gap-2 mb-8 text-center select-none">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                <div key={d} className="text-xs font-bold text-gray-400 dark:text-gray-500 py-2">
-                  {d}
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((dayMark) => (
+                <div key={dayMark} className="text-xs font-bold text-gray-500 dark:text-gray-400 py-2">
+                  {dayMark}
                 </div>
               ))}
-              {Array.from({ length: firstDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="aspect-square" />
+              {Array.from({ length: firstDay }).map((_, index) => (
+                <div key={`empty-${index}`} className="aspect-square" />
               ))}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
+              {Array.from({ length: daysInMonth }).map((_, index) => {
+                const day = index + 1;
                 const dayWorkouts = getWorkoutsForDay(day);
                 const isSelected =
                   selectedDayWorkouts.length > 0 &&
@@ -168,20 +171,20 @@ const CalendarView: React.FC = () => {
                   <div
                     key={day}
                     onClick={() => handleDayClick(day)}
-                    className={`aspect-square rounded-2xl flex flex-col items-center justify-center relative cursor-pointer transition-all active:scale-95 ${
+                    className={`aspect-square rounded-2xl flex flex-col items-center justify-center relative cursor-pointer transition-all active:scale-[0.98] ${
                       isSelected
-                        ? 'bg-amber-400 text-white shadow-lg shadow-amber-300/55 dark:shadow-amber-900/40'
+                        ? 'bg-amber-400 text-white shadow-[var(--surface-shadow)]'
                         : isToday
-                          ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold'
-                          : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                          ? 'bg-[var(--surface-muted)] text-gray-900 dark:text-gray-100 font-bold'
+                          : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-[var(--surface-muted)]/70'
                     }`}
                   >
                     <span className="text-sm">{day}</span>
                     {dayWorkouts.length > 0 && (
                       <div className="flex gap-1 mt-1">
-                        {dayWorkouts.slice(0, 3).map((_, idx) => (
+                        {dayWorkouts.slice(0, 3).map((_, dotIndex) => (
                           <div
-                            key={idx}
+                            key={dotIndex}
                             className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-amber-400'}`}
                           />
                         ))}
@@ -193,23 +196,23 @@ const CalendarView: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto scroll-area px-6 pb-[calc(7.5rem+env(safe-area-inset-bottom))]">
-        <div>
-          <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">
-            {selectedDayWorkouts.length > 0 ? getDisplayDate(selectedDayWorkouts[0].date) : t('calendar.selectDay')}
-          </h3>
-          <div className="space-y-4 list-stagger">
-            {selectedDayWorkouts.length === 0 && (
-              <div className="text-center py-8 text-gray-300 dark:text-gray-500 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-3xl">
-                {t('calendar.noWorkouts')}
-              </div>
-            )}
-            {selectedDayWorkouts.map(workout => (
-              <CalendarWorkoutRow key={workout.id} workout={workout} />
-            ))}
-          </div>
+        <SectionTitle
+          title={
+            selectedDayWorkouts.length > 0
+              ? getDisplayDate(selectedDayWorkouts[0].date)
+              : t('calendar.selectDay')
+          }
+        />
+        <div className="space-y-4 list-stagger">
+          {selectedDayWorkouts.length === 0 && (
+            <SurfaceCard tone="muted" className="text-center py-8 border-2 border-dashed border-[var(--surface-border)]">
+              {t('calendar.noWorkouts')}
+            </SurfaceCard>
+          )}
+          {selectedDayWorkouts.map((workout) => (
+            <CalendarWorkoutRow key={workout.id} workout={workout} />
+          ))}
         </div>
       </div>
 
@@ -248,7 +251,7 @@ const CalendarView: React.FC = () => {
           {t('calendar.cancel')}
         </Button>
       </Modal>
-    </div>
+    </ScreenShell>
   );
 };
 

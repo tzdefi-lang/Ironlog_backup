@@ -1,0 +1,103 @@
+@theme {
+  --font-sans: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --font-serif: "Playfair Display", "Times New Roman", Georgia, serif;
+
+  --color-gray-50: #f9f8f4;
+  --color-gray-100: #f0ebe2;
+  --color-gray-200: #e4dbd1;
+  --color-gray-300: #d2c7ba;
+  --color-gray-400: #ada294;
+  --color-gray-500: #8b8177;
+  --color-gray-600: #6a625a;
+  --color-gray-700: #4d4a43;
+  --color-gray-800: #354038;
+  --color-gray-900: #2d3a31;
+  --color-gray-950: #1f2722;
+
+  --color-amber-50: #f1f4ef;
+  --color-amber-100: #e3e9df;
+  --color-amber-200: #ccd5c4;
+  --color-amber-300: #afbcaa;
+  --color-amber-400: #8c9a84;
+  --color-amber-500: #75856d;
+  --color-amber-600: #617058;
+  --color-amber-700: #4c5845;
+  --color-amber-800: #394137;
+  --color-amber-900: #2a3128;
+  --color-amber-950: #1a1f1a;
+
+  --color-lime-300: #bed0b8;
+  --color-teal-500: #85967e;
+  --color-teal-50: #eaf0e6;
+  --color-sky-500: #7f9b97;
+  --color-indigo-500: #6f7f70;
+  --color-indigo-300: #9fb298;
+
+  --color-green-400: #8da184;
+  --color-green-500: #6f8d73;
+  --color-green-600: #5f7b63;
+
+  --color-orange-300: #d49b87;
+  --color-red-50: #f5ebe6;
+  --color-red-100: #efd9d0;
+  --color-red-300: #d6a898;
+  --color-red-400: #c98773;
+  --color-red-500: #c27b66;
+  --color-red-600: #ad6955;
+  --color-red-700: #945646;
+  --color-red-900: #5b332a;
+  --color-red-950: #3d231d;
+
+  --shadow-sm: 0 1px 2px rgba(45, 58, 49, 0.08);
+  --shadow: 0 8px 24px rgba(45, 58, 49, 0.08);
+  --shadow-lg: 0 14px 36px rgba(45, 58, 49, 0.1);
+  --shadow-xl: 0 20px 44px rgba(45, 58, 49, 0.12);
+  --shadow-2xl: 0 28px 60px rgba(45, 58, 49, 0.16);
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.125rem;
+  --radius-3xl: 1.5rem;
+}
+
+:root {
+  --botanical-bg: #f9f8f4;
+  --botanical-surface: #fffcf8;
+  --botanical-surface-muted: #dccfc2;
+  --botanical-text: #2d3a31;
+  --botanical-text-soft: #4f5d53;
+  --botanical-accent: #8c9a84;
+  --botanical-emphasis: #c27b66;
+  --botanical-border: #e4dbd1;
+  --botanical-border-strong: #cdbfb1;
+  --botanical-shadow:
+    0 1px 1px rgba(45, 58, 49, 0.04),
+    0 8px 24px rgba(45, 58, 49, 0.06),
+    0 20px 44px rgba(45, 58, 49, 0.04);
+  --botanical-shadow-strong:
+    0 2px 2px rgba(45, 58, 49, 0.05),
+    0 14px 34px rgba(45, 58, 49, 0.09),
+    0 30px 58px rgba(45, 58, 49, 0.05);
+  --botanical-noise-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  --font-display: "Playfair Display", "Times New Roman", Georgia, serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+
+html.dark {
+  --botanical-bg: #1f2722;
+  --botanical-surface: #2a332d;
+  --botanical-surface-muted: #3a463d;
+  --botanical-text: #f6f3ed;
+  --botanical-text-soft: #d8d3ca;
+  --botanical-accent: #9aa992;
+  --botanical-emphasis: #ce8d7b;
+  --botanical-border: #4d5a50;
+  --botanical-border-strong: #667366;
+  --botanical-shadow:
+    0 1px 1px rgba(4, 9, 6, 0.35),
+    0 12px 28px rgba(4, 9, 6, 0.45),
+    0 26px 48px rgba(4, 9, 6, 0.35);
+  --botanical-shadow-strong:
+    0 2px 2px rgba(4, 9, 6, 0.45),
+    0 16px 36px rgba(4, 9, 6, 0.5),
+    0 34px 62px rgba(4, 9, 6, 0.4);
+}

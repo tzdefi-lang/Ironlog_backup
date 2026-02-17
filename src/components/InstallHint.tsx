@@ -77,13 +77,14 @@ const InstallHint: React.FC = () => {
       <div className="mt-6 flex gap-3">
         <Button
           onClick={() => dismiss(false)}
-          className="flex-1 bg-amber-400 hover:bg-amber-500 text-black"
+          className="flex-1"
         >
           {t('installHint.notNow')}
         </Button>
         <Button
+          variant="secondary"
           onClick={() => dismiss(true)}
-          className="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
+          className="flex-1"
         >
           {t('installHint.dontShowAgain')}
         </Button>

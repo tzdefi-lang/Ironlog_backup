@@ -26,11 +26,11 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({
   const longPress = useLongPress(onCopyRequest, onClick);
 
   const bgClass = isMain
-    ? 'bg-gradient-to-br from-lime-300 to-teal-500 text-white shadow-emerald-200/50 dark:shadow-emerald-950/60'
-    : 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-800 dark:text-gray-100 shadow-gray-100 dark:shadow-black/20';
+    ? 'bg-gradient-to-br from-amber-300 to-teal-500 text-white shadow-[var(--surface-shadow-strong)]'
+    : 'bg-[var(--surface-card)] dark:bg-[var(--surface-card)] border border-[var(--surface-border)] text-gray-800 dark:text-gray-100 shadow-[var(--surface-shadow)]';
 
   const textClass = isMain ? 'text-white' : 'text-gray-900 dark:text-gray-100';
-  const subTextClass = isMain ? 'text-teal-50' : 'text-gray-400 dark:text-gray-500';
+  const subTextClass = isMain ? 'text-amber-50' : 'text-gray-500 dark:text-gray-400';
 
   return (
     <div
@@ -44,7 +44,7 @@ const WorkoutCard: React.FC<WorkoutCardProps> = ({
           {label && <span className="text-xs font-bold tracking-widest uppercase opacity-70">{label}</span>}
         </div>
 
-        <h3 className={`text-3xl font-bold uppercase leading-9 tracking-tight max-w-[70%] ${textClass}`}>
+        <h3 className={`text-3xl font-semibold uppercase leading-9 tracking-tight max-w-[70%] display-serif ${textClass}`}>
           {workout.title}
         </h3>
 

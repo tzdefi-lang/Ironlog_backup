@@ -68,7 +68,7 @@ const ExercisePickerModal: React.FC<ExercisePickerModalProps> = ({
       onClose={onClose}
       title={title}
       panelClassName="exercise-picker-modal-panel"
-      overlayClassName="exercise-picker-modal-overlay bg-gradient-to-t from-black/40 via-black/25 to-black/10 backdrop-blur-sm"
+      overlayClassName="exercise-picker-modal-overlay bg-gradient-to-t from-black/35 via-black/18 to-black/6 backdrop-blur-sm"
     >
       <p className="text-xs text-gray-400 mb-3">{hint}</p>
 

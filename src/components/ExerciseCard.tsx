@@ -65,14 +65,14 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
     <div
       ref={outerRef}
       style={style}
-      className={`bg-white dark:bg-gray-900 rounded-3xl p-5 shadow-sm dark:shadow-black/20 will-change-transform ${
-        isDragging ? 'ring-2 ring-amber-300 shadow-lg shadow-amber-100 dark:shadow-amber-900/20' : ''
+      className={`bg-[var(--surface-card)] dark:bg-[var(--surface-card)] border border-[var(--surface-border)] rounded-3xl p-5 shadow-[var(--surface-shadow)] will-change-transform ${
+        isDragging ? 'ring-2 ring-amber-300 shadow-[var(--surface-shadow-strong)]' : ''
       } ${isDragging ? 'transition-none' : 'transition-transform duration-200 ease-out'}`}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex gap-4">
           {(def.mediaId || def.mediaUrl) && (
-            <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden relative">
+            <div className="w-14 h-14 rounded-xl bg-[var(--surface-muted)] overflow-hidden relative">
               <MediaResolver
                 mediaId={def.mediaId}
                 mediaUrl={def.mediaUrl}
@@ -82,10 +82,10 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
             </div>
           )}
           <div>
-            <h4 {...nameLongPress} className="font-bold text-lg text-gray-900 dark:text-gray-100 select-none cursor-pointer">
+            <h4 {...nameLongPress} className="font-semibold text-xl text-gray-900 dark:text-gray-100 select-none cursor-pointer display-serif">
               {def.name}
             </h4>
-            <p className="text-xs text-gray-400 dark:text-gray-500">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               {ex.sets.length} Sets • {categoryLabel}
               {usesBarbell ? ' • Barbell' : ''}
             </p>
@@ -98,7 +98,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 onClick={onMoveUp}
                 disabled={index === 0}
                 className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors active:scale-95 ${
-                  index === 0 ? 'bg-gray-100 dark:bg-gray-800 text-gray-200 dark:text-gray-700' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500'
+                  index === 0 ? 'bg-[var(--surface-muted)] text-gray-300' : 'bg-[var(--surface-muted)] hover:bg-[var(--surface-border)] text-gray-500'
                 }`}
                 aria-label="Move exercise up"
               >
@@ -110,7 +110,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 onPointerMove={onHandlePointerMove}
                 onPointerUp={onHandlePointerUp}
                 onPointerCancel={onHandlePointerCancel}
-                className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 flex items-center justify-center cursor-grab active:cursor-grabbing active:scale-95 transition-transform"
+                className="w-7 h-7 rounded-lg bg-[var(--surface-muted)] text-gray-500 flex items-center justify-center cursor-grab active:cursor-grabbing active:scale-95 transition-transform"
                 style={{ touchAction: 'none' }}
                 aria-label="Hold to reorder"
               >
@@ -122,8 +122,8 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 disabled={index === total - 1}
                 className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors active:scale-95 ${
                   index === total - 1
-                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-200 dark:text-gray-700'
-                    : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 dark:text-gray-500'
+                    ? 'bg-[var(--surface-muted)] text-gray-300'
+                    : 'bg-[var(--surface-muted)] hover:bg-[var(--surface-border)] text-gray-500'
                 }`}
                 aria-label="Move exercise down"
               >
@@ -149,7 +149,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
             <div key={set.id} className="flex items-center gap-2">
               <div className="w-6 text-center text-xs font-bold text-gray-300 dark:text-gray-600">{idx + 1}</div>
 
-              <div className="flex-1 min-w-[120px] bg-gray-50 dark:bg-gray-800 rounded-xl px-2 py-2 flex items-center gap-2">
+              <div className="flex-1 min-w-[120px] bg-[var(--surface-muted)] rounded-xl px-2 py-2 flex items-center gap-2">
                 <SetNumberInput
                   value={set.weight}
                   inputMode="decimal"
@@ -159,7 +159,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 <span className="text-xs text-gray-400 dark:text-gray-500 font-medium shrink-0">{currentUnit}</span>
               </div>
 
-              <div className="flex-1 min-w-[104px] bg-gray-50 dark:bg-gray-800 rounded-xl px-2 py-2 flex items-center gap-2">
+              <div className="flex-1 min-w-[104px] bg-[var(--surface-muted)] rounded-xl px-2 py-2 flex items-center gap-2">
                 <SetNumberInput
                   value={set.reps}
                   inputMode="numeric"
@@ -180,7 +180,9 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
                 aria-label="Complete set"
                 data-testid={`set-complete-${ex.id}-${set.id}`}
                 className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-                  set.completed ? 'bg-amber-400 text-white shadow-lg shadow-amber-200 dark:shadow-amber-900/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-300 dark:text-gray-600'
+                  set.completed
+                    ? 'bg-amber-400 text-white shadow-[var(--surface-shadow)] growth-mark'
+                    : 'bg-[var(--surface-muted)] text-gray-400'
                 }`}
               >
                 <Check size={14} />
@@ -188,7 +190,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
               <button
                 onClick={() => onDeleteSet(set.id)}
-                className="w-8 h-8 rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-300 dark:text-gray-600 hover:text-red-400 transition-all active:scale-95"
+                className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--surface-muted)] text-gray-400 hover:text-red-400 transition-all active:scale-95"
                 aria-label="Delete set"
               >
                 <Trash2 size={14} />
@@ -206,7 +208,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
       <button
         onClick={onAddSet}
-        className="w-full mt-3 py-2 text-sm font-bold text-amber-500 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+        className="w-full mt-3 py-2 text-sm font-semibold text-amber-700 dark:text-amber-300 bg-amber-100/70 dark:bg-amber-900/20 rounded-xl hover:bg-amber-200/80 dark:hover:bg-amber-900/30 transition-colors"
       >
         + Add Set
       </button>

@@ -1,79 +1,134 @@
+@import "./design/tokens.css";
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Global polish for the PWA */
 :root {
-  /* Reduce the bright iOS tap highlight */
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+
   --ease-smooth: cubic-bezier(0.2, 0.72, 0.2, 1);
   --ease-spring: cubic-bezier(0.18, 0.9, 0.22, 1.08);
-  --dur-fast: 150ms;
-  --dur-med: 220ms;
-  --dur-slow: 280ms;
-  --app-bg: #ffffff;
-  --app-fg: #111827;
-  --surface-muted: #f9fafb;
-  --nav-shadow: rgba(17, 24, 39, 0.06);
-  --accent-glow-soft: rgba(245, 158, 11, 0.34);
-  --accent-glow-strong: rgba(245, 158, 11, 0.42);
-  --chart-tooltip-bg: rgba(255, 255, 255, 0.9);
-  --chart-tooltip-border: rgba(148, 163, 184, 0.28);
-  --chart-tooltip-shadow: rgba(15, 23, 42, 0.14);
-  --chart-tooltip-label: #0f172a;
-  --chart-tooltip-text: #334155;
-}
+  --dur-fast: 220ms;
+  --dur-med: 360ms;
+  --dur-slow: 500ms;
 
-html.dark {
-  --app-bg: #030712;
-  --app-fg: #f3f4f6;
-  --surface-muted: #111827;
-  --nav-shadow: rgba(2, 6, 23, 0.45);
-  --accent-glow-soft: rgba(245, 158, 11, 0.24);
-  --accent-glow-strong: rgba(245, 158, 11, 0.34);
-  --chart-tooltip-bg: rgba(17, 24, 39, 0.88);
-  --chart-tooltip-border: rgba(71, 85, 105, 0.45);
-  --chart-tooltip-shadow: rgba(2, 6, 23, 0.45);
-  --chart-tooltip-label: #f8fafc;
-  --chart-tooltip-text: #e2e8f0;
+  --app-bg: var(--botanical-bg);
+  --app-fg: var(--botanical-text);
+  --surface-muted: var(--botanical-surface-muted);
+  --surface-card: var(--botanical-surface);
+  --surface-border: var(--botanical-border);
+  --surface-border-strong: var(--botanical-border-strong);
+  --surface-shadow: var(--botanical-shadow);
+  --surface-shadow-strong: var(--botanical-shadow-strong);
+
+  --nav-shadow: rgba(45, 58, 49, 0.14);
+  --accent-glow-soft: rgba(140, 154, 132, 0.28);
+  --accent-glow-strong: rgba(140, 154, 132, 0.4);
+
+  --chart-primary: #8c9a84;
+  --chart-secondary: #7f9b97;
+  --chart-warning: #c27b66;
+  --chart-highlight: #6f8d73;
+
+  --chart-tooltip-bg: rgba(255, 252, 248, 0.92);
+  --chart-tooltip-border: rgba(205, 191, 177, 0.62);
+  --chart-tooltip-shadow: rgba(45, 58, 49, 0.18);
+  --chart-tooltip-label: #2d3a31;
+  --chart-tooltip-text: #4f5d53;
 }
 
 @media (prefers-color-scheme: dark) {
   html:not(.light):not(.dark) {
-    --app-bg: #030712;
-    --app-fg: #f3f4f6;
-    --surface-muted: #111827;
-    --nav-shadow: rgba(2, 6, 23, 0.45);
-    --accent-glow-soft: rgba(245, 158, 11, 0.24);
-    --accent-glow-strong: rgba(245, 158, 11, 0.34);
-    --chart-tooltip-bg: rgba(17, 24, 39, 0.88);
-    --chart-tooltip-border: rgba(71, 85, 105, 0.45);
-    --chart-tooltip-shadow: rgba(2, 6, 23, 0.45);
-    --chart-tooltip-label: #f8fafc;
-    --chart-tooltip-text: #e2e8f0;
+    --app-bg: #1f2722;
+    --app-fg: #f6f3ed;
+    --surface-muted: #3a463d;
+    --surface-card: #2a332d;
+    --surface-border: #4d5a50;
+    --surface-border-strong: #667366;
+    --surface-shadow:
+      0 1px 1px rgba(4, 9, 6, 0.35),
+      0 12px 28px rgba(4, 9, 6, 0.45),
+      0 26px 48px rgba(4, 9, 6, 0.35);
+    --surface-shadow-strong:
+      0 2px 2px rgba(4, 9, 6, 0.45),
+      0 16px 36px rgba(4, 9, 6, 0.5),
+      0 34px 62px rgba(4, 9, 6, 0.4);
+    --nav-shadow: rgba(4, 9, 6, 0.6);
+    --chart-tooltip-bg: rgba(42, 51, 45, 0.94);
+    --chart-tooltip-border: rgba(102, 115, 102, 0.7);
+    --chart-tooltip-shadow: rgba(4, 9, 6, 0.45);
+    --chart-tooltip-label: #f6f3ed;
+    --chart-tooltip-text: #d8d3ca;
   }
 }
 
-html, body {
+html.dark {
+  --app-bg: #1f2722;
+  --app-fg: #f6f3ed;
+  --surface-muted: #3a463d;
+  --surface-card: #2a332d;
+  --surface-border: #4d5a50;
+  --surface-border-strong: #667366;
+  --surface-shadow:
+    0 1px 1px rgba(4, 9, 6, 0.35),
+    0 12px 28px rgba(4, 9, 6, 0.45),
+    0 26px 48px rgba(4, 9, 6, 0.35);
+  --surface-shadow-strong:
+    0 2px 2px rgba(4, 9, 6, 0.45),
+    0 16px 36px rgba(4, 9, 6, 0.5),
+    0 34px 62px rgba(4, 9, 6, 0.4);
+  --nav-shadow: rgba(4, 9, 6, 0.6);
+  --chart-tooltip-bg: rgba(42, 51, 45, 0.94);
+  --chart-tooltip-border: rgba(102, 115, 102, 0.7);
+  --chart-tooltip-shadow: rgba(4, 9, 6, 0.45);
+  --chart-tooltip-label: #f6f3ed;
+  --chart-tooltip-text: #d8d3ca;
+}
+
+html,
+body {
   height: 100%;
-  background: var(--app-bg);
-  color: var(--app-fg);
-  /* Prefer Apple system font on iOS/macOS; fall back cleanly elsewhere */
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overscroll-behavior: none;
+  background-color: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-body);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background-image:
+    radial-gradient(circle at 15% 18%, rgba(255, 255, 255, 0.46), transparent 54%),
+    radial-gradient(circle at 84% 24%, rgba(220, 207, 194, 0.34), transparent 52%),
+    var(--botanical-noise-image);
+  background-size: auto, auto, 220px 220px;
+  background-repeat: no-repeat, no-repeat, repeat;
 }
 
 #root {
   height: 100%;
 }
 
-input, button, textarea, select {
+h1,
+h2,
+h3,
+.display-serif,
+.data-serif {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+input,
+button,
+textarea,
+select {
   font: inherit;
 }
 
-a, button {
+a,
+button {
   transition:
     color var(--dur-fast) var(--ease-smooth),
-    background-color var(--dur-fast) var(--ease-smooth),
+    background-color var(--dur-med) var(--ease-smooth),
     border-color var(--dur-fast) var(--ease-smooth),
     transform var(--dur-fast) var(--ease-smooth),
     box-shadow var(--dur-med) var(--ease-smooth),
@@ -81,20 +136,12 @@ a, button {
     opacity var(--dur-fast) var(--ease-smooth);
 }
 
-/* Keep scrolling feeling native */
-body {
-  margin: 0;
-  overflow: hidden;
-}
-
-/* Only specific content regions should scroll */
 .scroll-area {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
-/* Hide browser focus outlines on Recharts surfaces when tapping/clicking charts. */
 .recharts-wrapper:focus,
 .recharts-wrapper:focus-visible,
 .recharts-surface:focus,
@@ -107,14 +154,20 @@ body {
   box-shadow: none !important;
 }
 
-/* Harmonize all chart tooltips with app card style (soft, rounded, low-contrast). */
+.recharts-line-curve,
+.recharts-curve,
+.recharts-pie-sector path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .recharts-default-tooltip {
   background: var(--chart-tooltip-bg) !important;
   border: 1px solid var(--chart-tooltip-border) !important;
-  border-radius: 16px !important;
+  border-radius: 18px !important;
   box-shadow: 0 10px 24px var(--chart-tooltip-shadow) !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 10px 12px !important;
 }
 
@@ -122,7 +175,7 @@ body {
   margin-bottom: 6px !important;
   color: var(--chart-tooltip-label) !important;
   font-size: 13px !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   letter-spacing: 0.02em;
 }
 
@@ -130,40 +183,43 @@ body {
   padding: 0 !important;
   color: var(--chart-tooltip-text) !important;
   font-size: 13px !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
 }
 
-/* Quick "pop" feedback for taps (used on bottom-nav + key buttons) */
 @keyframes tap-pop {
-  0% { transform: scale(1); }
-  35% { transform: scale(0.88); }
-  70% { transform: scale(1.06); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-/* Apply a quick, satisfying pop on press */
 .pressable {
   will-change: transform;
   transform: translateZ(0);
 }
 
 .pressable:active {
-  animation: tap-pop 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: tap-pop var(--dur-fast) var(--ease-smooth);
 }
 
 .tap-pop {
-  animation: tap-pop 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: tap-pop var(--dur-fast) var(--ease-smooth);
 }
 
 .view-enter {
-  animation: view-enter var(--dur-med) var(--ease-spring) both;
+  animation: view-enter var(--dur-slow) var(--ease-spring) both;
 }
 
 @keyframes view-enter {
   0% {
     opacity: 0;
     transform: translate3d(0, 18px, 0) scale(0.988);
-    filter: saturate(0.9);
+    filter: saturate(0.92);
   }
   100% {
     opacity: 1;
@@ -176,38 +232,75 @@ body {
   height: 100%;
 }
 
-.page-shell--enter {
-  animation: page-shell-in 170ms var(--ease-spring) backwards;
+.page-shell--enter,
+.page-shell--enter-forward {
+  animation: page-shell-enter-forward var(--dur-med) var(--ease-smooth) both;
 }
 
-.page-shell--exit {
+.page-shell--enter-back {
+  animation: page-shell-enter-back var(--dur-med) var(--ease-smooth) both;
+}
+
+.page-shell--exit,
+.page-shell--exit-forward {
   will-change: opacity, transform, filter;
-  animation: page-shell-out 120ms cubic-bezier(0.4, 0, 0.8, 0.2) both;
+  animation: page-shell-exit-forward var(--dur-fast) cubic-bezier(0.4, 0, 0.8, 0.2) both;
 }
 
-@keyframes page-shell-in {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 14px, 0);
-    filter: blur(1.5px);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    filter: blur(0);
-  }
+.page-shell--exit-back {
+  will-change: opacity, transform, filter;
+  animation: page-shell-exit-back var(--dur-fast) cubic-bezier(0.4, 0, 0.8, 0.2) both;
 }
 
-@keyframes page-shell-out {
+@keyframes page-shell-enter-forward {
   0% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    filter: blur(0);
-  }
-  100% {
     opacity: 0;
-    transform: translate3d(0, -8px, 0);
+    transform: translate3d(24px, 0, 0);
     filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes page-shell-enter-back {
+  0% {
+    opacity: 0;
+    transform: translate3d(-20px, 0, 0);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+@keyframes page-shell-exit-forward {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-14px, 0, 0);
+    filter: blur(0.8px);
+  }
+}
+
+@keyframes page-shell-exit-back {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(14px, 0, 0);
+    filter: blur(0.8px);
   }
 }
 
@@ -216,11 +309,11 @@ body {
 }
 
 .calendar-month-frame--next {
-  animation: calendar-month-next 220ms var(--ease-smooth) both;
+  animation: calendar-month-next var(--dur-med) var(--ease-smooth) both;
 }
 
 .calendar-month-frame--prev {
-  animation: calendar-month-prev 220ms var(--ease-smooth) both;
+  animation: calendar-month-prev var(--dur-med) var(--ease-smooth) both;
 }
 
 @keyframes calendar-month-next {
@@ -251,6 +344,7 @@ body {
 
 .card-lift {
   transform: translateZ(0);
+  box-shadow: var(--surface-shadow);
   transition:
     transform var(--dur-fast) var(--ease-smooth),
     box-shadow var(--dur-med) var(--ease-smooth),
@@ -260,7 +354,8 @@ body {
 
 .card-lift:hover {
   transform: translate3d(0, -2px, 0);
-  filter: saturate(1.02);
+  filter: saturate(1.03);
+  box-shadow: var(--surface-shadow-strong);
 }
 
 .card-lift:active {
@@ -273,18 +368,50 @@ body {
   animation: list-item-in var(--dur-slow) var(--ease-spring) forwards;
 }
 
-.list-stagger > *:nth-child(1) { animation-delay: 16ms; }
-.list-stagger > *:nth-child(2) { animation-delay: 28ms; }
-.list-stagger > *:nth-child(3) { animation-delay: 40ms; }
-.list-stagger > *:nth-child(4) { animation-delay: 52ms; }
-.list-stagger > *:nth-child(5) { animation-delay: 64ms; }
-.list-stagger > *:nth-child(6) { animation-delay: 76ms; }
-.list-stagger > *:nth-child(7) { animation-delay: 88ms; }
-.list-stagger > *:nth-child(8) { animation-delay: 100ms; }
-.list-stagger > *:nth-child(9) { animation-delay: 112ms; }
-.list-stagger > *:nth-child(10) { animation-delay: 124ms; }
-.list-stagger > *:nth-child(11) { animation-delay: 136ms; }
-.list-stagger > *:nth-child(12) { animation-delay: 148ms; }
+.list-stagger > *:nth-child(2n) {
+  margin-top: 0.3rem;
+}
+
+.list-stagger > *:nth-child(3n) {
+  margin-top: 0.12rem;
+}
+
+.list-stagger > *:nth-child(1) {
+  animation-delay: 16ms;
+}
+.list-stagger > *:nth-child(2) {
+  animation-delay: 36ms;
+}
+.list-stagger > *:nth-child(3) {
+  animation-delay: 56ms;
+}
+.list-stagger > *:nth-child(4) {
+  animation-delay: 76ms;
+}
+.list-stagger > *:nth-child(5) {
+  animation-delay: 96ms;
+}
+.list-stagger > *:nth-child(6) {
+  animation-delay: 116ms;
+}
+.list-stagger > *:nth-child(7) {
+  animation-delay: 136ms;
+}
+.list-stagger > *:nth-child(8) {
+  animation-delay: 156ms;
+}
+.list-stagger > *:nth-child(9) {
+  animation-delay: 176ms;
+}
+.list-stagger > *:nth-child(10) {
+  animation-delay: 196ms;
+}
+.list-stagger > *:nth-child(11) {
+  animation-delay: 216ms;
+}
+.list-stagger > *:nth-child(12) {
+  animation-delay: 236ms;
+}
 
 @keyframes list-item-in {
   0% {
@@ -302,11 +429,11 @@ body {
 }
 
 .modal-backdrop--enter {
-  animation: modal-backdrop-in 240ms var(--ease-smooth) both;
+  animation: modal-backdrop-in var(--dur-med) var(--ease-smooth) both;
 }
 
 .modal-backdrop--exit {
-  animation: modal-backdrop-out 180ms var(--ease-smooth) both;
+  animation: modal-backdrop-out var(--dur-fast) var(--ease-smooth) both;
 }
 
 .modal-panel {
@@ -314,48 +441,56 @@ body {
 }
 
 .modal-panel--enter {
-  animation: modal-panel-in var(--dur-med) var(--ease-spring) both;
+  animation: modal-panel-in var(--dur-slow) var(--ease-spring) both;
 }
 
 .modal-panel--exit {
-  animation: modal-panel-out 170ms cubic-bezier(0.42, 0, 1, 1) both;
+  animation: modal-panel-out var(--dur-med) cubic-bezier(0.42, 0, 1, 1) both;
 }
 
 .exercise-picker-modal-overlay.modal-backdrop--enter {
-  animation: modal-backdrop-in 200ms var(--ease-smooth) both;
+  animation: modal-backdrop-in var(--dur-med) var(--ease-smooth) both;
 }
 
 .exercise-picker-modal-overlay.modal-backdrop--exit {
-  animation: modal-backdrop-out 220ms var(--ease-smooth) both;
+  animation: modal-backdrop-out var(--dur-med) var(--ease-smooth) both;
 }
 
 .exercise-picker-modal-panel.modal-panel--enter {
-  animation: exercise-picker-panel-in 260ms var(--ease-spring) both;
+  animation: exercise-picker-panel-in var(--dur-slow) var(--ease-spring) both;
 }
 
 .exercise-picker-modal-panel.modal-panel--exit {
-  animation: exercise-picker-panel-out 220ms cubic-bezier(0.32, 0, 0.67, 0) both;
+  animation: exercise-picker-panel-out var(--dur-med) cubic-bezier(0.32, 0, 0.67, 0) both;
 }
 
 @keyframes modal-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modal-backdrop-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes modal-panel-in {
   0% {
     opacity: 0;
-    transform: translate3d(0, 16px, 0) scale(0.97);
+    transform: translate3d(0, 44px, 0);
     filter: blur(1px);
   }
   100% {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
     filter: blur(0);
   }
 }
@@ -363,12 +498,12 @@ body {
 @keyframes modal-panel-out {
   0% {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
     filter: blur(0);
   }
   100% {
     opacity: 0;
-    transform: translate3d(0, 10px, 0) scale(0.98);
+    transform: translate3d(0, 56px, 0);
     filter: blur(1px);
   }
 }
@@ -376,12 +511,12 @@ body {
 @keyframes exercise-picker-panel-in {
   0% {
     opacity: 0;
-    transform: translate3d(0, 22px, 0) scale(0.96);
+    transform: translate3d(0, 56px, 0);
     filter: blur(1px);
   }
   100% {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
     filter: blur(0);
   }
 }
@@ -389,29 +524,29 @@ body {
 @keyframes exercise-picker-panel-out {
   0% {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
     filter: blur(0);
   }
   100% {
     opacity: 0;
-    transform: translate3d(0, 20px, 0) scale(0.97);
+    transform: translate3d(0, 62px, 0);
     filter: blur(1px);
   }
 }
 
 .action-sheet-overlay {
-  animation: modal-backdrop-in 240ms var(--ease-smooth) both;
+  animation: modal-backdrop-in var(--dur-med) var(--ease-smooth) both;
 }
 
 .action-sheet-panel {
   will-change: transform, opacity;
-  animation: action-sheet-in 360ms var(--ease-spring) both;
+  animation: action-sheet-in var(--dur-slow) var(--ease-spring) both;
 }
 
 @keyframes action-sheet-in {
   from {
     opacity: 0;
-    transform: translate3d(0, 28px, 0);
+    transform: translate3d(0, 38px, 0);
   }
   to {
     opacity: 1;
@@ -424,7 +559,8 @@ body {
 }
 
 @keyframes float-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 10px 30px var(--accent-glow-soft);
     transform: translate3d(0, 0, 0);
   }
@@ -435,12 +571,13 @@ body {
 }
 
 .bottom-nav-shell {
-  backdrop-filter: blur(14px);
-  box-shadow: 0 -8px 28px var(--nav-shadow);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 -10px 30px var(--nav-shadow);
 }
 
 .bottom-nav-link[data-active='true'] {
-  transform: translate3d(0, -2px, 0);
+  transform: translate3d(0, -3px, 0);
 }
 
 .bottom-nav-link svg {
@@ -451,19 +588,51 @@ body {
   transform: translate3d(0, -1px, 0);
 }
 
-/* "Score" reveal used in the session report */
 @keyframes score-pop {
-  0% { transform: scale(0.94); opacity: 0.0; }
-  55% { transform: scale(1.08); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .score-pop {
-  animation: score-pop 360ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  animation: score-pop var(--dur-med) cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+@keyframes sprout-grow {
+  0% {
+    transform: scale(0.78);
+    filter: saturate(0.85);
+    box-shadow: 0 0 0 rgba(140, 154, 132, 0);
+  }
+  52% {
+    transform: scale(1.08);
+    filter: saturate(1.06);
+    box-shadow: 0 8px 18px rgba(140, 154, 132, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    filter: saturate(1);
+    box-shadow: 0 2px 10px rgba(140, 154, 132, 0.14);
+  }
+}
+
+.growth-mark {
+  animation: sprout-grow 500ms var(--ease-smooth) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
