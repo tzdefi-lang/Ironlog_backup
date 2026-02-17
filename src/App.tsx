@@ -8,6 +8,12 @@ import { DashboardSkeleton } from '@/components/Skeleton';
 import StarterSplash from '@/components/StarterSplash';
 import { ToastViewport } from '@/components/ui';
 import { GymProvider } from '@/context/GymContext';
+import {
+  BOTANICAL_APP_BACKGROUND,
+  BOTANICAL_DARK_APP_BACKGROUND,
+  BOTANICAL_DARK_THEME_COLOR,
+  BOTANICAL_THEME_COLOR,
+} from '@/design/tokens';
 import { useGymData } from '@/hooks/useGymData';
 import { I18nProvider } from '@/i18n/I18nProvider';
 import { isReminderWindowReached, notifyPendingWorkout } from '@/services/notifications';
@@ -15,9 +21,10 @@ import { formatDate } from '@/services/utils';
 import type { ThemeMode } from '@/types';
 import LoginView from '@/views/LoginView';
 
-const LIGHT_THEME_COLOR = '#ffffff';
-const DARK_THEME_COLOR = '#111827';
-const DARK_APP_BACKGROUND = '#030712';
+const LIGHT_THEME_COLOR = BOTANICAL_THEME_COLOR;
+const DARK_THEME_COLOR = BOTANICAL_DARK_THEME_COLOR;
+const LIGHT_APP_BACKGROUND = BOTANICAL_APP_BACKGROUND;
+const DARK_APP_BACKGROUND = BOTANICAL_DARK_APP_BACKGROUND;
 
 const getInitialThemeMode = (): ThemeMode => {
   if (typeof window === 'undefined') return 'system';
@@ -46,9 +53,9 @@ const AppContent: React.FC = () => {
       document.documentElement.classList.toggle('dark', isDark);
       document.documentElement.classList.toggle('light', isLight);
       document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-      document.documentElement.style.backgroundColor = isDark ? DARK_APP_BACKGROUND : LIGHT_THEME_COLOR;
+      document.documentElement.style.backgroundColor = isDark ? DARK_APP_BACKGROUND : LIGHT_APP_BACKGROUND;
       if (document.body) {
-        document.body.style.backgroundColor = isDark ? DARK_APP_BACKGROUND : LIGHT_THEME_COLOR;
+        document.body.style.backgroundColor = isDark ? DARK_APP_BACKGROUND : LIGHT_APP_BACKGROUND;
       }
 
       const themeColorMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -60,7 +67,7 @@ const AppContent: React.FC = () => {
         'meta[name="apple-mobile-web-app-status-bar-style"]'
       );
       if (appleStatusBarMeta) {
-        appleStatusBarMeta.setAttribute('content', 'black-translucent');
+        appleStatusBarMeta.setAttribute('content', isDark ? 'black-translucent' : 'default');
       }
     };
 
@@ -137,7 +144,7 @@ const AppContent: React.FC = () => {
     if (isLoading) {
       return (
         <>
-          <div className="app-shell max-w-md mx-auto h-[100dvh] bg-white dark:bg-gray-950 relative overflow-hidden transition-colors">
+          <div className="app-shell max-w-md mx-auto h-[100dvh] bg-[var(--surface-card)] dark:bg-[var(--surface-card)] relative overflow-hidden transition-colors">
             <DashboardSkeleton />
           </div>
           <StarterSplash ready={!isLoading} />
@@ -153,8 +160,8 @@ const AppContent: React.FC = () => {
   }
 
   const shellClass = isManageRoute
-    ? 'app-shell w-full h-[100dvh] bg-white dark:bg-gray-950 relative overflow-hidden transition-colors'
-    : 'app-shell max-w-md mx-auto h-[100dvh] bg-white dark:bg-gray-950 relative shadow-2xl dark:shadow-black/40 overflow-hidden transition-colors';
+    ? 'app-shell w-full h-[100dvh] bg-[var(--surface-card)] dark:bg-[var(--surface-card)] relative overflow-hidden transition-colors'
+    : 'app-shell max-w-md mx-auto h-[100dvh] bg-[var(--surface-card)] dark:bg-[var(--surface-card)] relative shadow-[var(--surface-shadow-strong)] overflow-hidden transition-colors';
 
   return (
     <>

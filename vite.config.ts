@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const isVitest = mode === 'test';
+  const rootDir = __dirname;
   const plugins = [react(), tailwindcss()];
 
   if (!isVitest) {
@@ -38,9 +39,10 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    root: rootDir,
     test: {
       environment: 'jsdom',
-      setupFiles: './src/test/setup.ts',
+      setupFiles: path.resolve(rootDir, 'src/test/setup.ts'),
       css: true,
       include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     },
