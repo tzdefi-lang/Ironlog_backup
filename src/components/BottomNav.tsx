@@ -24,7 +24,7 @@ const BottomNav: React.FC = () => {
     window.setTimeout(() => setPopped(null), 240);
   };
 
-  if (location.pathname.startsWith('/workout/') || location.pathname.startsWith('/manage')) return null;
+  if (location.pathname.startsWith('/workout/')) return null;
 
   const navItems: NavItem[] = [
     { path: '/', label: t('bottomNav.home'), icon: Home },
@@ -61,7 +61,7 @@ const BottomNav: React.FC = () => {
         aria-label={t('fab.addWorkout')}
         title={t('fab.addWorkout')}
         onClick={() => navigate('/workout/new')}
-        className="pressable justify-self-center w-10 h-10 rounded-full bg-brand text-gray-900 hover:brightness-95 active:scale-90 transition-all flex items-center justify-center"
+        className="pressable justify-self-center w-10 h-10 rounded-full bg-amber-400 text-gray-900 hover:bg-amber-500 active:scale-90 transition-all flex items-center justify-center"
       >
         <Plus size={22} strokeWidth={2.5} />
       </button>

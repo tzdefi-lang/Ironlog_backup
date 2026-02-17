@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import * as Sentry from '@sentry/react';
 import { registerSW } from 'virtual:pwa-register';
 import AppErrorBoundary from '@/components/AppErrorBoundary';
 import AppRoot from '@/AppRoot';
@@ -7,32 +8,20 @@ import '@/index.css';
 
 const DEFAULT_PRIVY_APP_ID = 'cmlib187t04f3jo0cy0ffgof8';
 const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || DEFAULT_PRIVY_APP_ID;
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const LIGHT_THEME_COLOR = '#ffffff';
 const DARK_THEME_COLOR = '#111827';
 const LIGHT_APP_BACKGROUND = '#ffffff';
 const DARK_APP_BACKGROUND = '#030712';
 
-const isIOSDevice = () => {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent;
-  const isIOS = /iPad|iPhone|iPod/i.test(ua);
-  const isIPadOSDesktop = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-  return isIOS || isIPadOSDesktop;
-};
-
-const isStandaloneMode = () => {
-  if (typeof window === 'undefined') return false;
-  const mediaStandalone = window.matchMedia?.('(display-mode: standalone)').matches ?? false;
-  const navigatorStandalone =
-    (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
-  const androidTwaReferrer = document.referrer.startsWith('android-app://');
-  return mediaStandalone || navigatorStandalone || androidTwaReferrer;
-};
-
-const applyStandaloneClass = () => {
-  if (typeof document === 'undefined') return;
-  document.documentElement.classList.toggle('ios-standalone', isIOSDevice() && isStandaloneMode());
-};
+if (import.meta.env.PROD && SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    release: __APP_VERSION__,
+    environment: 'production',
+    tracesSampleRate: 0.1,
+  });
+}
 
 const getInitialThemeMode = (): 'light' | 'dark' | 'system' => {
   try {
@@ -43,25 +32,6 @@ const getInitialThemeMode = (): 'light' | 'dark' | 'system' => {
   }
   return 'system';
 };
-
-applyStandaloneClass();
-if (typeof window !== 'undefined') {
-  window.addEventListener('pageshow', applyStandaloneClass);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      applyStandaloneClass();
-    }
-  });
-
-  const displayModeQuery = window.matchMedia?.('(display-mode: standalone)');
-  if (displayModeQuery) {
-    if (typeof displayModeQuery.addEventListener === 'function') {
-      displayModeQuery.addEventListener('change', applyStandaloneClass);
-    } else {
-      displayModeQuery.addListener(applyStandaloneClass);
-    }
-  }
-}
 
 const applyInitialTheme = () => {
   if (typeof window === 'undefined') return;

@@ -2,8 +2,20 @@
 
 const DEFAULT_SUPABASE_URL = 'https://gyiqdkmvlixwgedjhycc.supabase.co';
 const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_psIWS8xZmx4aCqVnzUFkyg_vjM1kPiz';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? (
+  import.meta.env.DEV
+    ? DEFAULT_SUPABASE_URL
+    : (() => {
+      throw new Error('[IronLog] VITE_SUPABASE_URL is required in production');
+    })()
+);
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? (
+  import.meta.env.DEV
+    ? DEFAULT_SUPABASE_ANON_KEY
+    : (() => {
+      throw new Error('[IronLog] VITE_SUPABASE_ANON_KEY is required in production');
+    })()
+);
 const TOKEN_EXCHANGE_URL = `${SUPABASE_URL}/functions/v1/token-exchange`;
 
 interface TokenExchangeResult {
@@ -57,6 +69,13 @@ export async function exchangePrivyToken(privyAccessToken: string): Promise<Toke
 export function clearTokenCache() {
   cachedResult = null;
   cachedSourceToken = null;
+}
+
+/**
+ * Get the cached Supabase JWT expiry timestamp (ms), if available.
+ */
+export function getTokenExpiresAt(): number | null {
+  return cachedResult?.expiresAt ?? null;
 }
 
 /**

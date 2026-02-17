@@ -18,7 +18,17 @@ export default defineConfig(({ mode }) => {
           clientsClaim: true,
           cleanupOutdatedCaches: true,
           maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          globPatterns: ['**/*.{html,css,ico,png,svg,woff2}'],
+          globIgnores: [
+            '**/heic2any*.js',
+            '**/charts-vendor*.js',
+            '**/ConnectPhoneForm*.js',
+            '**/SetWalletPasswordForm*.js',
+            '**/BridgeNetworkSelectionView*.js',
+            '**/w3m-modal*.js',
+            '**/ConnectWalletView*.js',
+            '**/secp256k1*.js',
+          ],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/gyiqdkmvlixwgedjhycc\.supabase\.co/,
@@ -31,6 +41,39 @@ export default defineConfig(({ mode }) => {
                 },
               },
             },
+            {
+              urlPattern: /(ConnectPhoneForm|SetWalletPasswordForm|BridgeNetworkSelectionView|w3m-modal|ConnectWalletView|secp256k1).*\.js$/,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'wallet-bridge-lazy',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 * 7,
+                },
+              },
+            },
+            {
+              urlPattern: /heic2any.*\.js$/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'heic2any-lazy',
+                expiration: {
+                  maxEntries: 2,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+              },
+            },
+            {
+              urlPattern: /assets\/.*\.js$/,
+              handler: 'StaleWhileRevalidate',
+              options: {
+                cacheName: 'js-chunks',
+                expiration: {
+                  maxEntries: 120,
+                  maxAgeSeconds: 60 * 60 * 24 * 7,
+                },
+              },
+            },
           ],
         },
       })
@@ -38,6 +81,9 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    define: {
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '0.0.0'),
+    },
     test: {
       environment: 'jsdom',
       setupFiles: './src/test/setup.ts',

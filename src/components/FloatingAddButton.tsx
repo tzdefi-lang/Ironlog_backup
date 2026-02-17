@@ -17,7 +17,7 @@ const FloatingAddButton: React.FC = () => {
         <button
           onClick={() => navigate('/workout/new')}
           data-testid="fab-add-workout"
-          className="pressable float-glow w-14 h-14 bg-brand text-gray-900 rounded-full border border-brand shadow-xl shadow-brand-soft flex items-center justify-center hover:brightness-95 active:scale-90 transition-all"
+          className="pressable float-glow w-14 h-14 bg-amber-400 text-gray-900 rounded-full border border-amber-300/80 dark:border-amber-600/50 shadow-xl shadow-amber-300/60 dark:shadow-amber-900/55 flex items-center justify-center hover:bg-amber-500 active:scale-90 transition-all"
           aria-label={t('fab.addWorkout')}
           title={t('fab.addWorkout')}
         >

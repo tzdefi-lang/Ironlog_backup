@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
-import { HashRouter, useLocation } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import AnimatedRoutes from '@/components/AnimatedRoutes';
 import BottomNav from '@/components/BottomNav';
 import InstallHint from '@/components/InstallHint';
 import OrientationLockOverlay from '@/components/OrientationLockOverlay';
 import { DashboardSkeleton } from '@/components/Skeleton';
-import StarterSplash from '@/components/StarterSplash';
 import { ToastViewport } from '@/components/ui';
 import { GymProvider } from '@/context/GymContext';
 import { useGymData } from '@/hooks/useGymData';
@@ -32,9 +31,7 @@ const getInitialThemeMode = (): ThemeMode => {
 
 const AppContent: React.FC = () => {
   const { user, workouts, isLoading } = useGymData();
-  const location = useLocation();
   const themeMode = user?.preferences.themeMode ?? getInitialThemeMode();
-  const isManageRoute = location.pathname.startsWith('/manage');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -60,7 +57,7 @@ const AppContent: React.FC = () => {
         'meta[name="apple-mobile-web-app-status-bar-style"]'
       );
       if (appleStatusBarMeta) {
-        appleStatusBarMeta.setAttribute('content', 'black-translucent');
+        appleStatusBarMeta.setAttribute('content', isDark ? 'black-translucent' : 'default');
       }
     };
 
@@ -136,37 +133,22 @@ const AppContent: React.FC = () => {
   if (!user) {
     if (isLoading) {
       return (
-        <>
-          <div className="app-shell max-w-md mx-auto h-[100dvh] bg-white dark:bg-gray-950 relative overflow-hidden transition-colors">
-            <DashboardSkeleton />
-          </div>
-          <StarterSplash ready={!isLoading} />
-        </>
+        <div className="max-w-md mx-auto h-[100dvh] bg-white dark:bg-gray-950 relative overflow-hidden transition-colors">
+          <DashboardSkeleton />
+        </div>
       );
     }
-    return (
-      <>
-        <LoginView />
-        <StarterSplash ready={!isLoading} />
-      </>
-    );
+    return <LoginView />;
   }
 
-  const shellClass = isManageRoute
-    ? 'app-shell w-full h-[100dvh] bg-white dark:bg-gray-950 relative overflow-hidden transition-colors'
-    : 'app-shell max-w-md mx-auto h-[100dvh] bg-white dark:bg-gray-950 relative shadow-2xl dark:shadow-black/40 overflow-hidden transition-colors';
-
   return (
-    <>
-      <div className={shellClass}>
-        <OrientationLockOverlay />
-        {!isManageRoute && <InstallHint />}
-        <AnimatedRoutes />
-        <BottomNav />
-        <ToastViewport />
-      </div>
-      <StarterSplash ready={!isLoading} />
-    </>
+    <div className="max-w-md mx-auto h-[100dvh] bg-white dark:bg-gray-950 relative shadow-2xl dark:shadow-black/40 overflow-hidden transition-colors">
+      <OrientationLockOverlay />
+      <InstallHint />
+      <AnimatedRoutes />
+      <BottomNav />
+      <ToastViewport />
+    </div>
   );
 };
 

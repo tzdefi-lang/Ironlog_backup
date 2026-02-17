@@ -1,15 +1,9 @@
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getIdentityToken, usePrivy } from '@privy-io/react-auth';
 import { pushToast } from '@/components/ui';
-import { exchangePrivyToken, clearTokenCache } from '@/services/auth';
-import {
-  normalizeExerciseDefRow,
-  normalizeTemplateRow,
-  sanitizeTemplateExercises,
-  toPersonalExerciseRow,
-  toPersonalTemplateRow,
-} from '@/services/officialContent';
+import { clearTokenCache, exchangePrivyToken, getTokenExpiresAt } from '@/services/auth';
 import { clearAuthToken, getSupabase, setAuthToken } from '@/services/supabase';
+import { syncedMutation } from '@/services/syncedMutation';
 import {
   enqueueSyncOperation,
   listQueuedOperations,
@@ -29,7 +23,6 @@ export interface GymContextType {
   setRestTimerSeconds: (seconds: number) => void;
   setThemeMode: (mode: ThemeMode) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
-  refreshOfficialContent: () => Promise<void>;
   workouts: Workout[];
   exerciseDefs: ExerciseDef[];
   templates: WorkoutTemplate[];
@@ -55,10 +48,14 @@ export type GymActionsContextType = Omit<GymContextType, keyof GymDataContextTyp
 export const GymDataContext = createContext<GymDataContextType | null>(null);
 export const GymActionsContext = createContext<GymActionsContextType | null>(null);
 
-const INITIAL_PERSONAL_EXERCISES: ExerciseDef[] = [];
+const INITIAL_EXERCISES: ExerciseDef[] = [
+  { id: '1', name: 'Bench Press', description: 'Barbell bench press', mediaType: 'image', category: 'Chest' },
+  { id: '2', name: 'Squat', description: 'Barbell back squat', mediaType: 'image', category: 'Quads' },
+  { id: '3', name: 'Deadlift', description: 'Conventional deadlift', mediaType: 'image', category: 'Back' },
+];
 const REST_TIMER_OPTIONS = [30, 60, 90, 120, 180];
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error && error.message) return error.message;
@@ -74,6 +71,23 @@ const normalizeThemeMode = (value: string | null): ThemeMode =>
 const THEME_STORAGE_KEY = 'ironlog_theme_mode';
 
 const getTemplateStorageKey = (userId: string) => `ironlog_templates_${userId}`;
+
+const sanitizeTemplateExercises = (value: unknown): WorkoutTemplate['exercises'] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const defId = typeof (item as { defId?: unknown }).defId === 'string'
+        ? (item as { defId: string }).defId
+        : '';
+      const defaultSetsRaw = Number((item as { defaultSets?: unknown }).defaultSets);
+      const defaultSets = Number.isFinite(defaultSetsRaw) ? Math.max(1, Math.round(defaultSetsRaw)) : 1;
+      if (!defId) return null;
+      return { defId, defaultSets };
+    })
+    .filter((item): item is WorkoutTemplate['exercises'][number] => item !== null);
+};
 
 const sortTemplatesByCreatedAt = (templates: WorkoutTemplate[]) =>
   templates
@@ -93,14 +107,9 @@ const readLocalTemplates = (userId: string): WorkoutTemplate[] => {
         const id = typeof item.id === 'string' ? item.id : '';
         const name = typeof item.name === 'string' ? item.name : '';
         if (!id || !name) return null;
-
         return {
           id,
           name,
-          source: 'personal',
-          readOnly: false,
-          description: typeof item.description === 'string' ? item.description : '',
-          tagline: typeof item.tagline === 'string' ? item.tagline : '',
           createdAt:
             typeof item.createdAt === 'string' && item.createdAt
               ? item.createdAt
@@ -118,8 +127,7 @@ const readLocalTemplates = (userId: string): WorkoutTemplate[] => {
 
 const writeLocalTemplates = (userId: string, templates: WorkoutTemplate[]) => {
   try {
-    const personalOnly = templates.filter((template) => template.source === 'personal');
-    localStorage.setItem(getTemplateStorageKey(userId), JSON.stringify(sortTemplatesByCreatedAt(personalOnly)));
+    localStorage.setItem(getTemplateStorageKey(userId), JSON.stringify(sortTemplatesByCreatedAt(templates)));
   } catch {
     // Ignore localStorage write errors.
   }
@@ -149,59 +157,51 @@ const OFFLINE_QUEUE_TOAST_MESSAGE = 'Offline: changes saved locally and queued f
 const E2E_BYPASS_AUTH = import.meta.env.VITE_E2E_BYPASS_AUTH === '1';
 const E2E_USER_ID = '00000000-0000-4000-8000-000000000000';
 
-const isOffline = () => typeof navigator !== 'undefined' && navigator.onLine === false;
+const isOffline = () =>
+  typeof navigator !== 'undefined' && navigator.onLine === false;
 
 const getQueuedDeleteId = (payload: Record<string, any>) => {
   const value = payload.id;
   return typeof value === 'string' ? value : '';
 };
 
-const mergeExerciseDefs = (official: ExerciseDef[], personal: ExerciseDef[]) => {
-  const byId = new Map<string, ExerciseDef>();
-  for (const def of official) byId.set(def.id, def);
-  for (const def of personal) byId.set(def.id, def);
+const buildWorkoutRow = (workout: Workout, userId: string) => ({
+  id: workout.id,
+  user_id: userId,
+  date: workout.date,
+  title: workout.title,
+  completed: workout.completed,
+  data: {
+    exercises: workout.exercises,
+    note: workout.note,
+    elapsedSeconds: workout.elapsedSeconds,
+    startTimestamp: workout.startTimestamp,
+  },
+});
 
-  return Array.from(byId.values()).sort((a, b) => {
-    if (a.source !== b.source) return a.source === 'official' ? -1 : 1;
-    return a.name.localeCompare(b.name);
-  });
-};
-
-const mergeTemplates = (official: WorkoutTemplate[], personal: WorkoutTemplate[]) => {
-  const byId = new Map<string, WorkoutTemplate>();
-  for (const template of official) byId.set(template.id, template);
-  for (const template of personal) byId.set(template.id, template);
-  return sortTemplatesByCreatedAt(Array.from(byId.values()));
-};
-
-const ensurePersonalExerciseShape = (def: ExerciseDef): ExerciseDef => {
-  const mediaItems = Array.isArray(def.mediaItems) ? def.mediaItems : [];
-  const firstUpload = mediaItems.find((item) => item.kind === 'upload');
-
-  return {
-    ...def,
-    source: 'personal',
-    readOnly: false,
-    markdown: def.markdown ?? '',
-    mediaItems,
-    mediaUrl: firstUpload?.url ?? def.mediaUrl,
-    mediaType: firstUpload?.contentType ?? def.mediaType,
+const buildExerciseDefRow = (def: ExerciseDef, userId: string) => ({
+  id: def.id,
+  user_id: userId,
+  name: def.name,
+  description: def.description,
+  media_url: def.mediaUrl,
+  media_type: def.mediaType,
+  data: {
     category: def.category ?? 'Other',
     usesBarbell: !!def.usesBarbell,
-    barbellWeight: Number.isFinite(def.barbellWeight) ? def.barbellWeight : 0,
-  };
-};
+    barbellWeight: def.barbellWeight,
+  },
+});
 
 export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [personalExerciseDefs, setPersonalExerciseDefs] = useState<ExerciseDef[]>(INITIAL_PERSONAL_EXERCISES);
-  const [officialExerciseDefs, setOfficialExerciseDefs] = useState<ExerciseDef[]>([]);
-  const [personalTemplates, setPersonalTemplates] = useState<WorkoutTemplate[]>([]);
-  const [officialTemplates, setOfficialTemplates] = useState<WorkoutTemplate[]>([]);
+  const [exerciseDefs, setExerciseDefs] = useState<ExerciseDef[]>(INITIAL_EXERCISES);
+  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const initInFlightRef = useRef<Promise<void> | null>(null);
+  const tokenRefreshTimerRef = useRef<number | null>(null);
 
   const {
     ready,
@@ -213,16 +213,23 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   } = usePrivy();
 
   const isConsumingQueueRef = useRef(false);
+  const userRef = useRef<UserProfile | null>(user);
+  const workoutsRef = useRef<Workout[]>(workouts);
+  const exerciseDefsRef = useRef<ExerciseDef[]>(exerciseDefs);
+  const templatesRef = useRef<WorkoutTemplate[]>(templates);
+  const authenticatedRef = useRef(authenticated);
+  const privyLoginRef = useRef(privyLogin);
+  const privyLogoutRef = useRef(privyLogout);
+  const initSessionRef = useRef<() => Promise<void>>(async () => {});
+  const mapPrivyUserRef = useRef<(pUser: any | null | undefined, determinedUserId: string) => void>(() => {});
 
-  const exerciseDefs = useMemo(
-    () => mergeExerciseDefs(officialExerciseDefs, personalExerciseDefs),
-    [officialExerciseDefs, personalExerciseDefs]
-  );
-
-  const templates = useMemo(
-    () => mergeTemplates(officialTemplates, personalTemplates),
-    [officialTemplates, personalTemplates]
-  );
+  userRef.current = user;
+  workoutsRef.current = workouts;
+  exerciseDefsRef.current = exerciseDefs;
+  templatesRef.current = templates;
+  authenticatedRef.current = authenticated;
+  privyLoginRef.current = privyLogin;
+  privyLogoutRef.current = privyLogout;
 
   const executeQueuedOperation = useCallback(async (operation: QueuedOperation) => {
     if (operation.action === 'upsert') {
@@ -238,88 +245,42 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (error) throw error;
   }, []);
 
-  const consumeSyncQueue = useCallback(
-    async (targetUserId?: string) => {
-      if (E2E_BYPASS_AUTH) return;
-      const activeUserId = targetUserId ?? user?.id;
-      if (!activeUserId || isOffline() || isConsumingQueueRef.current) return;
+  const consumeSyncQueue = useCallback(async (targetUserId?: string) => {
+    if (E2E_BYPASS_AUTH) return;
+    const activeUserId = targetUserId ?? user?.id;
+    if (!activeUserId || isOffline() || isConsumingQueueRef.current) return;
 
-      isConsumingQueueRef.current = true;
-      let processedCount = 0;
-      try {
-        const queued = await listQueuedOperations(activeUserId);
-        for (const operation of queued) {
-          try {
-            await executeQueuedOperation(operation);
-            await removeQueuedOperation(operation.id);
-            processedCount += 1;
-          } catch (error) {
-            if (isOffline()) break;
-            console.warn('Sync queue operation failed:', error);
-            break;
-          }
-        }
-
-        if (processedCount > 0) {
-          pushToast({ kind: 'success', message: 'Offline changes synced' });
-        }
-      } catch (error) {
-        console.warn('Failed to process sync queue:', error);
-      } finally {
-        isConsumingQueueRef.current = false;
-      }
-    },
-    [executeQueuedOperation, user?.id]
-  );
-
-  const queueOfflineOperation = useCallback(
-    async (
-      operation: Omit<QueuedOperation, 'id' | 'timestamp'>,
-      rollback: () => void,
-      fallbackMessage: string
-    ) => {
-      try {
-        await enqueueSyncOperation(operation);
-        pushToast({ kind: 'info', message: OFFLINE_QUEUE_TOAST_MESSAGE });
-      } catch (queueError) {
-        rollback();
-        pushToast({ kind: 'error', message: getErrorMessage(queueError, fallbackMessage) });
-      }
-    },
-    []
-  );
-
-  const fetchOfficialContent = useCallback(async () => {
+    isConsumingQueueRef.current = true;
+    let processedCount = 0;
     try {
-      const [officialExercisesResult, officialTemplatesResult] = await Promise.all([
-        getSupabase().from('official_exercise_defs').select('*').order('updated_at', { ascending: false }),
-        getSupabase().from('official_workout_templates').select('*').order('created_at', { ascending: false }),
-      ]);
+      const queued = await listQueuedOperations(activeUserId);
+      for (const operation of queued) {
+        try {
+          await executeQueuedOperation(operation);
+          await removeQueuedOperation(operation.id);
+          processedCount += 1;
+        } catch (error) {
+          if (isOffline()) break;
+          console.warn('Sync queue operation failed:', error);
+          break;
+        }
+      }
 
-      if (officialExercisesResult.error) throw officialExercisesResult.error;
-      if (officialTemplatesResult.error) throw officialTemplatesResult.error;
-
-      setOfficialExerciseDefs(
-        (officialExercisesResult.data ?? []).map((row: any) => normalizeExerciseDefRow(row, 'official'))
-      );
-
-      setOfficialTemplates(
-        sortTemplatesByCreatedAt(
-          (officialTemplatesResult.data ?? [])
-            .map((row: any) => normalizeTemplateRow(row, 'official'))
-            .filter((template: WorkoutTemplate) => template.exercises.length > 0)
-        )
-      );
+      if (processedCount > 0) {
+        pushToast({ kind: 'success', message: 'Offline changes synced' });
+      }
     } catch (error) {
-      console.warn('Official content sync skipped:', error);
+      console.warn('Failed to process sync queue:', error);
+    } finally {
+      isConsumingQueueRef.current = false;
     }
-  }, []);
+  }, [executeQueuedOperation, user?.id]);
 
   useEffect(() => {
     if (E2E_BYPASS_AUTH) {
       setAuthError(null);
-      if (!user) {
-        mapPrivyUser(null, E2E_USER_ID);
+      if (!userRef.current) {
+        mapPrivyUserRef.current(null, E2E_USER_ID);
       }
       setIsLoading(false);
       return;
@@ -328,7 +289,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!ready) return;
 
     if (authenticated) {
-      void initSession();
+      void initSessionRef.current();
       return;
     }
 
@@ -336,58 +297,27 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     clearTokenCache();
     setUser(null);
     setWorkouts([]);
-    setPersonalExerciseDefs(INITIAL_PERSONAL_EXERCISES);
-    setOfficialExerciseDefs([]);
-    setPersonalTemplates([]);
-    setOfficialTemplates([]);
+    setExerciseDefs(INITIAL_EXERCISES);
+    setTemplates([]);
     setAuthError(null);
     setIsLoading(false);
-    // initSession intentionally reads latest auth state from current closure.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, authenticated, privyUser, user]);
+  }, [ready, authenticated, privyUser]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const handleOnline = () => {
       void consumeSyncQueue();
-      void fetchOfficialContent();
     };
 
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
-  }, [consumeSyncQueue, fetchOfficialContent]);
+  }, [consumeSyncQueue]);
 
   useEffect(() => {
     if (!user?.id) return;
     void consumeSyncQueue(user.id);
   }, [user?.id, consumeSyncQueue]);
-
-  useEffect(() => {
-    if (!user?.id || E2E_BYPASS_AUTH) return;
-
-    const channel = getSupabase()
-      .channel(`official-content-${user.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'official_exercise_defs' },
-        () => {
-          void fetchOfficialContent();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'official_workout_templates' },
-        () => {
-          void fetchOfficialContent();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      void getSupabase().removeChannel(channel);
-    };
-  }, [user?.id, fetchOfficialContent]);
 
   const initSession = async () => {
     if (initInFlightRef.current) {
@@ -415,7 +345,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 300 * (i + 1)));
+        await new Promise(resolve => setTimeout(resolve, 300 * (i + 1)));
       }
 
       if (lastError) throw lastError;
@@ -439,10 +369,8 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clearTokenCache();
         setUser(null);
         setWorkouts([]);
-        setPersonalExerciseDefs(INITIAL_PERSONAL_EXERCISES);
-        setOfficialExerciseDefs([]);
-        setPersonalTemplates([]);
-        setOfficialTemplates([]);
+        setExerciseDefs(INITIAL_EXERCISES);
+        setTemplates([]);
         setIsLoading(false);
       } finally {
         initInFlightRef.current = null;
@@ -451,8 +379,57 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     await initInFlightRef.current;
   };
+  initSessionRef.current = initSession;
 
-  const shortenAddress = (addr?: string) => (addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : undefined);
+  useEffect(() => {
+    if (E2E_BYPASS_AUTH || !user?.id) return;
+
+    let canceled = false;
+    const clearRefreshTimer = () => {
+      if (tokenRefreshTimerRef.current !== null) {
+        window.clearTimeout(tokenRefreshTimerRef.current);
+        tokenRefreshTimerRef.current = null;
+      }
+    };
+
+    const scheduleTokenRefresh = () => {
+      clearRefreshTimer();
+      const expiresAt = getTokenExpiresAt();
+      if (!expiresAt) return;
+
+      const refreshAt = expiresAt - (5 * 60 * 1000);
+      const delay = Math.max(0, refreshAt - Date.now());
+
+      tokenRefreshTimerRef.current = window.setTimeout(async () => {
+        try {
+          const accessToken = await getAccessToken();
+          const identityToken = accessToken ? null : await getIdentityToken();
+          const privyToken = accessToken || identityToken;
+          if (!privyToken) throw new Error('No Privy token available');
+
+          clearTokenCache();
+          const { token: refreshedJwt } = await exchangePrivyToken(privyToken);
+          setAuthToken(refreshedJwt);
+
+          if (!canceled) {
+            scheduleTokenRefresh();
+          }
+        } catch (error) {
+          console.error('Token refresh failed:', error);
+          pushToast({ kind: 'error', message: 'Session expired. Please reload the page.' });
+        }
+      }, delay);
+    };
+
+    scheduleTokenRefresh();
+    return () => {
+      canceled = true;
+      clearRefreshTimer();
+    };
+  }, [user?.id, getAccessToken]);
+
+  const shortenAddress = (addr?: string) =>
+    addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : undefined;
 
   const mapPrivyUser = (pUser: any | null | undefined, determinedUserId: string) => {
     const email = pUser?.email?.address || pUser?.google?.email || '';
@@ -471,15 +448,21 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const linkedAccounts = pUser?.linkedAccounts || [];
 
-    const evmWallet = linkedAccounts.find((a: any) => a.type === 'wallet' && a.chainType === 'ethereum');
-    const solWallet = linkedAccounts.find((a: any) => a.type === 'wallet' && a.chainType === 'solana');
+    const evmWallet = linkedAccounts.find(
+      (a: any) => a.type === 'wallet' && a.chainType === 'ethereum'
+    );
+    const solWallet = linkedAccounts.find(
+      (a: any) => a.type === 'wallet' && a.chainType === 'solana'
+    );
 
     const unitKey = `ironlog_unit_${determinedUserId}`;
     const savedUnit = localStorage.getItem(unitKey);
     const defaultUnit: Unit = savedUnit === 'kg' || savedUnit === 'lbs' ? savedUnit : 'lbs';
     const restTimerKey = `ironlog_rest_timer_${determinedUserId}`;
     const savedRestTimer = Number(localStorage.getItem(restTimerKey));
-    const restTimerSeconds = normalizeRestTimerSeconds(Number.isFinite(savedRestTimer) ? savedRestTimer : 90);
+    const restTimerSeconds = normalizeRestTimerSeconds(
+      Number.isFinite(savedRestTimer) ? savedRestTimer : 90
+    );
     const notificationsKey = `ironlog_notifications_${determinedUserId}`;
     const notificationsEnabled = localStorage.getItem(notificationsKey) === '1';
     const themeKey = `ironlog_theme_${determinedUserId}`;
@@ -498,6 +481,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       preferences: { defaultUnit, restTimerSeconds, themeMode, notificationsEnabled },
     });
   };
+  mapPrivyUserRef.current = mapPrivyUser;
 
   const fetchData = async (activeUserId?: string) => {
     setIsLoading(true);
@@ -505,21 +489,53 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const localTemplates = templateUserId ? readLocalTemplates(templateUserId) : [];
 
     if (templateUserId) {
-      setPersonalTemplates(localTemplates);
+      setTemplates(localTemplates);
     }
 
     try {
-      const [wResult, eResult, tResult] = await Promise.all([
-        getSupabase().from('workouts').select('*'),
+      const fetchAllWorkouts = async () => {
+        const pageSize = 200;
+        const rows: any[] = [];
+        let from = 0;
+        let hasMore = true;
+
+        while (hasMore) {
+          const { data, error } = await getSupabase()
+            .from('workouts')
+            .select('*')
+            .order('date', { ascending: false })
+            .range(from, from + pageSize - 1);
+
+          if (error) throw error;
+          if (!data || data.length === 0) {
+            hasMore = false;
+            break;
+          }
+
+          rows.push(...data);
+          if (data.length < pageSize) {
+            hasMore = false;
+            break;
+          }
+          from += pageSize;
+        }
+
+        return rows;
+      };
+
+      const [workoutRows, eResult, tResult] = await Promise.all([
+        fetchAllWorkouts(),
         getSupabase().from('exercise_defs').select('*'),
         templateUserId
-          ? getSupabase().from('workout_templates').select('*').order('created_at', { ascending: false })
+          ? getSupabase()
+              .from('workout_templates')
+              .select('*')
+              .order('created_at', { ascending: false })
           : Promise.resolve({ data: null, error: null }),
       ]);
 
-      if (wResult.error) throw wResult.error;
-      if (wResult.data) {
-        const parsedWorkouts = wResult.data.map((row: any) => ({
+      if (workoutRows.length > 0) {
+        const parsedWorkouts = workoutRows.map((row: any) => ({
           id: row.id,
           date: row.date,
           title: row.title,
@@ -527,12 +543,21 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...row.data,
         }));
         setWorkouts(parsedWorkouts);
+      } else {
+        setWorkouts([]);
       }
 
       if (eResult.error) throw eResult.error;
-      if (eResult.data) {
-        const parsedDefs = eResult.data.map((row: any) => normalizeExerciseDefRow(row, 'personal'));
-        setPersonalExerciseDefs(parsedDefs);
+      if (eResult.data && eResult.data.length > 0) {
+        const parsedDefs = eResult.data.map((row: any) => ({
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          mediaUrl: row.media_url,
+          mediaType: row.media_type,
+          ...row.data,
+        }));
+        setExerciseDefs(parsedDefs);
       }
 
       if (templateUserId) {
@@ -541,23 +566,24 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } else if (tResult.data) {
           const remoteTemplates: WorkoutTemplate[] = sortTemplatesByCreatedAt(
             tResult.data
-              .map((row: any) => normalizeTemplateRow(row, 'personal'))
+              .map((row: any) => ({
+                id: row.id,
+                name: row.name,
+                createdAt: row.created_at || new Date().toISOString(),
+                exercises: sanitizeTemplateExercises(row.data?.exercises),
+              }))
               .filter((template: WorkoutTemplate) => template.exercises.length > 0)
           );
-
           const mergedTemplates = sortTemplatesByCreatedAt([
             ...remoteTemplates,
             ...localTemplates.filter(
               (localTemplate) => !remoteTemplates.some((remoteTemplate) => remoteTemplate.id === localTemplate.id)
             ),
           ]);
-
-          setPersonalTemplates(mergedTemplates);
+          setTemplates(mergedTemplates);
           writeLocalTemplates(templateUserId, mergedTemplates);
         }
       }
-
-      await fetchOfficialContent();
     } catch (e) {
       console.error('Sync Error:', e);
     } finally {
@@ -581,48 +607,48 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const login = () => {
+  const login = useCallback(() => {
     if (E2E_BYPASS_AUTH) {
-      mapPrivyUser(null, E2E_USER_ID);
+      mapPrivyUserRef.current(null, E2E_USER_ID);
       setIsLoading(false);
       return;
     }
 
     setAuthError(null);
-    if (authenticated) {
-      void initSession();
+    if (authenticatedRef.current) {
+      void initSessionRef.current();
       return;
     }
-    privyLogin();
-  };
+    privyLoginRef.current();
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     if (E2E_BYPASS_AUTH) {
       setUser(null);
       setWorkouts([]);
-      setPersonalTemplates([]);
-      setOfficialTemplates([]);
+      setTemplates([]);
       return;
     }
 
     clearAuthToken();
     clearTokenCache();
     setAuthError(null);
-    await privyLogout();
+    await privyLogoutRef.current();
     setUser(null);
-    setPersonalTemplates([]);
-    setOfficialTemplates([]);
-  };
+    setTemplates([]);
+  }, []);
 
-  const toggleUnit = () => {
-    if (!user) return;
-    const newUnit = user.preferences.defaultUnit === 'kg' ? 'lbs' : 'kg';
-    localStorage.setItem(`ironlog_unit_${user.id}`, newUnit);
-    setUser({ ...user, preferences: { ...user.preferences, defaultUnit: newUnit } });
-  };
+  const toggleUnit = useCallback(() => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const newUnit = prev.preferences.defaultUnit === 'kg' ? 'lbs' : 'kg';
+      localStorage.setItem(`ironlog_unit_${prev.id}`, newUnit);
+      return { ...prev, preferences: { ...prev.preferences, defaultUnit: newUnit } };
+    });
+  }, []);
 
-  const setRestTimerSeconds = (seconds: number) => {
-    setUser((prev) => {
+  const setRestTimerSeconds = useCallback((seconds: number) => {
+    setUser(prev => {
       if (!prev) return prev;
       const nextSeconds = normalizeRestTimerSeconds(seconds);
       localStorage.setItem(`ironlog_rest_timer_${prev.id}`, String(nextSeconds));
@@ -631,10 +657,10 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         preferences: { ...prev.preferences, restTimerSeconds: nextSeconds },
       };
     });
-  };
+  }, []);
 
-  const setThemeMode = (mode: ThemeMode) => {
-    setUser((prev) => {
+  const setThemeMode = useCallback((mode: ThemeMode) => {
+    setUser(prev => {
       if (!prev) return prev;
       const nextMode = normalizeThemeMode(mode);
       localStorage.setItem(`ironlog_theme_${prev.id}`, nextMode);
@@ -644,10 +670,10 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         preferences: { ...prev.preferences, themeMode: nextMode },
       };
     });
-  };
+  }, []);
 
-  const setNotificationsEnabled = (enabled: boolean) => {
-    setUser((prev) => {
+  const setNotificationsEnabled = useCallback((enabled: boolean) => {
+    setUser(prev => {
       if (!prev) return prev;
       localStorage.setItem(`ironlog_notifications_${prev.id}`, enabled ? '1' : '0');
       return {
@@ -655,257 +681,266 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         preferences: { ...prev.preferences, notificationsEnabled: enabled },
       };
     });
-  };
+  }, []);
 
-  const addWorkout = async (workout: Workout) => {
-    const previous = workouts;
-    setWorkouts((prev) => [...prev, workout]);
+  const addWorkout = useCallback(async (workout: Workout) => {
+    const activeUser = userRef.current;
+    if (!activeUser || E2E_BYPASS_AUTH) {
+      setWorkouts(prev => [...prev, workout]);
+      return;
+    }
 
-    if (user && !E2E_BYPASS_AUTH) {
-      const row = {
-        id: workout.id,
-        user_id: user.id,
-        date: workout.date,
-        title: workout.title,
-        completed: workout.completed,
-        data: {
-          exercises: workout.exercises,
-          note: workout.note,
-          elapsedSeconds: workout.elapsedSeconds,
-          startTimestamp: workout.startTimestamp,
-        },
-      };
-      try {
+    const previous = workoutsRef.current;
+    const row = buildWorkoutRow(workout, activeUser.id);
+    await syncedMutation({
+      optimisticUpdate: () => setWorkouts(prev => [...prev, workout]),
+      rollback: () => setWorkouts(previous),
+      remoteOperation: async () => {
         await retryWithBackoff(async () => {
           const { error } = await getSupabase().from('workouts').upsert(row);
           if (error) throw error;
         });
-      } catch (error) {
-        if (isOffline()) {
-          await queueOfflineOperation(
-            {
-              userId: user.id,
-              table: 'workouts',
-              action: 'upsert',
-              payload: row,
-            },
-            () => setWorkouts(previous),
-            'Failed to queue workout while offline'
-          );
-        } else {
-          setWorkouts(previous);
-          pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to save workout') });
-        }
-      }
+      },
+      enqueueOfflineOperation: async () => {
+        await enqueueSyncOperation({
+          userId: activeUser.id,
+          table: 'workouts',
+          action: 'upsert',
+          payload: row,
+        });
+      },
+      isOffline,
+      onOfflineQueued: () => {
+        pushToast({ kind: 'info', message: OFFLINE_QUEUE_TOAST_MESSAGE });
+      },
+      onRemoteError: (error) => {
+        pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to save workout') });
+      },
+      onQueueError: (queueError) => {
+        pushToast({ kind: 'error', message: getErrorMessage(queueError, 'Failed to queue workout while offline') });
+      },
+    });
+  }, []);
+
+  const updateWorkout = useCallback(async (updated: Workout) => {
+    const activeUser = userRef.current;
+    if (!activeUser || E2E_BYPASS_AUTH) {
+      setWorkouts(prev => prev.map(w => (w.id === updated.id ? updated : w)));
+      return;
     }
-  };
 
-  const updateWorkout = async (updated: Workout) => {
-    const previous = workouts;
-    setWorkouts((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
-
-    if (user && !E2E_BYPASS_AUTH) {
-      const row = {
-        id: updated.id,
-        user_id: user.id,
-        date: updated.date,
-        title: updated.title,
-        completed: updated.completed,
-        data: {
-          exercises: updated.exercises,
-          note: updated.note,
-          elapsedSeconds: updated.elapsedSeconds,
-          startTimestamp: updated.startTimestamp,
-        },
-      };
-      try {
+    const previous = workoutsRef.current;
+    const row = buildWorkoutRow(updated, activeUser.id);
+    await syncedMutation({
+      optimisticUpdate: () => setWorkouts(prev => prev.map(w => (w.id === updated.id ? updated : w))),
+      rollback: () => setWorkouts(previous),
+      remoteOperation: async () => {
         await retryWithBackoff(async () => {
           const { error } = await getSupabase().from('workouts').upsert(row);
           if (error) throw error;
         });
-      } catch (error) {
-        if (isOffline()) {
-          await queueOfflineOperation(
-            {
-              userId: user.id,
-              table: 'workouts',
-              action: 'upsert',
-              payload: row,
-            },
-            () => setWorkouts(previous),
-            'Failed to queue workout update while offline'
-          );
-        } else {
-          setWorkouts(previous);
-          pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to update workout') });
-        }
-      }
-    }
-  };
+      },
+      enqueueOfflineOperation: async () => {
+        await enqueueSyncOperation({
+          userId: activeUser.id,
+          table: 'workouts',
+          action: 'upsert',
+          payload: row,
+        });
+      },
+      isOffline,
+      onOfflineQueued: () => {
+        pushToast({ kind: 'info', message: OFFLINE_QUEUE_TOAST_MESSAGE });
+      },
+      onRemoteError: (error) => {
+        pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to update workout') });
+      },
+      onQueueError: (queueError) => {
+        pushToast({ kind: 'error', message: getErrorMessage(queueError, 'Failed to queue workout update while offline') });
+      },
+    });
+  }, []);
 
-  const deleteWorkout = async (id: string) => {
-    const previous = workouts;
-    setWorkouts((prev) => prev.filter((w) => w.id !== id));
-    if (user && !E2E_BYPASS_AUTH) {
-      try {
+  const deleteWorkout = useCallback(async (id: string) => {
+    const activeUser = userRef.current;
+    if (!activeUser || E2E_BYPASS_AUTH) {
+      setWorkouts(prev => prev.filter(w => w.id !== id));
+      return;
+    }
+
+    const previous = workoutsRef.current;
+    await syncedMutation({
+      optimisticUpdate: () => setWorkouts(prev => prev.filter(w => w.id !== id)),
+      rollback: () => setWorkouts(previous),
+      remoteOperation: async () => {
         await retryWithBackoff(async () => {
           const { error } = await getSupabase().from('workouts').delete().eq('id', id);
           if (error) throw error;
         });
-      } catch (error) {
-        if (isOffline()) {
-          await queueOfflineOperation(
-            {
-              userId: user.id,
-              table: 'workouts',
-              action: 'delete',
-              payload: { id },
-            },
-            () => setWorkouts(previous),
-            'Failed to queue workout delete while offline'
-          );
-        } else {
-          setWorkouts(previous);
-          pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to delete workout') });
-        }
-      }
-    }
-  };
+      },
+      enqueueOfflineOperation: async () => {
+        await enqueueSyncOperation({
+          userId: activeUser.id,
+          table: 'workouts',
+          action: 'delete',
+          payload: { id },
+        });
+      },
+      isOffline,
+      onOfflineQueued: () => {
+        pushToast({ kind: 'info', message: OFFLINE_QUEUE_TOAST_MESSAGE });
+      },
+      onRemoteError: (error) => {
+        pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to delete workout') });
+      },
+      onQueueError: (queueError) => {
+        pushToast({ kind: 'error', message: getErrorMessage(queueError, 'Failed to queue workout delete while offline') });
+      },
+    });
+  }, []);
 
-  const addExerciseDef = async (def: ExerciseDef) => {
-    if (def.source === 'official' || def.readOnly) {
-      pushToast({ kind: 'error', message: 'Official exercises are read-only' });
+  const addExerciseDef = useCallback(async (def: ExerciseDef) => {
+    const activeUser = userRef.current;
+    if (!activeUser || E2E_BYPASS_AUTH) {
+      setExerciseDefs(prev => [...prev, def]);
       return;
     }
 
-    const normalized = ensurePersonalExerciseShape(def);
-    const previous = personalExerciseDefs;
-    setPersonalExerciseDefs((prev) => [...prev, normalized]);
-
-    if (user && !E2E_BYPASS_AUTH) {
-      const row = toPersonalExerciseRow(normalized, user.id);
-      try {
+    const previous = exerciseDefsRef.current;
+    const row = buildExerciseDefRow(def, activeUser.id);
+    await syncedMutation({
+      optimisticUpdate: () => setExerciseDefs(prev => [...prev, def]),
+      rollback: () => setExerciseDefs(previous),
+      remoteOperation: async () => {
         await retryWithBackoff(async () => {
           const { error } = await getSupabase().from('exercise_defs').upsert(row);
           if (error) throw error;
         });
-      } catch (error) {
-        if (isOffline()) {
-          await queueOfflineOperation(
-            {
-              userId: user.id,
-              table: 'exercise_defs',
-              action: 'upsert',
-              payload: row,
-            },
-            () => setPersonalExerciseDefs(previous),
-            'Failed to queue exercise while offline'
-          );
-        } else {
-          setPersonalExerciseDefs(previous);
-          pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to save exercise') });
-        }
-      }
-    }
-  };
+      },
+      enqueueOfflineOperation: async () => {
+        await enqueueSyncOperation({
+          userId: activeUser.id,
+          table: 'exercise_defs',
+          action: 'upsert',
+          payload: row,
+        });
+      },
+      isOffline,
+      onOfflineQueued: () => {
+        pushToast({ kind: 'info', message: OFFLINE_QUEUE_TOAST_MESSAGE });
+      },
+      onRemoteError: (error) => {
+        pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to save exercise') });
+      },
+      onQueueError: (queueError) => {
+        pushToast({ kind: 'error', message: getErrorMessage(queueError, 'Failed to queue exercise while offline') });
+      },
+    });
+  }, []);
 
-  const updateExerciseDef = async (def: ExerciseDef) => {
-    if (def.source === 'official' || def.readOnly) {
-      pushToast({ kind: 'error', message: 'Official exercises are read-only' });
+  const updateExerciseDef = useCallback(async (def: ExerciseDef) => {
+    const activeUser = userRef.current;
+    if (!activeUser || E2E_BYPASS_AUTH) {
+      setExerciseDefs(prev => prev.map(d => (d.id === def.id ? def : d)));
       return;
     }
 
-    const normalized = ensurePersonalExerciseShape(def);
-    const previous = personalExerciseDefs;
-    setPersonalExerciseDefs((prev) => prev.map((d) => (d.id === normalized.id ? normalized : d)));
-
-    if (user && !E2E_BYPASS_AUTH) {
-      const row = toPersonalExerciseRow(normalized, user.id);
-      try {
+    const previous = exerciseDefsRef.current;
+    const row = buildExerciseDefRow(def, activeUser.id);
+    await syncedMutation({
+      optimisticUpdate: () => setExerciseDefs(prev => prev.map(d => (d.id === def.id ? def : d))),
+      rollback: () => setExerciseDefs(previous),
+      remoteOperation: async () => {
         await retryWithBackoff(async () => {
           const { error } = await getSupabase().from('exercise_defs').upsert(row);
           if (error) throw error;
         });
-      } catch (error) {
-        if (isOffline()) {
-          await queueOfflineOperation(
-            {
-              userId: user.id,
-              table: 'exercise_defs',
-              action: 'upsert',
-              payload: row,
-            },
-            () => setPersonalExerciseDefs(previous),
-            'Failed to queue exercise update while offline'
-          );
-        } else {
-          setPersonalExerciseDefs(previous);
-          pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to update exercise') });
-        }
-      }
-    }
-  };
+      },
+      enqueueOfflineOperation: async () => {
+        await enqueueSyncOperation({
+          userId: activeUser.id,
+          table: 'exercise_defs',
+          action: 'upsert',
+          payload: row,
+        });
+      },
+      isOffline,
+      onOfflineQueued: () => {
+        pushToast({ kind: 'info', message: OFFLINE_QUEUE_TOAST_MESSAGE });
+      },
+      onRemoteError: (error) => {
+        pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to update exercise') });
+      },
+      onQueueError: (queueError) => {
+        pushToast({ kind: 'error', message: getErrorMessage(queueError, 'Failed to queue exercise update while offline') });
+      },
+    });
+  }, []);
 
-  const deleteExerciseDef = async (id: string) => {
-    const target = exerciseDefs.find((item) => item.id === id);
-    if (target?.source === 'official' || target?.readOnly) {
-      pushToast({ kind: 'error', message: 'Official exercises are read-only' });
+  const deleteExerciseDef = useCallback(async (id: string) => {
+    const activeUser = userRef.current;
+    if (!activeUser || E2E_BYPASS_AUTH) {
+      setExerciseDefs(prev => prev.filter(d => d.id !== id));
       return;
     }
 
-    const previous = personalExerciseDefs;
-    setPersonalExerciseDefs((prev) => prev.filter((d) => d.id !== id));
-
-    if (user && !E2E_BYPASS_AUTH) {
-      try {
+    const previous = exerciseDefsRef.current;
+    await syncedMutation({
+      optimisticUpdate: () => setExerciseDefs(prev => prev.filter(d => d.id !== id)),
+      rollback: () => setExerciseDefs(previous),
+      remoteOperation: async () => {
         await retryWithBackoff(async () => {
           const { error } = await getSupabase().from('exercise_defs').delete().eq('id', id);
           if (error) throw error;
         });
-      } catch (error) {
-        if (isOffline()) {
-          await queueOfflineOperation(
-            {
-              userId: user.id,
-              table: 'exercise_defs',
-              action: 'delete',
-              payload: { id },
-            },
-            () => setPersonalExerciseDefs(previous),
-            'Failed to queue exercise delete while offline'
-          );
-        } else {
-          setPersonalExerciseDefs(previous);
-          pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to delete exercise') });
-        }
-      }
-    }
-  };
+      },
+      enqueueOfflineOperation: async () => {
+        await enqueueSyncOperation({
+          userId: activeUser.id,
+          table: 'exercise_defs',
+          action: 'delete',
+          payload: { id },
+        });
+      },
+      isOffline,
+      onOfflineQueued: () => {
+        pushToast({ kind: 'info', message: OFFLINE_QUEUE_TOAST_MESSAGE });
+      },
+      onRemoteError: (error) => {
+        pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to delete exercise') });
+      },
+      onQueueError: (queueError) => {
+        pushToast({ kind: 'error', message: getErrorMessage(queueError, 'Failed to queue exercise delete while offline') });
+      },
+    });
+  }, []);
 
-  const persistTemplatesLocal = (nextTemplates: WorkoutTemplate[], activeUserId?: string) => {
-    const targetUserId = activeUserId ?? user?.id;
+  const persistTemplatesLocal = useCallback((nextTemplates: WorkoutTemplate[], activeUserId?: string) => {
+    const targetUserId = activeUserId ?? userRef.current?.id;
     if (!targetUserId) return;
-    writeLocalTemplates(targetUserId, nextTemplates.filter((template) => template.source === 'personal'));
-  };
+    writeLocalTemplates(targetUserId, nextTemplates);
+  }, []);
 
-  const addTemplate = async (template: WorkoutTemplate): Promise<boolean> => {
+  const addTemplate = useCallback(async (template: WorkoutTemplate): Promise<boolean> => {
     const normalized = {
       ...template,
-      source: 'personal' as const,
-      readOnly: false,
-      description: template.description ?? '',
-      tagline: template.tagline ?? '',
       exercises: sanitizeTemplateExercises(template.exercises),
       createdAt: template.createdAt || new Date().toISOString(),
     };
-
-    const next = sortTemplatesByCreatedAt([...personalTemplates, normalized]);
-    setPersonalTemplates(next);
+    const next = sortTemplatesByCreatedAt([...templatesRef.current, normalized]);
+    setTemplates(next);
     persistTemplatesLocal(next);
     let syncedToRemote = false;
 
-    if (user && !E2E_BYPASS_AUTH) {
-      const row = toPersonalTemplateRow(normalized, user.id);
+    const activeUser = userRef.current;
+    if (activeUser && !E2E_BYPASS_AUTH) {
+      const row = {
+        id: normalized.id,
+        user_id: activeUser.id,
+        name: normalized.name,
+        data: { exercises: normalized.exercises },
+        created_at: normalized.createdAt,
+      };
       try {
         await retryWithBackoff(async () => {
           const { error } = await getSupabase().from('workout_templates').upsert(row);
@@ -916,7 +951,7 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.warn('Template sync failed, keeping local template:', error);
         try {
           await enqueueSyncOperation({
-            userId: user.id,
+            userId: activeUser.id,
             table: 'workout_templates',
             action: 'upsert',
             payload: row,
@@ -929,11 +964,10 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     }
+    return syncedToRemote || !activeUser || E2E_BYPASS_AUTH;
+  }, [persistTemplatesLocal]);
 
-    return syncedToRemote || !user || E2E_BYPASS_AUTH;
-  };
-
-  const addTemplateFromWorkout = async (name: string, workout: Workout) => {
+  const addTemplateFromWorkout = useCallback(async (name: string, workout: Workout) => {
     const setsByDefId = new Map<string, number>();
     for (const exercise of workout.exercises) {
       const setCount = Math.max(1, exercise.sets.length);
@@ -954,10 +988,6 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const template: WorkoutTemplate = {
       id: generateId(),
       name: name.trim() || workout.title || 'Workout Template',
-      source: 'personal',
-      readOnly: false,
-      description: '',
-      tagline: '',
       exercises: templateExercises,
       createdAt: new Date().toISOString(),
     };
@@ -968,58 +998,62 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
     pushToast({ kind: 'info', message: 'Template saved locally and will sync later' });
-  };
+  }, [addTemplate]);
 
-  const deleteTemplate = async (id: string) => {
-    const target = templates.find((template) => template.id === id);
-    if (target?.source === 'official' || target?.readOnly) {
-      pushToast({ kind: 'error', message: 'Official templates are read-only' });
+  const deleteTemplate = useCallback(async (id: string) => {
+    const previous = templatesRef.current;
+    const next = templatesRef.current.filter((template) => template.id !== id);
+    const activeUser = userRef.current;
+    if (!activeUser || E2E_BYPASS_AUTH) {
+      setTemplates(next);
+      persistTemplatesLocal(next);
       return;
     }
 
-    const previous = personalTemplates;
-    const next = personalTemplates.filter((template) => template.id !== id);
-    setPersonalTemplates(next);
-    persistTemplatesLocal(next);
-
-    if (user && !E2E_BYPASS_AUTH) {
-      try {
+    await syncedMutation({
+      optimisticUpdate: () => {
+        setTemplates(next);
+        persistTemplatesLocal(next);
+      },
+      rollback: () => {
+        setTemplates(previous);
+        persistTemplatesLocal(previous);
+      },
+      remoteOperation: async () => {
         await retryWithBackoff(async () => {
           const { error } = await getSupabase().from('workout_templates').delete().eq('id', id);
           if (error) throw error;
         });
-      } catch (error) {
-        if (isOffline()) {
-          await queueOfflineOperation(
-            {
-              userId: user.id,
-              table: 'workout_templates',
-              action: 'delete',
-              payload: { id },
-            },
-            () => {
-              setPersonalTemplates(previous);
-              persistTemplatesLocal(previous);
-            },
-            'Failed to queue template delete while offline'
-          );
-        } else {
-          setPersonalTemplates(previous);
-          persistTemplatesLocal(previous);
-          pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to delete template') });
-        }
-      }
-    }
-  };
+      },
+      enqueueOfflineOperation: async () => {
+        await enqueueSyncOperation({
+          userId: activeUser.id,
+          table: 'workout_templates',
+          action: 'delete',
+          payload: { id },
+        });
+      },
+      isOffline,
+      onOfflineQueued: () => {
+        pushToast({ kind: 'info', message: OFFLINE_QUEUE_TOAST_MESSAGE });
+      },
+      onRemoteError: (error) => {
+        pushToast({ kind: 'error', message: getErrorMessage(error, 'Failed to delete template') });
+      },
+      onQueueError: (queueError) => {
+        pushToast({ kind: 'error', message: getErrorMessage(queueError, 'Failed to queue template delete while offline') });
+      },
+    });
+  }, [persistTemplatesLocal]);
 
-  const startWorkoutFromTemplate = async (templateId: string, targetDate: string) => {
-    const template = templates.find((item) => item.id === templateId);
+  const startWorkoutFromTemplate = useCallback(async (templateId: string, targetDate: string) => {
+    const template = templatesRef.current.find((item) => item.id === templateId);
     if (!template) {
       pushToast({ kind: 'error', message: 'Template not found' });
       return null;
     }
 
-    const existingDefIds = new Set(exerciseDefs.map((def) => def.id));
+    const existingDefIds = new Set(exerciseDefsRef.current.map((def) => def.id));
     const exercises: Workout['exercises'] = template.exercises
       .filter((item) => existingDefIds.has(item.defId))
       .map((item) => ({
@@ -1051,10 +1085,10 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     await addWorkout(workout);
     return workout;
-  };
+  }, [addWorkout]);
 
-  const copyWorkout = (workoutId: string, targetDate: string) => {
-    const source = workouts.find((w) => w.id === workoutId);
+  const copyWorkout = useCallback((workoutId: string, targetDate: string) => {
+    const source = workoutsRef.current.find(w => w.id === workoutId);
     if (!source) return;
 
     const newWorkout: Workout = {
@@ -1064,35 +1098,32 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       completed: false,
       elapsedSeconds: 0,
       startTimestamp: null,
-      exercises: source.exercises.map((ex) => ({
+      exercises: source.exercises.map(ex => ({
         ...ex,
-        sets: ex.sets.map((s) => ({ ...s, completed: false })),
+        id: generateId(),
+        sets: ex.sets.map(s => ({ ...s, id: generateId(), completed: false })),
       })),
     };
 
     void addWorkout(newWorkout);
-  };
+  }, [addWorkout]);
 
-  const dataValue = useMemo<GymDataContextType>(
-    () => ({
-      user,
-      isLoading,
-      authError,
-      workouts,
-      exerciseDefs,
-      templates,
-    }),
-    [user, isLoading, authError, workouts, exerciseDefs, templates]
-  );
+  const dataValue = useMemo<GymDataContextType>(() => ({
+    user,
+    isLoading,
+    authError,
+    workouts,
+    exerciseDefs,
+    templates,
+  }), [user, isLoading, authError, workouts, exerciseDefs, templates]);
 
-  const actionsValue: GymActionsContextType = {
+  const actionsValue = useMemo<GymActionsContextType>(() => ({
     login,
     logout,
     toggleUnit,
     setRestTimerSeconds,
     setThemeMode,
     setNotificationsEnabled,
-    refreshOfficialContent: fetchOfficialContent,
     addWorkout,
     updateWorkout,
     deleteWorkout,
@@ -1103,11 +1134,30 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     deleteTemplate,
     startWorkoutFromTemplate,
     copyWorkout,
-  };
+  }), [
+    login,
+    logout,
+    toggleUnit,
+    setRestTimerSeconds,
+    setThemeMode,
+    setNotificationsEnabled,
+    addWorkout,
+    updateWorkout,
+    deleteWorkout,
+    addExerciseDef,
+    updateExerciseDef,
+    deleteExerciseDef,
+    addTemplateFromWorkout,
+    deleteTemplate,
+    startWorkoutFromTemplate,
+    copyWorkout,
+  ]);
 
   return (
     <GymDataContext.Provider value={dataValue}>
-      <GymActionsContext.Provider value={actionsValue}>{children}</GymActionsContext.Provider>
+      <GymActionsContext.Provider value={actionsValue}>
+        {children}
+      </GymActionsContext.Provider>
     </GymDataContext.Provider>
   );
 };

@@ -68,30 +68,10 @@ const RestTimer: React.FC<RestTimerProps> = ({
   onDurationChange,
 }) => {
   const { t } = useI18n();
-  const [shouldRender, setShouldRender] = useState(isOpen);
-  const [isClosing, setIsClosing] = useState(false);
   const [activeDuration, setActiveDuration] = useState(normalizeDuration(durationSeconds));
   const [remainingSeconds, setRemainingSeconds] = useState(normalizeDuration(durationSeconds));
   const [isPaused, setIsPaused] = useState(false);
   const didCompleteRef = useRef(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setShouldRender(true);
-      setIsClosing(false);
-      return;
-    }
-
-    if (!shouldRender) return;
-
-    setIsClosing(true);
-    const timer = window.setTimeout(() => {
-      setShouldRender(false);
-      setIsClosing(false);
-    }, 220);
-
-    return () => window.clearTimeout(timer);
-  }, [isOpen, shouldRender]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -119,7 +99,7 @@ const RestTimer: React.FC<RestTimerProps> = ({
     return () => window.clearTimeout(closeTimer);
   }, [isOpen, remainingSeconds, onClose]);
 
-  if (!shouldRender) return null;
+  if (!isOpen) return null;
 
   const radius = 58;
   const circumference = 2 * Math.PI * radius;
@@ -137,15 +117,11 @@ const RestTimer: React.FC<RestTimerProps> = ({
   return (
     <Portal>
       <div
-        className={`fixed inset-0 z-[950] bg-black/45 backdrop-blur-sm px-6 flex items-center justify-center modal-backdrop ${
-          isClosing ? 'modal-backdrop--exit' : 'modal-backdrop--enter'
-        }`}
+        className="fixed inset-0 z-[950] bg-black/45 backdrop-blur-sm px-6 flex items-center justify-center"
         onClick={onClose}
       >
         <div
-          className={`w-full max-w-sm rounded-[28px] bg-white dark:bg-gray-900 p-6 shadow-2xl dark:shadow-black/60 transition-colors modal-panel ${
-            isClosing ? 'modal-panel--exit' : 'modal-panel--enter'
-          }`}
+          className="w-full max-w-sm rounded-[28px] bg-white dark:bg-gray-900 p-6 shadow-2xl dark:shadow-black/60 transition-colors"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-5">
@@ -177,7 +153,7 @@ const RestTimer: React.FC<RestTimerProps> = ({
                   cy="70"
                   r={radius}
                   fill="none"
-                  stroke="var(--brand-yellow)"
+                  stroke="#F59E0B"
                   strokeWidth="10"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
@@ -208,7 +184,7 @@ const RestTimer: React.FC<RestTimerProps> = ({
                 onClick={() => chooseDuration(seconds)}
                 className={`py-2 rounded-lg text-xs font-bold transition-colors ${
                   activeDuration === seconds
-                    ? 'bg-brand text-gray-900'
+                    ? 'bg-amber-400 text-gray-900'
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >

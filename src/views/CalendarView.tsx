@@ -170,7 +170,7 @@ const CalendarView: React.FC = () => {
                     onClick={() => handleDayClick(day)}
                     className={`aspect-square rounded-2xl flex flex-col items-center justify-center relative cursor-pointer transition-all active:scale-95 ${
                       isSelected
-                        ? 'bg-brand text-gray-900 shadow-lg shadow-brand-soft'
+                        ? 'bg-amber-400 text-white shadow-lg shadow-amber-300/55 dark:shadow-amber-900/40'
                         : isToday
                           ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold'
                           : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -182,11 +182,7 @@ const CalendarView: React.FC = () => {
                         {dayWorkouts.slice(0, 3).map((_, idx) => (
                           <div
                             key={idx}
-                            className={`w-1 h-1 rounded-full ${
-                              isSelected
-                                ? 'bg-gray-900/70'
-                                : 'bg-brand ring-1 ring-black/10 dark:ring-white/10'
-                            }`}
+                            className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-amber-400'}`}
                           />
                         ))}
                       </div>

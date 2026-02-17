@@ -490,7 +490,8 @@ export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { 
 }) => {
   const base = "px-6 py-3 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 pressable";
   const variants = {
-    primary: "bg-brand text-gray-900 shadow-lg shadow-brand-soft hover:brightness-95",
+    // Warm "yellow" accent (amber) reads better than pure yellow on white and keeps contrast.
+    primary: "bg-amber-400 text-gray-900 shadow-lg shadow-amber-100 hover:bg-amber-500 dark:shadow-amber-900/30",
     secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700",
     danger: "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/45 dark:text-red-300 dark:hover:bg-red-900/45 dark:border dark:border-red-900/55",
     ghost: "bg-transparent text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -512,7 +513,6 @@ export const Modal: React.FC<{
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  position?: 'center' | 'bottom';
   panelClassName?: string;
   contentClassName?: string;
   overlayClassName?: string;
@@ -521,7 +521,6 @@ export const Modal: React.FC<{
   onClose,
   title,
   children,
-  position = 'center',
   panelClassName,
   contentClassName,
   overlayClassName,
@@ -562,12 +561,10 @@ export const Modal: React.FC<{
 
   const phaseClass = isClosing ? 'modal-backdrop--exit' : 'modal-backdrop--enter';
   const panelPhaseClass = isClosing ? 'modal-panel--exit' : 'modal-panel--enter';
-  const overlayPositionClass = position === 'bottom' ? 'items-end' : 'items-center';
-  const panelShapeClass = position === 'bottom' ? 'rounded-t-[32px] rounded-b-none' : 'rounded-[32px]';
 
   const overlay = (
     <div
-      className={`fixed inset-0 z-[1000] flex justify-center ${overlayPositionClass} ${
+      className={`fixed inset-0 z-[1000] flex items-center justify-center ${
         overlayClassName ??
         'bg-gradient-to-t from-black/40 via-black/25 to-black/10 backdrop-blur-sm'
       } modal-backdrop ${phaseClass}`}
@@ -575,7 +572,7 @@ export const Modal: React.FC<{
       role="presentation"
     >
       <div
-        className={`bg-white dark:bg-gray-900 ${panelShapeClass} shadow-2xl dark:shadow-black/60 w-full max-w-md mx-4 max-h-[92vh] overflow-hidden flex flex-col modal-panel ${panelPhaseClass} ${
+        className={`bg-white dark:bg-gray-900 rounded-[32px] shadow-2xl dark:shadow-black/60 w-full max-w-md mx-4 max-h-[92vh] overflow-hidden flex flex-col modal-panel ${panelPhaseClass} ${
           panelClassName ?? ''
         }`}
         onMouseDown={(e) => e.stopPropagation()}
@@ -607,7 +604,7 @@ export const Modal: React.FC<{
 export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({ label, className = '', ...props }) => (
   <div className="flex flex-col gap-2 mb-4">
     {label && <label className="text-sm font-semibold text-gray-500 dark:text-gray-400 ml-1">{label}</label>}
-    <input className={`bg-gray-50 dark:bg-gray-800 border-none rounded-2xl px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 ring-brand outline-none transition-all ${className}`} {...props} />
+    <input className={`bg-gray-50 dark:bg-gray-800 border-none rounded-2xl px-4 py-3 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all ${className}`} {...props} />
   </div>
 );
 

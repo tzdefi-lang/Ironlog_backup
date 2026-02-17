@@ -2,14 +2,20 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const DEFAULT_SUPABASE_URL = 'https://gyiqdkmvlixwgedjhycc.supabase.co';
 const DEFAULT_SUPABASE_ANON_KEY = 'sb_publishable_psIWS8xZmx4aCqVnzUFkyg_vjM1kPiz';
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_ANON_KEY;
-
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn(
-    '[IronLog] Supabase env vars are missing. Falling back to built-in defaults for emergency startup.'
-  );
-}
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? (
+  import.meta.env.DEV
+    ? DEFAULT_SUPABASE_URL
+    : (() => {
+      throw new Error('[IronLog] VITE_SUPABASE_URL is required in production');
+    })()
+);
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? (
+  import.meta.env.DEV
+    ? DEFAULT_SUPABASE_ANON_KEY
+    : (() => {
+      throw new Error('[IronLog] VITE_SUPABASE_ANON_KEY is required in production');
+    })()
+);
 
 // Module-level client — starts as unauthenticated, swapped on login/logout
 let _client: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -51,7 +57,6 @@ export const uploadMediaToSupabase = async (blob: Blob, path: string) => {
     .upload(path, blob, {
       cacheControl: '3600',
       upsert: true,
-      contentType: blob.type ? blob.type.split(';')[0] : undefined,
     });
 
   if (error) {

@@ -19,7 +19,7 @@ const CategoryPicker: React.FC<CategoryPickerProps> = ({ value, onChange }) => {
               type="button"
               onClick={() => onChange(opt)}
               className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                isActive ? 'bg-brand text-gray-900' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                isActive ? 'bg-amber-400 text-gray-900' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {opt}

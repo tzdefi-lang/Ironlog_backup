@@ -5,115 +5,52 @@
 :root {
   /* Reduce the bright iOS tap highlight */
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  --standalone-safe-top: 0px;
   --ease-smooth: cubic-bezier(0.2, 0.72, 0.2, 1);
   --ease-spring: cubic-bezier(0.18, 0.9, 0.22, 1.08);
-  --ease-cinematic: cubic-bezier(0.22, 0, 0.12, 1);
   --dur-fast: 150ms;
   --dur-med: 220ms;
   --dur-slow: 280ms;
-  --brand-yellow: #ffff8c;
-  --brand-yellow-text: #b8a800;
-  --brand-yellow-tint: rgba(255, 255, 140, 0.22);
-  --brand-yellow-tint-strong: rgba(255, 255, 140, 0.32);
-  --brand-yellow-border: rgba(255, 255, 140, 0.65);
-  --brand-yellow-ring: rgba(255, 255, 140, 0.55);
-  --brand-yellow-glow-soft: rgba(255, 255, 140, 0.34);
-  --brand-yellow-glow-strong: rgba(255, 255, 140, 0.42);
   --app-bg: #ffffff;
   --app-fg: #111827;
   --surface-muted: #f9fafb;
   --nav-shadow: rgba(17, 24, 39, 0.06);
-  --accent-glow-soft: var(--brand-yellow-glow-soft);
-  --accent-glow-strong: var(--brand-yellow-glow-strong);
+  --accent-glow-soft: rgba(245, 158, 11, 0.34);
+  --accent-glow-strong: rgba(245, 158, 11, 0.42);
   --chart-tooltip-bg: rgba(255, 255, 255, 0.9);
   --chart-tooltip-border: rgba(148, 163, 184, 0.28);
   --chart-tooltip-shadow: rgba(15, 23, 42, 0.14);
   --chart-tooltip-label: #0f172a;
   --chart-tooltip-text: #334155;
-  --stats-grid-stroke: #e5e7eb;
-  --stats-axis-stroke: #9ca3af;
-  --stats-line-primary: #2563eb;
-  --stats-line-secondary: #0f766e;
-  --stats-line-danger: #ef4444;
-  --stats-bar-primary: #60a5fa;
-  --stats-bar-accent: var(--brand-yellow);
-  --stats-highlight: var(--brand-yellow);
-  --stats-cursor-line: rgba(100, 116, 139, 0.45);
-  --stats-cursor-fill: rgba(15, 23, 42, 0.04);
 }
 
 html.dark {
-  --brand-yellow-text: var(--brand-yellow);
-  --brand-yellow-tint: rgba(255, 255, 140, 0.14);
-  --brand-yellow-tint-strong: rgba(255, 255, 140, 0.22);
-  --brand-yellow-border: rgba(255, 255, 140, 0.5);
-  --brand-yellow-ring: rgba(255, 255, 140, 0.36);
-  --brand-yellow-glow-soft: rgba(255, 255, 140, 0.24);
-  --brand-yellow-glow-strong: rgba(255, 255, 140, 0.34);
   --app-bg: #030712;
   --app-fg: #f3f4f6;
   --surface-muted: #111827;
   --nav-shadow: rgba(2, 6, 23, 0.45);
-  --accent-glow-soft: var(--brand-yellow-glow-soft);
-  --accent-glow-strong: var(--brand-yellow-glow-strong);
+  --accent-glow-soft: rgba(245, 158, 11, 0.24);
+  --accent-glow-strong: rgba(245, 158, 11, 0.34);
   --chart-tooltip-bg: rgba(17, 24, 39, 0.88);
   --chart-tooltip-border: rgba(71, 85, 105, 0.45);
   --chart-tooltip-shadow: rgba(2, 6, 23, 0.45);
   --chart-tooltip-label: #f8fafc;
   --chart-tooltip-text: #e2e8f0;
-  --stats-grid-stroke: #334155;
-  --stats-axis-stroke: #94a3b8;
-  --stats-line-primary: var(--brand-yellow);
-  --stats-line-secondary: rgba(255, 255, 140, 0.72);
-  --stats-line-danger: #f87171;
-  --stats-bar-primary: #64748b;
-  --stats-bar-accent: var(--brand-yellow);
-  --stats-highlight: var(--brand-yellow);
-  --stats-cursor-line: rgba(255, 255, 140, 0.46);
-  --stats-cursor-fill: rgba(255, 255, 140, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
   html:not(.light):not(.dark) {
-    --brand-yellow-text: var(--brand-yellow);
-    --brand-yellow-tint: rgba(255, 255, 140, 0.14);
-    --brand-yellow-tint-strong: rgba(255, 255, 140, 0.22);
-    --brand-yellow-border: rgba(255, 255, 140, 0.5);
-    --brand-yellow-ring: rgba(255, 255, 140, 0.36);
-    --brand-yellow-glow-soft: rgba(255, 255, 140, 0.24);
-    --brand-yellow-glow-strong: rgba(255, 255, 140, 0.34);
     --app-bg: #030712;
     --app-fg: #f3f4f6;
     --surface-muted: #111827;
     --nav-shadow: rgba(2, 6, 23, 0.45);
-    --accent-glow-soft: var(--brand-yellow-glow-soft);
-    --accent-glow-strong: var(--brand-yellow-glow-strong);
+    --accent-glow-soft: rgba(245, 158, 11, 0.24);
+    --accent-glow-strong: rgba(245, 158, 11, 0.34);
     --chart-tooltip-bg: rgba(17, 24, 39, 0.88);
     --chart-tooltip-border: rgba(71, 85, 105, 0.45);
     --chart-tooltip-shadow: rgba(2, 6, 23, 0.45);
     --chart-tooltip-label: #f8fafc;
     --chart-tooltip-text: #e2e8f0;
-    --stats-grid-stroke: #334155;
-    --stats-axis-stroke: #94a3b8;
-    --stats-line-primary: var(--brand-yellow);
-    --stats-line-secondary: rgba(255, 255, 140, 0.72);
-    --stats-line-danger: #f87171;
-    --stats-bar-primary: #64748b;
-    --stats-bar-accent: var(--brand-yellow);
-    --stats-highlight: var(--brand-yellow);
-    --stats-cursor-line: rgba(255, 255, 140, 0.46);
-    --stats-cursor-fill: rgba(255, 255, 140, 0.12);
   }
-}
-
-.app-shell {
-  box-sizing: border-box;
-  padding-top: var(--standalone-safe-top);
-}
-
-html.ios-standalone {
-  --standalone-safe-top: calc(max(env(safe-area-inset-top, 0px), 12px) + 2px);
 }
 
 html, body {
@@ -160,228 +97,14 @@ body {
 /* Hide browser focus outlines on Recharts surfaces when tapping/clicking charts. */
 .recharts-wrapper:focus,
 .recharts-wrapper:focus-visible,
-.recharts-responsive-container:focus,
-.recharts-responsive-container:focus-visible,
 .recharts-surface:focus,
 .recharts-surface:focus-visible,
 .recharts-pie:focus,
 .recharts-pie:focus-visible,
-.recharts-sector:focus,
-.recharts-sector:focus-visible,
 .recharts-pie-sector:focus,
 .recharts-pie-sector:focus-visible {
   outline: none !important;
   box-shadow: none !important;
-}
-
-/* Exercise detail bottom sheet (iOS-style). */
-.exercise-detail-backdrop {
-  opacity: 0;
-  transition: opacity 320ms var(--ease-smooth);
-  will-change: opacity;
-}
-
-.exercise-detail-backdrop.is-open {
-  opacity: 1;
-}
-
-.exercise-detail-sheet {
-  transform: translate3d(0, 100%, 0);
-  transition: transform 420ms var(--ease-spring);
-  will-change: transform;
-}
-
-.exercise-detail-sheet.is-dragging {
-  transition: none !important;
-}
-
-.exercise-detail-sheet.is-open {
-  transform: translate3d(0, 0, 0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .exercise-detail-backdrop,
-  .exercise-detail-sheet {
-    transition: none !important;
-  }
-}
-
-/* Hide scrollbars for horizontal carousels (still scrollable). */
-.hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge legacy */
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Stronger snap feel for swipe-only carousels. */
-.snap-stop-always {
-  scroll-snap-stop: always;
-}
-
-/* Brand helpers (yellow = #FFFF8C). */
-.bg-brand {
-  background-color: var(--brand-yellow);
-}
-
-.bg-brand-tint {
-  background-color: var(--brand-yellow-tint);
-}
-
-.bg-brand-tint-strong {
-  background-color: var(--brand-yellow-tint-strong);
-}
-
-.text-brand {
-  color: var(--brand-yellow-text);
-}
-
-.border-brand {
-  border-color: var(--brand-yellow-border);
-}
-
-.shadow-brand-soft {
-  --tw-shadow-color: var(--brand-yellow-glow-soft);
-}
-
-.shadow-brand-strong {
-  --tw-shadow-color: var(--brand-yellow-glow-strong);
-}
-
-.ring-brand {
-  --tw-ring-color: var(--brand-yellow-ring);
-}
-
-.focus-border-brand:focus {
-  border-color: var(--brand-yellow) !important;
-}
-
-/* Starter splash overlay. */
-.starter-splash {
-  position: fixed;
-  inset: 0;
-  z-index: 3000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: all;
-}
-
-.starter-splash.is-exiting {
-  /* Don't block the app while the sheet collapses. */
-  pointer-events: none;
-}
-
-.starter-splash__bg {
-  position: absolute;
-  inset: 0;
-  background: var(--brand-yellow);
-  clip-path: inset(0 0 0 0 round 0px);
-  will-change: clip-path;
-}
-
-.starter-splash__logo {
-  width: min(220px, 58vw);
-  height: auto;
-  position: relative;
-  will-change: transform, opacity, filter;
-}
-
-.starter-splash.is-exiting .starter-splash__bg {
-  animation: starter-splash-collapse 690ms var(--ease-cinematic) both;
-}
-
-.starter-splash.is-exiting .starter-splash__logo {
-  animation: starter-splash-logo 420ms var(--ease-cinematic) both;
-}
-
-@keyframes starter-splash-logo {
-  0% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate3d(0, -10px, 0) scale(0.94);
-    filter: blur(1px);
-  }
-}
-
-@keyframes starter-splash-collapse {
-  0% {
-    clip-path: inset(0 0 0 0 round 0px);
-  }
-  62% {
-    clip-path: inset(0 0 46% 0 round 0px);
-  }
-  88% {
-    clip-path: inset(0 0 calc(100% - var(--standalone-safe-top)) 0 round 0px 0px 22px 22px);
-  }
-  100% {
-    clip-path: inset(0 0 100% 0 round 0px);
-  }
-}
-
-/* Generic bottom sheet (ActionMenu / pickers). */
-.bottom-sheet-backdrop {
-  opacity: 0;
-  transition: opacity 280ms var(--ease-smooth);
-  will-change: opacity;
-}
-
-.bottom-sheet-backdrop.is-open {
-  opacity: 1;
-}
-
-.bottom-sheet-panel {
-  transform: translate3d(0, 100%, 0);
-  transition: transform 380ms var(--ease-spring);
-  will-change: transform;
-}
-
-.bottom-sheet-panel.is-dragging {
-  transition: none !important;
-}
-
-.bottom-sheet-panel.is-open {
-  transform: translate3d(0, 0, 0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bottom-sheet-backdrop,
-  .bottom-sheet-panel {
-    transition: none !important;
-  }
-}
-
-/* Set row animations. */
-@keyframes set-row-in {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 8px, 0) scale(0.99);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-.set-row-enter {
-  animation: set-row-in 260ms var(--ease-spring) both;
-}
-
-@keyframes set-complete-pop {
-  0% { transform: scale(1); }
-  35% { transform: scale(0.86); }
-  70% { transform: scale(1.08); }
-  100% { transform: scale(1); }
-}
-
-.set-complete-pop {
-  animation: set-complete-pop 240ms var(--ease-spring) both;
 }
 
 /* Harmonize all chart tooltips with app card style (soft, rounded, low-contrast). */
@@ -493,11 +216,11 @@ body {
 }
 
 .calendar-month-frame--next {
-  animation: calendar-month-next 360ms var(--ease-smooth) both;
+  animation: calendar-month-next 220ms var(--ease-smooth) both;
 }
 
 .calendar-month-frame--prev {
-  animation: calendar-month-prev 360ms var(--ease-smooth) both;
+  animation: calendar-month-prev 220ms var(--ease-smooth) both;
 }
 
 @keyframes calendar-month-next {
@@ -653,7 +376,7 @@ body {
 @keyframes exercise-picker-panel-in {
   0% {
     opacity: 0;
-    transform: translate3d(0, 84px, 0) scale(0.98);
+    transform: translate3d(0, 22px, 0) scale(0.96);
     filter: blur(1px);
   }
   100% {
@@ -671,7 +394,7 @@ body {
   }
   100% {
     opacity: 0;
-    transform: translate3d(0, 84px, 0) scale(0.98);
+    transform: translate3d(0, 20px, 0) scale(0.97);
     filter: blur(1px);
   }
 }

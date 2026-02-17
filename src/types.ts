@@ -1,15 +1,5 @@
 export type Unit = 'kg' | 'lbs';
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type ContentSource = 'personal' | 'official';
-export type ExerciseMediaKind = 'upload' | 'youtube';
-
-export interface ExerciseMediaItem {
-  id: string;
-  kind: ExerciseMediaKind;
-  contentType: 'image' | 'video';
-  url: string;
-  title?: string;
-}
 
 export interface Set {
   id: string;
@@ -22,11 +12,6 @@ export interface ExerciseDef {
   id: string;
   name: string;
   description: string;
-  source: ContentSource;
-  readOnly: boolean;
-  thumbnailUrl?: string;
-  markdown?: string;
-  mediaItems: ExerciseMediaItem[];
   mediaUrl?: string; // Legacy/External URL
   mediaId?: string;  // Reference to IndexedDB Blob
   mediaType?: 'image' | 'video';
@@ -53,19 +38,13 @@ export interface Workout {
   startTimestamp: number | null; // Date.now() when started, null if paused
 }
 
-export interface WorkoutTemplateExercise {
-  defId: string;
-  defaultSets: number;
-}
-
 export interface WorkoutTemplate {
   id: string;
   name: string;
-  source: ContentSource;
-  readOnly: boolean;
-  description?: string;
-  tagline?: string;
-  exercises: WorkoutTemplateExercise[];
+  exercises: {
+    defId: string;
+    defaultSets: number;
+  }[];
   createdAt: string;
 }
 

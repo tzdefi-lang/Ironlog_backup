@@ -13,7 +13,7 @@ const AppRoot: React.FC<AppRootProps> = ({ appId }) => {
       config={{
         appearance: {
           theme: 'light',
-          accentColor: '#FFFF8C',
+          accentColor: '#F59E0B',
           logo: '/icons/icon-192x192.png',
         },
         loginMethods: ['google', 'email', 'wallet'],

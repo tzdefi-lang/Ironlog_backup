@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" />
 
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <style>
       #root {
         min-height: 100vh;
@@ -58,7 +58,7 @@
             'meta[name="apple-mobile-web-app-status-bar-style"]'
           );
           if (appleStatusBarMeta) {
-            appleStatusBarMeta.setAttribute('content', 'black-translucent');
+            appleStatusBarMeta.setAttribute('content', isDark ? 'black-translucent' : 'default');
           }
         } catch (_error) {
           // Ignore theme bootstrap failures and keep default rendering.

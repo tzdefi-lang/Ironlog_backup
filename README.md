@@ -28,7 +28,6 @@ Set values in `.env`:
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
 VITE_PRIVY_APP_ID=...
-VITE_ADMIN_EMAILS=...
 ```
 
 3. Run locally:
@@ -69,21 +68,18 @@ Set required secrets:
 ```bash
 supabase secrets set JWT_SECRET=<your-supabase-jwt-secret>
 supabase secrets set PRIVY_APP_ID=<your-privy-app-id>
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<your-supabase-service-role-key>
-supabase secrets set ADMIN_EMAILS=<comma-separated-admin-emails>
+supabase secrets set ALLOWED_ORIGINS="https://your-production-domain.com,http://localhost:3000"
 ```
 
 Deploy function (JWT verification disabled because we validate Privy tokens ourselves):
 
 ```bash
 supabase functions deploy token-exchange --no-verify-jwt
-supabase functions deploy official-content-admin --no-verify-jwt
 ```
 
 Source file:
 
 - `supabase/functions/token-exchange/index.ts`
-- `supabase/functions/official-content-admin/index.ts`
 
 ### 3) Data access model
 

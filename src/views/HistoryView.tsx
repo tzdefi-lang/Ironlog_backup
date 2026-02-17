@@ -179,7 +179,7 @@ const HistoryView: React.FC = () => {
         className="card-lift bg-white dark:bg-gray-900 p-5 rounded-3xl shadow-lg shadow-gray-100 dark:shadow-black/20 border border-gray-50 dark:border-gray-800 flex justify-between items-center active:scale-[0.99] transition-transform cursor-pointer select-none"
       >
         <div className="flex items-center gap-4">
-          <div className="bg-brand-tint text-brand border border-brand w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg">
+          <div className="bg-amber-50 text-amber-500 w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg">
             {getDayNumber(workout.date)}
           </div>
           <div>
@@ -222,7 +222,7 @@ const HistoryView: React.FC = () => {
             data-testid="history-filter-button"
             aria-label={t('history.filterButtonAria')}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-              hasActiveFilters ? 'bg-brand text-gray-900' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+              hasActiveFilters ? 'bg-amber-400 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
             }`}
           >
             <Filter size={20} />
@@ -376,7 +376,7 @@ const HistoryView: React.FC = () => {
                 <select
                   value={draftFilters.year}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, year: e.target.value }))}
-                  className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus-border-brand"
+                  className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus:border-amber-200"
                 >
                   <option value="all">{t('history.allYears')}</option>
                   {yearOptions.map((year) => (
@@ -392,7 +392,7 @@ const HistoryView: React.FC = () => {
                 <select
                   value={draftFilters.month}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, month: e.target.value }))}
-                  className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus-border-brand"
+                  className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus:border-amber-200"
                 >
                   <option value="all">{t('history.allMonths')}</option>
                   {monthOptions.map((month) => (
@@ -409,7 +409,7 @@ const HistoryView: React.FC = () => {
               <select
                 value={draftFilters.category}
                 onChange={(e) => setDraftFilters((prev) => ({ ...prev, category: e.target.value }))}
-                className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus-border-brand"
+                className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus:border-amber-200"
               >
                 <option value="all">{t('history.allCategories')}</option>
                 {categoryOptions.map((category) => (
@@ -427,7 +427,7 @@ const HistoryView: React.FC = () => {
                 onChange={(e) =>
                   setDraftFilters((prev) => ({ ...prev, status: e.target.value as StatusFilter }))
                 }
-                className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus-border-brand"
+                className="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-3 rounded-2xl outline-none border border-transparent focus:border-amber-200"
               >
                 <option value="all">{t('history.all')}</option>
                 <option value="completed">{t('history.statusCompleted')}</option>

@@ -1,13 +1,10 @@
 import React from 'react';
-import { ChevronLeft, ShieldCheck, Trash2 } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, pushToast } from '@/components/ui';
 import { useGym } from '@/hooks/useGym';
-import { useConfirm } from '@/hooks/useConfirm';
 import type { Locale } from '@/i18n/I18nProvider';
 import { useI18n } from '@/i18n/useI18n';
-import { isAdminUser, isDesktopViewport } from '@/services/admin';
-import { clearAppCache } from '@/services/clearCache';
 import { exportAsCSV, exportAsJSON } from '@/services/export';
 import { isNotificationSupported, requestNotificationPermission } from '@/services/notifications';
 import type { ThemeMode } from '@/types';
@@ -27,8 +24,6 @@ const ProfileSettingsView: React.FC = () => {
   } = useGym();
   const navigate = useNavigate();
   const { t, locale, setLocale } = useI18n();
-  const canAccessManage = isAdminUser(user?.email) && isDesktopViewport();
-  const { confirm, confirmDialog } = useConfirm();
 
   const getThemeLabel = (mode: ThemeMode) => {
     if (mode === 'light') return t('common.light');
@@ -56,21 +51,6 @@ const ProfileSettingsView: React.FC = () => {
     } catch {
       pushToast({ kind: 'error', message: t('toast.exportCsvError') });
     }
-  };
-
-  const handleClearCache = async () => {
-    const accepted = await confirm({
-      title: t('profile.clearCacheConfirmTitle'),
-      message: t('profile.clearCacheConfirmBody'),
-      confirmText: t('profile.clearCacheConfirmAction'),
-      cancelText: t('dashboard.cancel'),
-      danger: true,
-    });
-    if (!accepted) return;
-
-    await clearAppCache();
-    pushToast({ kind: 'success', message: t('toast.cacheCleared') });
-    window.setTimeout(() => window.location.reload(), 400);
   };
 
   const handleNotificationToggle = async () => {
@@ -136,7 +116,7 @@ const ProfileSettingsView: React.FC = () => {
                 onClick={() => setThemeMode(option)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                   user?.preferences.themeMode === option
-                    ? 'bg-brand text-gray-900'
+                    ? 'bg-amber-400 text-gray-900'
                     : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
@@ -156,7 +136,7 @@ const ProfileSettingsView: React.FC = () => {
                 onClick={() => setLocale(option)}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                   locale === option
-                    ? 'bg-brand text-gray-900'
+                    ? 'bg-amber-400 text-gray-900'
                     : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
@@ -180,7 +160,7 @@ const ProfileSettingsView: React.FC = () => {
             }}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
               user?.preferences.notificationsEnabled
-                ? 'bg-brand text-gray-900'
+                ? 'bg-amber-400 text-gray-900'
                 : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
             }`}
           >
@@ -199,45 +179,12 @@ const ProfileSettingsView: React.FC = () => {
             </Button>
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={() => void handleClearCache()}
-          className="pressable card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center transition-colors w-full text-left active:scale-[0.98]"
-        >
-          <span className="flex items-center gap-3">
-            <Trash2 size={20} className="text-gray-400 dark:text-gray-500" />
-            <span>
-              <span className="block font-medium text-gray-700 dark:text-gray-300">{t('profile.clearCacheTitle')}</span>
-              <span className="block text-xs text-gray-400 dark:text-gray-500">{t('profile.clearCacheHint')}</span>
-            </span>
-          </span>
-          <ChevronLeft size={18} className="text-gray-300 dark:text-gray-600 rotate-180" />
-        </button>
-
-        {canAccessManage && (
-          <button
-            type="button"
-            onClick={() => navigate('/manage')}
-            className="pressable card-lift bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl flex justify-between items-center transition-colors w-full text-left active:scale-[0.98]"
-          >
-            <span className="flex items-center gap-3">
-              <ShieldCheck size={20} className="text-brand" />
-              <span>
-                <span className="block font-medium text-gray-700 dark:text-gray-300">{t('profile.manageOfficialTitle')}</span>
-                <span className="block text-xs text-gray-400 dark:text-gray-500">{t('profile.manageOfficialHint')}</span>
-              </span>
-            </span>
-            <ChevronLeft size={18} className="text-gray-300 dark:text-gray-600 rotate-180" />
-          </button>
-        )}
       </div>
 
       <Button variant="danger" className="w-full mt-10 rounded-2xl" onClick={logout}>
         {t('common.signOut')}
       </Button>
-
-      {confirmDialog}
+      <p className="mt-4 text-center text-xs text-gray-400 dark:text-gray-500">v{__APP_VERSION__}</p>
     </div>
   );
 };

@@ -9,7 +9,7 @@ const LoginView: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="h-full bg-white dark:bg-gray-950 px-8 pt-[calc(2rem+var(--standalone-safe-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] animate-pulse transition-colors">
+      <div className="h-full bg-white dark:bg-gray-950 px-8 pt-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))] animate-pulse transition-colors">
         <div className="h-full flex flex-col justify-between gap-8">
           <div className="pt-8 space-y-3">
             <div className="h-10 rounded-2xl bg-gray-100 dark:bg-gray-800" />
@@ -26,7 +26,7 @@ const LoginView: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-950 px-8 pt-[calc(2rem+var(--standalone-safe-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-950 px-8 pt-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))] view-enter transition-colors">
       <div className="flex-1 flex flex-col justify-center min-h-0">
         <div className="pt-4">
           <h1 className="text-5xl font-black text-center leading-tight tracking-tight text-gray-900 dark:text-gray-100">
@@ -42,7 +42,7 @@ const LoginView: React.FC = () => {
       <div className="flex flex-col items-center w-full gap-6 shrink-0">
         <div className="w-full flex flex-col items-center">
           <div className="flex gap-2 justify-center mb-6">
-            <div className="flex items-center text-brand">
+            <div className="flex items-center text-amber-400">
               <User size={32} />
               <User size={32} className="-ml-2 opacity-60" />
             </div>
@@ -59,7 +59,7 @@ const LoginView: React.FC = () => {
 
         <button
           onClick={login}
-          className="pressable w-full bg-brand text-gray-900 py-4 rounded-2xl font-bold text-lg shadow-xl shadow-brand-soft active:scale-95 transition-all hover:brightness-95"
+          className="pressable w-full bg-amber-400 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-amber-300/60 dark:shadow-amber-900/45 active:scale-95 transition-all hover:bg-amber-500"
         >
           {t('login.signIn')}
         </button>

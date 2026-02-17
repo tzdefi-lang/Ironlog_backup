@@ -214,18 +214,17 @@ const compressVideo = (file: File): Promise<Blob> => {
         return;
       }
 
-      // IMPORTANT: Prefer MP4 output for iOS compatibility.
-      // Many browsers (notably Chromium) cannot record MP4 via MediaRecorder, so we fall
-      // back to the original upload in `processAndSaveMedia()` when MP4 isn't supported.
+      // Check support for various mime types, prioritizing mp4/webm
       const types = [
-        'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
-        'video/mp4',
+          'video/mp4',
+          'video/webm;codecs=vp8', 
+          'video/webm'
       ];
-      const mimeType = types.find((t) => MediaRecorder.isTypeSupported(t)) || '';
+      const mimeType = types.find(t => MediaRecorder.isTypeSupported(t)) || '';
       
       if (!mimeType) {
         cleanup();
-        reject(new Error("MP4 video recording not supported on this device"));
+        reject(new Error("Video recording not supported on this device"));
         return;
       }
 

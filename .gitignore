@@ -12,7 +12,6 @@ dist
 dist-ssr
 *.local
 .env
-supabase/functions/.env
 supabase/.temp/
 test-results/
 playwright-report/

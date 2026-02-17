@@ -3,6 +3,8 @@ import { useEffect } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GymProvider, type GymContextType } from '@/context/GymContext';
 import { useGym } from '@/hooks/useGym';
+import { useGymActions } from '@/hooks/useGymActions';
+import { useGymData } from '@/hooks/useGymData';
 import type { Workout } from '@/types';
 
 const privyState = {
@@ -22,6 +24,7 @@ vi.mock('@privy-io/react-auth', () => ({
 vi.mock('@/services/auth', () => ({
   exchangePrivyToken: vi.fn(),
   clearTokenCache: vi.fn(),
+  getTokenExpiresAt: vi.fn(() => null),
 }));
 
 vi.mock('@/services/supabase', () => ({
@@ -63,7 +66,7 @@ describe('GymProvider', () => {
 
     await waitFor(() => expect(latestRef.current?.isLoading).toBe(false));
     expect(latestRef.current?.user).toBeNull();
-    expect(latestRef.current?.exerciseDefs).toHaveLength(0);
+    expect(latestRef.current?.exerciseDefs).toHaveLength(3);
     expect(latestRef.current?.workouts).toHaveLength(0);
   });
 
@@ -122,8 +125,55 @@ describe('GymProvider', () => {
     });
 
     await waitFor(() => expect(latestRef.current!.workouts).toHaveLength(2));
-    expect(latestRef.current!.workouts[1].date).toBe('2026-02-12');
-    expect(latestRef.current!.workouts[1].completed).toBe(false);
-    expect(latestRef.current!.workouts[1].id).not.toBe('workout-1');
+    const copied = latestRef.current!.workouts[1];
+    expect(copied.date).toBe('2026-02-12');
+    expect(copied.completed).toBe(false);
+    expect(copied.id).not.toBe('workout-1');
+    expect(copied.exercises[0].id).not.toBe('exercise-1');
+    expect(copied.exercises[0].sets[0].id).not.toBe('set-1');
+    expect(copied.exercises[0].sets[0].completed).toBe(false);
+  });
+
+  it('keeps actions context identity stable when only data changes', async () => {
+    const latestActionsRef: { current: ReturnType<typeof useGymActions> | null } = { current: null };
+    const latestDataRef: { current: ReturnType<typeof useGymData> | null } = { current: null };
+
+    const Probe = () => {
+      const actions = useGymActions();
+      const data = useGymData();
+      useEffect(() => {
+        latestActionsRef.current = actions;
+        latestDataRef.current = data;
+      }, [actions, data]);
+      return null;
+    };
+
+    render(
+      <GymProvider>
+        <Probe />
+      </GymProvider>
+    );
+
+    await waitFor(() => expect(latestDataRef.current?.isLoading).toBe(false));
+    const initialActions = latestActionsRef.current;
+    expect(initialActions).not.toBeNull();
+
+    const workout: Workout = {
+      id: 'workout-stable-action',
+      date: '2026-02-11',
+      title: 'Leg Day',
+      note: '',
+      completed: false,
+      elapsedSeconds: 0,
+      startTimestamp: null,
+      exercises: [],
+    };
+
+    await act(async () => {
+      await latestActionsRef.current!.addWorkout(workout);
+    });
+
+    await waitFor(() => expect(latestDataRef.current!.workouts).toHaveLength(1));
+    expect(latestActionsRef.current).toBe(initialActions);
   });
 });

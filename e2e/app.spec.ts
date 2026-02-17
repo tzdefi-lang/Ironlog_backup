@@ -7,9 +7,7 @@ const completeWorkout = async (title: string, page: Page) => {
   await page.getByTestId('fab-add-workout').click({ force: true });
   await page.getByTestId('workout-title-input').fill(title);
   await page.getByTestId('add-exercise-button').click();
-  await page.getByRole('button', { name: 'Create New' }).click();
-  await page.getByPlaceholder('Name').fill(`${title} Exercise`);
-  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByText('Bench Press').first().click();
   await page.locator('[data-testid^="set-complete-"]').first().click();
   await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByTestId('finish-workout-button').click({ force: true });
@@ -94,9 +92,7 @@ test('save template and start workout from template', async ({ page }) => {
   await page.getByTestId('fab-add-workout').click({ force: true });
   await page.getByTestId('workout-title-input').fill(title);
   await page.getByTestId('add-exercise-button').click();
-  await page.getByRole('button', { name: 'Create New' }).click();
-  await page.getByPlaceholder('Name').fill(`${title} Exercise`);
-  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByText('Bench Press').first().click();
   await page.locator('[data-testid^="set-complete-"]').first().click();
   await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByTestId('finish-workout-button').click({ force: true });

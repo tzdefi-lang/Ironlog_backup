@@ -7,7 +7,6 @@ const StatsView = lazy(() => import('@/views/StatsView'));
 const HistoryView = lazy(() => import('@/views/HistoryView'));
 const ProfileView = lazy(() => import('@/views/ProfileView'));
 const ProfileSettingsView = lazy(() => import('@/views/ProfileSettingsView'));
-const ManageView = lazy(() => import('@/views/ManageView'));
 const WorkoutEditor = lazy(() => import('@/views/WorkoutEditor'));
 
 const RouteFallback: React.FC = () => (
@@ -52,7 +51,6 @@ const AnimatedRoutes: React.FC = () => {
           <Route path="/history" element={<HistoryView />} />
           <Route path="/profile" element={<ProfileView />} />
           <Route path="/profile/settings" element={<ProfileSettingsView />} />
-          <Route path="/manage" element={<ManageView />} />
           <Route path="/workout/:id" element={<WorkoutEditor />} />
         </Routes>
       </Suspense>
