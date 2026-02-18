@@ -1,0 +1,62 @@
+name: iOS CI
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-ci.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios-ci.yml'
+
+jobs:
+  ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate iOS Project
+        working-directory: ios/IronLog
+        run: xcodegen generate
+
+      - name: Resolve Simulator Name
+        id: sim
+        run: |
+          SIM_NAME=$(xcrun simctl list devices available | awk -F'[()]' '/iPhone/ {gsub(/^ +| +$/, "", $1); print $1; exit}')
+          if [ -z "$SIM_NAME" ]; then
+            echo "No available iPhone simulator found" >&2
+            exit 1
+          fi
+          echo "name=$SIM_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Build App
+        run: |
+          xcodebuild \
+            -project ios/IronLog/IronLog.xcodeproj \
+            -scheme IronLog \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.name }}" \
+            build
+
+      - name: Run Unit Tests
+        run: |
+          xcodebuild \
+            -project ios/IronLog/IronLog.xcodeproj \
+            -scheme IronLog \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.name }}" \
+            test \
+            -only-testing:IronLogTests
+
+      - name: Run UI Tests
+        run: |
+          xcodebuild \
+            -project ios/IronLog/IronLog.xcodeproj \
+            -scheme IronLog \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.name }}" \
+            test \
+            -only-testing:IronLogUITests

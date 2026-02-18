@@ -113,3 +113,47 @@ Workflow file:
 
 - `.env` is ignored by git; keep secrets there.
 - `.env.example` contains only variable names.
+
+## iOS Native (SwiftUI)
+
+The iOS native app lives under:
+
+- `ios/IronLog`
+
+### Tooling
+
+- Xcode 16+ (tested locally with Xcode 26.2)
+- `xcodegen` (used to generate `IronLog.xcodeproj` from `project.yml`)
+
+### Run iOS app
+
+```bash
+cd ios/IronLog
+xcodegen generate
+xcodebuild -project IronLog.xcodeproj -scheme IronLog -destination 'platform=iOS Simulator,name=iPhone 17' build
+```
+
+### iOS Privy native auth
+
+The iOS app now uses `privy-ios` native OAuth (Google / Apple), then exchanges the Privy token through the existing Supabase Edge Function:
+
+- `POST /functions/v1/token-exchange`
+
+Required iOS config values:
+
+- `PRIVY_APP_ID`
+- `PRIVY_APP_CLIENT_ID`
+- `PRIVY_APP_URL_SCHEME` (default in this repo: `ironlog`)
+
+Privy dashboard requirements:
+
+- iOS app client URL scheme must include `ironlog` (or your custom scheme).
+- iOS app identifiers must include your bundle id (default in this repo: `com.ironlog.app`).
+
+### Run iOS tests
+
+```bash
+cd ios/IronLog
+xcodebuild -project IronLog.xcodeproj -scheme IronLog -destination 'platform=iOS Simulator,name=iPhone 17' test -only-testing:IronLogTests
+xcodebuild -project IronLog.xcodeproj -scheme IronLog -destination 'platform=iOS Simulator,name=iPhone 17' test -only-testing:IronLogUITests
+```

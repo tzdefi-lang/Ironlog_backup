@@ -1,0 +1,86 @@
+import CommonCrypto
+import Foundation
+import KeychainSwift
+
+struct TokenExchangeResult: Codable, Sendable {
+    let token: String
+    let userId: String
+    let expiresAt: Double
+}
+
+enum TokenExchangeError: Error {
+    case invalidResponse
+    case serverError(String)
+}
+
+final class TokenExchangeService {
+    private var cache: (token: String, expiresAt: Double, sourceToken: String)?
+    private let keychain = KeychainSwift()
+
+    func exchange(privyToken: String) async throws -> TokenExchangeResult {
+        if let cache,
+           cache.sourceToken == privyToken,
+           Date().timeIntervalSince1970 * 1000 < cache.expiresAt - 5 * 60 * 1000 {
+            return TokenExchangeResult(token: cache.token, userId: extractUserId(from: cache.token), expiresAt: cache.expiresAt)
+        }
+
+        var request = URLRequest(url: Constants.supabaseURL.appending(path: "/functions/v1/token-exchange"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(Constants.supabaseAnonKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(Constants.supabaseAnonKey, forHTTPHeaderField: "apikey")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["token": privyToken])
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw TokenExchangeError.invalidResponse
+        }
+
+        if http.statusCode < 200 || http.statusCode >= 300 {
+            let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
+            throw TokenExchangeError.serverError(message ?? "Token exchange failed")
+        }
+
+        let result = try JSONDecoder().decode(TokenExchangeResult.self, from: data)
+        keychain.set(result.token, forKey: "ironlog_supabase_jwt")
+        keychain.set(result.userId, forKey: "ironlog_user_id")
+        cache = (result.token, result.expiresAt, privyToken)
+        return result
+    }
+
+    func clear() {
+        cache = nil
+        keychain.delete("ironlog_supabase_jwt")
+        keychain.delete("ironlog_user_id")
+    }
+
+    func extractUserId(from jwt: String) -> String {
+        let parts = jwt.split(separator: ".")
+        guard parts.count == 3 else { return "" }
+        var payload = String(parts[1])
+        let remainder = payload.count % 4
+        if remainder > 0 {
+            payload += String(repeating: "=", count: 4 - remainder)
+        }
+        payload = payload.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        guard let data = Data(base64Encoded: payload),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let sub = json["sub"] as? String else {
+            return ""
+        }
+        return sub
+    }
+
+    static func privyDidToUUID(_ did: String) -> String {
+        let data = Data(did.utf8)
+        var digest = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        data.withUnsafeBytes { ptr in
+            _ = CC_SHA256(ptr.baseAddress, CC_LONG(data.count), &digest)
+        }
+        digest[6] = (digest[6] & 0x0F) | 0x40
+        digest[8] = (digest[8] & 0x3F) | 0x80
+
+        let hex = digest[0..<16].map { String(format: "%02x", $0) }.joined()
+        return "\(hex.prefix(8))-\(hex.dropFirst(8).prefix(4))-\(hex.dropFirst(12).prefix(4))-\(hex.dropFirst(16).prefix(4))-\(hex.dropFirst(20).prefix(12))"
+    }
+}

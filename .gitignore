@@ -27,3 +27,11 @@ playwright-report/
 *.njsproj
 *.sln
 *.sw?
+
+# iOS/Xcode
+DerivedData/
+*.xcuserstate
+*.xcscmblueprint
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+ios/**/build/

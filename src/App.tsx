@@ -20,6 +20,7 @@ import { isReminderWindowReached, notifyPendingWorkout } from '@/services/notifi
 import { formatDate } from '@/services/utils';
 import type { ThemeMode } from '@/types';
 import LoginView from '@/views/LoginView';
+import NativeAuthProxyView from '@/views/NativeAuthProxyView';
 
 const LIGHT_THEME_COLOR = BOTANICAL_THEME_COLOR;
 const DARK_THEME_COLOR = BOTANICAL_DARK_THEME_COLOR;
@@ -42,6 +43,7 @@ const AppContent: React.FC = () => {
   const location = useLocation();
   const themeMode = user?.preferences.themeMode ?? getInitialThemeMode();
   const isManageRoute = location.pathname.startsWith('/manage');
+  const isNativeAuthRoute = location.pathname === '/native-auth';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -139,6 +141,10 @@ const AppContent: React.FC = () => {
     window.addEventListener('focusout', onFocusOut);
     return () => window.removeEventListener('focusout', onFocusOut);
   }, []);
+
+  if (isNativeAuthRoute) {
+    return <NativeAuthProxyView />;
+  }
 
   if (!user) {
     if (isLoading) {

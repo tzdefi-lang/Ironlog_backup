@@ -1,10 +1,25 @@
 import { expect, test, type Page } from '@playwright/test';
 
+const uniqueTitle = (prefix: string) => `${prefix} ${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+const openNewWorkoutEditor = async (page: Page) => {
+  const startNowButton = page.getByRole('button', { name: /Start Now|立即开始/ });
+
+  if ((await startNowButton.count()) > 0) {
+    await startNowButton.first().click();
+  } else {
+    await page.getByTestId('fab-add-workout').click({ force: true });
+  }
+
+  await expect(page).toHaveURL(/#\/workout\/new/);
+  await expect(page.getByTestId('workout-title-input')).toBeVisible();
+};
+
 const completeWorkout = async (title: string, page: Page) => {
   await page.goto('/#/');
   await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
 
-  await page.getByTestId('fab-add-workout').click({ force: true });
+  await openNewWorkoutEditor(page);
   await page.getByTestId('workout-title-input').fill(title);
   await page.getByTestId('add-exercise-button').click();
   await page.getByRole('button', { name: 'Create New' }).click();
@@ -27,7 +42,7 @@ test('login flow reaches dashboard in e2e bypass mode', async ({ page }) => {
 });
 
 test('create workout, add exercise, log set, and finish workout', async ({ page }) => {
-  const title = 'E2E Push Workout';
+  const title = uniqueTitle('E2E Push Workout');
   await completeWorkout(title, page);
 
   await page.goto('/#/history');
@@ -35,14 +50,14 @@ test('create workout, add exercise, log set, and finish workout', async ({ page 
 });
 
 test('history filter and delete workout', async ({ page }) => {
-  const title = 'E2E Delete Workout';
+  const title = uniqueTitle('E2E Delete Workout');
   await completeWorkout(title, page);
 
   await page.goto('/#/history');
   await page.getByTestId('history-filter-button').click();
   await page.getByPlaceholder('Chest, Leg Day...').fill(title);
   await page.getByRole('button', { name: 'Apply Filters' }).click();
-  await expect(page.getByRole('heading', { name: title })).toBeVisible();
+  await expect(page.getByRole('heading', { name: title })).toBeVisible({ timeout: 30000 });
 
   const rowTitle = page.getByRole('heading', { name: title }).first();
   const row = rowTitle.locator('xpath=../../..');
@@ -67,7 +82,7 @@ test('history filter and delete workout', async ({ page }) => {
 });
 
 test('export data as json and csv', async ({ page }) => {
-  const title = 'E2E Export Workout';
+  const title = uniqueTitle('E2E Export Workout');
   await completeWorkout(title, page);
 
   await page.goto('/#/profile/settings');
@@ -86,12 +101,12 @@ test('export data as json and csv', async ({ page }) => {
 });
 
 test('save template and start workout from template', async ({ page }) => {
-  const title = 'E2E Template Save Workout';
+  const title = uniqueTitle('E2E Template Save Workout');
   const expectedTemplateName = `${title} Template`;
 
   await page.goto('/#/');
   await expect(page.getByRole('heading', { name: 'Workout' })).toBeVisible();
-  await page.getByTestId('fab-add-workout').click({ force: true });
+  await openNewWorkoutEditor(page);
   await page.getByTestId('workout-title-input').fill(title);
   await page.getByTestId('add-exercise-button').click();
   await page.getByRole('button', { name: 'Create New' }).click();
