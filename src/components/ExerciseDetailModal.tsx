@@ -122,7 +122,7 @@ const GifVideo: React.FC<{ src: string; title: string; className?: string }> = (
     >
       <video
         ref={videoRef}
-        className="h-full w-full object-cover"
+        className="block h-full w-full object-cover"
         src={src}
         autoPlay
         muted
