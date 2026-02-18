@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BotanicalTextField: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var value: String
 
     var body: some View {

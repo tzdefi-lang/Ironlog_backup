@@ -2,8 +2,9 @@ import XCTest
 @testable import IronLog
 
 final class PrivyAuthServiceTests: XCTestCase {
-    func testEmailProviderHasNoOAuthProvider() {
+    func testNonOAuthProvidersHaveNoOAuthProvider() {
         XCTAssertNil(PrivyLoginProvider.email.oauthProvider)
+        XCTAssertNil(PrivyLoginProvider.wallet.oauthProvider)
     }
 
     func testOAuthProvidersRemainMapped() {
@@ -11,7 +12,8 @@ final class PrivyAuthServiceTests: XCTestCase {
         XCTAssertEqual(PrivyLoginProvider.apple.oauthProvider, .apple)
     }
 
-    func testAllCasesContainsEmail() {
+    func testAllCasesContainsEmailAndWallet() {
         XCTAssertTrue(PrivyLoginProvider.allCases.contains(.email))
+        XCTAssertTrue(PrivyLoginProvider.allCases.contains(.wallet))
     }
 }

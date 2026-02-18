@@ -24,7 +24,7 @@ struct LoginView: View {
                 Text("IronLog")
                     .font(.display(52))
                     .foregroundStyle(Color.botanicalTextPrimary)
-                Text("Your strength. Your record.")
+                Text("auth.login.subtitle")
                     .font(.botanicalBody(16))
                     .foregroundStyle(Color.botanicalTextSecondary)
             }
@@ -46,7 +46,7 @@ struct LoginView: View {
                 VStack(spacing: 12) {
                     oauthButton(
                         icon: "g.circle.fill",
-                        title: "Continue with Google",
+                        title: "auth.login.continueGoogle",
                         color: Color(hex: "#4285F4")
                     ) {
                         Task { await store.loginWithPrivy(provider: .google) }
@@ -54,10 +54,26 @@ struct LoginView: View {
 
                     oauthButton(
                         icon: "apple.logo",
-                        title: "Continue with Apple",
+                        title: "auth.login.continueApple",
                         color: Color.botanicalTextPrimary
                     ) {
                         Task { await store.loginWithPrivy(provider: .apple) }
+                    }
+
+                    oauthButton(
+                        icon: "wallet.pass.fill",
+                        title: "auth.login.continueWallet",
+                        color: Color(hex: "#2D6A4F"),
+                        disabled: !walletLoginAvailable
+                    ) {
+                        Task { await store.loginWithWallet() }
+                    }
+
+                    if !walletLoginAvailable {
+                        Text("Wallet login requires REOWN_PROJECT_ID in Info.plist.")
+                            .font(.botanicalBody(12))
+                            .foregroundStyle(Color.botanicalTextSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     HStack {
@@ -71,7 +87,7 @@ struct LoginView: View {
 
                     oauthButton(
                         icon: "envelope.fill",
-                        title: "Continue with Email",
+                        title: "auth.login.continueEmail",
                         color: Color.botanicalAccent
                     ) {
                         withAnimation(.easeOut(duration: 0.25)) {
@@ -83,17 +99,19 @@ struct LoginView: View {
 
             case .emailEntry:
                 VStack(spacing: 16) {
-                    Text("Enter your email")
+                    Text("auth.login.enterEmail")
                         .font(.botanicalSemibold(18))
                         .foregroundStyle(Color.botanicalTextPrimary)
 
-                    BotanicalTextField(title: "Email address", value: $emailInput)
+                    BotanicalTextField(title: "auth.login.emailAddress", value: $emailInput)
                         .keyboardType(.emailAddress)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
 
                     BotanicalButton(
-                        title: isEmailSending ? "Sending..." : "Send Code",
+                        title: isEmailSending
+                            ? LocalizedStringKey("auth.login.sending")
+                            : LocalizedStringKey("auth.login.sendCode"),
                         variant: .primary,
                         disabled: emailInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isEmailSending
                     ) {
@@ -110,7 +128,7 @@ struct LoginView: View {
                         }
                     }
 
-                    Button("Back") {
+                    Button("auth.login.back") {
                         withAnimation(.easeOut(duration: 0.25)) {
                             loginStep = .initial
                             store.authError = nil
@@ -122,20 +140,22 @@ struct LoginView: View {
 
             case .otpEntry(let email):
                 VStack(spacing: 16) {
-                    Text("Check your email")
+                    Text("auth.login.checkEmail")
                         .font(.botanicalSemibold(18))
                         .foregroundStyle(Color.botanicalTextPrimary)
 
-                    Text("We sent a code to \(email)")
+                    (Text("auth.login.codeSentPrefix") + Text(" \(email)"))
                         .font(.botanicalBody(14))
                         .foregroundStyle(Color.botanicalTextSecondary)
                         .multilineTextAlignment(.center)
 
-                    BotanicalTextField(title: "6-digit code", value: $otpInput)
+                    BotanicalTextField(title: "auth.login.codePlaceholder", value: $otpInput)
                         .keyboardType(.numberPad)
 
                     BotanicalButton(
-                        title: store.isLoading ? "Verifying..." : "Verify",
+                        title: store.isLoading
+                            ? LocalizedStringKey("auth.login.verifying")
+                            : LocalizedStringKey("auth.login.verify"),
                         variant: .primary,
                         disabled: otpInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || store.isLoading
                     ) {
@@ -147,13 +167,13 @@ struct LoginView: View {
                         }
                     }
 
-                    Button("Resend code") {
+                    Button("auth.login.resendCode") {
                         Task { await store.sendEmailOTP(to: email) }
                     }
                     .font(.botanicalBody(14))
                     .foregroundStyle(Color.botanicalAccent)
 
-                    Button("Back") {
+                    Button("auth.login.back") {
                         withAnimation(.easeOut(duration: 0.25)) {
                             loginStep = .emailEntry
                             otpInput = ""
@@ -175,7 +195,17 @@ struct LoginView: View {
         .background(Color.botanicalBackground.ignoresSafeArea())
     }
 
-    private func oauthButton(icon: String, title: String, color: Color, action: @escaping () -> Void) -> some View {
+    private var walletLoginAvailable: Bool {
+        !Constants.reownProjectId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func oauthButton(
+        icon: String,
+        title: LocalizedStringKey,
+        color: Color,
+        disabled: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
@@ -198,16 +228,16 @@ struct LoginView: View {
             )
         }
         .buttonStyle(PressableButtonStyle())
-        .disabled(store.isLoading)
+        .disabled(store.isLoading || disabled)
     }
 
     private var disclosureGroupDevFallback: some View {
         DisclosureGroup(isExpanded: $showDevFallback) {
             VStack(alignment: .leading, spacing: 10) {
-                BotanicalTextField(title: "Paste Privy token", value: $fallbackToken)
+                BotanicalTextField(title: "auth.login.pasteToken", value: $fallbackToken)
 
                 BotanicalButton(
-                    title: "Use Token",
+                    title: "auth.login.useToken",
                     variant: .secondary,
                     disabled: fallbackToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || store.isLoading
                 ) {
@@ -217,7 +247,7 @@ struct LoginView: View {
             }
             .padding(.top, 8)
         } label: {
-            Text("Dev: paste Privy token")
+            Text("auth.login.devPasteToken")
                 .font(.system(size: 11))
                 .foregroundStyle(Color.botanicalTextSecondary)
         }

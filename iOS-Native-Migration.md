@@ -852,7 +852,7 @@ enum L10n {
 - 收集的数据类型：健康/健身数据、姓名、邮件
 
 ### App Store 配置
-- **Bundle ID**：`com.ironlog.app`（自定义）
+- **Bundle ID**：`com.syntaxis.ironlog`（自定义）
 - **Deployment Target**：iOS 17.0
 - **设备**：iPhone only（初版）
 - **分类**：Health & Fitness

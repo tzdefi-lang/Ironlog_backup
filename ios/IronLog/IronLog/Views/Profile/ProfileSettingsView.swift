@@ -12,7 +12,7 @@ struct ProfileSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                settingCard(title: "Unit") {
+                settingCard(title: "profile.units") {
                     HStack(spacing: 10) {
                         unitChip("KG", selected: prefs.defaultUnit == .kg) {
                             if prefs.defaultUnit != .kg { store.toggleUnit() }
@@ -24,37 +24,26 @@ struct ProfileSettingsView: View {
                     }
                 }
 
-                settingCard(title: "Rest Timer") {
-                    HStack(spacing: 8) {
-                        ForEach([30, 60, 90, 120, 180], id: \.self) { sec in
-                            timerChip("\(sec)s", selected: prefs.restTimerSeconds == sec) {
-                                store.setRestTimerSeconds(sec)
-                            }
-                        }
-                        Spacer()
-                    }
-                }
-
-                settingCard(title: "Theme") {
+                settingCard(title: "profile.appearance") {
                     HStack(spacing: 10) {
-                        themeChip("Light", icon: "sun.max", mode: .light, current: prefs.themeMode)
-                        themeChip("Dark", icon: "moon", mode: .dark, current: prefs.themeMode)
-                        themeChip("Auto", icon: "circle.lefthalf.filled", mode: .system, current: prefs.themeMode)
+                        themeChip("common.light", icon: "sun.max", mode: .light, current: prefs.themeMode)
+                        themeChip("common.dark", icon: "moon", mode: .dark, current: prefs.themeMode)
+                        themeChip("common.system", icon: "circle.lefthalf.filled", mode: .system, current: prefs.themeMode)
                         Spacer()
                     }
                 }
 
-                settingCard(title: "Language") {
+                settingCard(title: "profile.language") {
                     HStack(spacing: 10) {
-                        languageChip("English", code: "en")
-                        languageChip("中文", code: "zh-Hans")
+                        languageChip("profile.languageEnglish", code: "en")
+                        languageChip("profile.languageChinese", code: "zh-Hans")
                         Spacer()
                     }
                 }
 
-                settingCard(title: "Notifications") {
+                settingCard(title: "profile.notifications") {
                     HStack {
-                        Text("Workout reminders")
+                        Text("profile.workoutReminders")
                             .font(.botanicalBody(15))
                             .foregroundStyle(Color.botanicalTextPrimary)
                         Spacer()
@@ -65,15 +54,15 @@ struct ProfileSettingsView: View {
                     }
                 }
 
-                settingCard(title: "Export Data") {
+                settingCard(title: "profile.exportData") {
                     VStack(spacing: 10) {
-                        BotanicalButton(title: "Export as JSON", variant: .secondary) { exportJSON() }
-                        BotanicalButton(title: "Export as CSV", variant: .secondary) { exportCSV() }
+                        BotanicalButton(title: "profile.exportJson", variant: .secondary) { exportJSON() }
+                        BotanicalButton(title: "profile.exportCsv", variant: .secondary) { exportCSV() }
                     }
                 }
 
-                settingCard(title: "Account") {
-                    BotanicalButton(title: "Sign Out", variant: .danger) {
+                settingCard(title: "profile.account") {
+                    BotanicalButton(title: "common.signOut", variant: .danger) {
                         Task { await store.logout() }
                     }
                 }
@@ -83,7 +72,7 @@ struct ProfileSettingsView: View {
             .padding(.bottom, 60)
         }
         .background(Color.botanicalBackground.ignoresSafeArea())
-        .navigationTitle("Settings")
+        .navigationTitle("profile.settingsTitle")
         .sheet(isPresented: $showExporter) {
             if let exportURL {
                 ShareSheet(items: [exportURL])
@@ -91,9 +80,9 @@ struct ProfileSettingsView: View {
         }
     }
 
-    private func settingCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func settingCard<Content: View>(title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title.uppercased())
+            Text(title)
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(Color.botanicalTextSecondary)
                 .tracking(1.2)
@@ -117,21 +106,7 @@ struct ProfileSettingsView: View {
         .animation(.easeOut(duration: 0.2), value: selected)
     }
 
-    private func timerChip(_ label: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(label)
-                .font(.botanicalSemibold(13))
-                .foregroundStyle(selected ? Color.botanicalTextPrimary : Color.botanicalTextSecondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(selected ? Color.botanicalAccent : Color.botanicalMuted.opacity(0.6))
-                .clipShape(Capsule())
-        }
-        .buttonStyle(PressableButtonStyle())
-        .animation(.easeOut(duration: 0.2), value: selected)
-    }
-
-    private func themeChip(_ label: String, icon: String, mode: ThemeMode, current: ThemeMode) -> some View {
+    private func themeChip(_ label: LocalizedStringKey, icon: String, mode: ThemeMode, current: ThemeMode) -> some View {
         let selected = current == mode
         return Button {
             store.setThemeMode(mode)
@@ -150,8 +125,8 @@ struct ProfileSettingsView: View {
         .animation(.easeOut(duration: 0.2), value: selected)
     }
 
-    private func languageChip(_ label: String, code: String) -> some View {
-        let selected = language == code
+    private func languageChip(_ label: LocalizedStringKey, code: String) -> some View {
+        let selected = normalizedLanguage == code
         return Button {
             language = code
         } label: {
@@ -165,6 +140,16 @@ struct ProfileSettingsView: View {
         }
         .buttonStyle(PressableButtonStyle())
         .animation(.easeOut(duration: 0.2), value: selected)
+    }
+
+    private var normalizedLanguage: String {
+        let raw = language.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else { return "en" }
+        let lower = raw.lowercased()
+        if lower == "zh" || lower.hasPrefix("zh-") {
+            return "zh-Hans"
+        }
+        return raw
     }
 
     private func botanicalToggle(isOn: Binding<Bool>) -> some View {

@@ -9,7 +9,7 @@ struct ProfileView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Profile")
+                Text("profile.title")
                     .font(.display(40))
 
                 BotanicalCard {
@@ -20,23 +20,35 @@ struct ProfileView: View {
                             .overlay(Text(initials).font(.botanicalSemibold(24)))
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(store.user?.name.isEmpty == false ? store.user?.name ?? "User" : "User")
-                                .font(.botanicalSemibold(18))
-                            Text(store.user?.email.isEmpty == false ? store.user?.email ?? "" : "No email")
-                                .font(.botanicalBody(13))
-                                .foregroundStyle(Color.botanicalTextSecondary)
+                            if let name = store.user?.name.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+                                Text(name)
+                                    .font(.botanicalSemibold(18))
+                            } else {
+                                Text("profile.defaultUser")
+                                    .font(.botanicalSemibold(18))
+                            }
+
+                            if let email = store.user?.email.trimmingCharacters(in: .whitespacesAndNewlines), !email.isEmpty {
+                                Text(email)
+                                    .font(.botanicalBody(13))
+                                    .foregroundStyle(Color.botanicalTextSecondary)
+                            } else {
+                                Text("profile.noEmail")
+                                    .font(.botanicalBody(13))
+                                    .foregroundStyle(Color.botanicalTextSecondary)
+                            }
                         }
                     }
                 }
 
-                actionRow("History") { showHistory = true }
-                actionRow("Settings") { showSettings = true }
+                actionRow("history.title") { showHistory = true }
+                actionRow("profile.settings") { showSettings = true }
 
                 if store.isAdmin {
-                    actionRow("Manage") { showManage = true }
+                    actionRow("profile.manageOfficialTitle") { showManage = true }
                 }
 
-                BotanicalButton(title: "Sign Out", variant: .danger) {
+                BotanicalButton(title: "common.signOut", variant: .danger) {
                     Task { await store.logout() }
                 }
             }
@@ -62,7 +74,7 @@ struct ProfileView: View {
         return name.split(separator: " ").prefix(2).compactMap { $0.first }.map(String.init).joined()
     }
 
-    private func actionRow(_ title: String, action: @escaping () -> Void) -> some View {
+    private func actionRow(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
                 Text(title)

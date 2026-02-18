@@ -7,7 +7,7 @@ struct BotanicalButton: View {
         case danger
     }
 
-    let title: String
+    let title: LocalizedStringKey
     let variant: Variant
     var disabled = false
     let action: () -> Void
@@ -31,7 +31,7 @@ struct BotanicalButton: View {
         switch variant {
         case .primary: return .botanicalTextPrimary
         case .secondary: return .botanicalTextSecondary
-        case .danger: return .white
+        case .danger: return Color(red: 0.98, green: 0.93, blue: 0.91)
         }
     }
 
@@ -39,7 +39,7 @@ struct BotanicalButton: View {
         switch variant {
         case .primary: return .botanicalAccent
         case .secondary: return .botanicalMuted
-        case .danger: return .red
+        case .danger: return Color(red: 0.72, green: 0.32, blue: 0.28).opacity(0.85)
         }
     }
 }

@@ -2,11 +2,13 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppStore.self) private var store
-    @Environment(\.colorScheme) private var systemScheme
+    @AppStorage("ironlog_language") private var languageCode = Locale.current.language.languageCode?.identifier ?? "en"
 
     var body: some View {
         Group {
-            if store.user == nil {
+            if store.isBootstrappingSession {
+                bootstrappingView
+            } else if store.user == nil {
                 LoginView()
             } else {
                 MainTabView()
@@ -14,6 +16,7 @@ struct RootView: View {
         }
         .background(Color.botanicalBackground.ignoresSafeArea())
         .preferredColorScheme(preferredScheme)
+        .environment(\.locale, Locale(identifier: normalizedLanguageCode))
     }
 
     private var preferredScheme: ColorScheme? {
@@ -26,5 +29,27 @@ struct RootView: View {
         case .system:
             return nil
         }
+    }
+
+    private var normalizedLanguageCode: String {
+        let normalized = languageCode.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else { return "en" }
+        let lowered = normalized.lowercased()
+        if lowered == "zh" || lowered.hasPrefix("zh-") {
+            return "zh-Hans"
+        }
+        return normalized
+    }
+
+    private var bootstrappingView: some View {
+        VStack(spacing: 14) {
+            ProgressView()
+                .tint(Color.botanicalAccent)
+                .scaleEffect(1.1)
+            Text("auth.login.restoreSession")
+                .font(.botanicalBody(14))
+                .foregroundStyle(Color.botanicalTextSecondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

@@ -13,9 +13,39 @@ enum TokenExchangeError: Error {
     case serverError(String)
 }
 
+protocol KeychainClient {
+    @discardableResult
+    func set(_ value: String, forKey key: String) -> Bool
+    func get(_ key: String) -> String?
+    @discardableResult
+    func delete(_ key: String) -> Bool
+}
+
+struct KeychainSwiftClient: KeychainClient {
+    private let keychain = KeychainSwift()
+
+    @discardableResult
+    func set(_ value: String, forKey key: String) -> Bool {
+        keychain.set(value, forKey: key, withAccess: nil)
+    }
+
+    func get(_ key: String) -> String? {
+        keychain.get(key)
+    }
+
+    @discardableResult
+    func delete(_ key: String) -> Bool {
+        keychain.delete(key)
+    }
+}
+
 final class TokenExchangeService {
     private var cache: (token: String, expiresAt: Double, sourceToken: String)?
-    private let keychain = KeychainSwift()
+    private let keychain: any KeychainClient
+
+    init(keychain: any KeychainClient = KeychainSwiftClient()) {
+        self.keychain = keychain
+    }
 
     func exchange(privyToken: String) async throws -> TokenExchangeResult {
         if let cache,
@@ -44,6 +74,7 @@ final class TokenExchangeService {
         let result = try JSONDecoder().decode(TokenExchangeResult.self, from: data)
         keychain.set(result.token, forKey: "ironlog_supabase_jwt")
         keychain.set(result.userId, forKey: "ironlog_user_id")
+        keychain.set(String(result.expiresAt), forKey: "ironlog_jwt_expires_at")
         cache = (result.token, result.expiresAt, privyToken)
         return result
     }
@@ -52,6 +83,26 @@ final class TokenExchangeService {
         cache = nil
         keychain.delete("ironlog_supabase_jwt")
         keychain.delete("ironlog_user_id")
+        keychain.delete("ironlog_jwt_expires_at")
+    }
+
+    func restoreSession() -> TokenExchangeResult? {
+        guard
+            let token = keychain.get("ironlog_supabase_jwt"),
+            let userId = keychain.get("ironlog_user_id"),
+            let expiresAtString = keychain.get("ironlog_jwt_expires_at"),
+            let expiresAt = Double(expiresAtString)
+        else {
+            return nil
+        }
+
+        let now = Date().timeIntervalSince1970 * 1000
+        guard now < expiresAt - 5 * 60 * 1000 else {
+            clear()
+            return nil
+        }
+
+        return TokenExchangeResult(token: token, userId: userId, expiresAt: expiresAt)
     }
 
     func extractUserId(from jwt: String) -> String {

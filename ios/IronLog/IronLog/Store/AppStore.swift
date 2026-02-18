@@ -16,6 +16,7 @@ final class AppStore {
     var exerciseDefs: [ExerciseDef] = []
     var templates: [WorkoutTemplate] = []
     var isLoading = true
+    var isBootstrappingSession = true
     var authError: String?
     var activeToast: AppToast?
 
@@ -92,6 +93,19 @@ final class AppStore {
         }
     }
 
+    func loginWithWallet() async {
+        isLoading = true
+        authError = nil
+        defer { isLoading = false }
+
+        do {
+            let login = try await authService.loginWithWallet()
+            await completeLogin(exchange: login.exchange, profile: login.profile)
+        } catch {
+            handleLoginFailure(error)
+        }
+    }
+
     func sendEmailOTP(to email: String) async {
         let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanEmail.isEmpty else {
@@ -151,6 +165,19 @@ final class AppStore {
         } catch {
             authError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         }
+    }
+
+    func attemptSessionRestore() async {
+        guard isBootstrappingSession else { return }
+        defer { isBootstrappingSession = false }
+
+        guard user == nil else { return }
+        guard let restored = tokenExchangeService.restoreSession() else { return }
+
+        SupabaseClientProvider.shared.setAuthToken(restored.token)
+        mapPrivyUser(userId: restored.userId, profile: nil)
+        await refreshData()
+        await consumeSyncQueue()
     }
 
     func refreshOfficialContent() async {
@@ -452,8 +479,8 @@ final class AppStore {
             name: name.isEmpty ? "User" : name,
             email: email,
             photoUrl: profile?.photoUrl,
-            walletAddress: nil,
-            solanaAddress: nil,
+            walletAddress: profile?.walletAddress,
+            solanaAddress: profile?.solanaAddress,
             loginMethod: profile?.loginMethod ?? "privy",
             preferences: saved
         )

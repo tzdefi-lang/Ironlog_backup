@@ -14,6 +14,10 @@ enum Constants {
     static let privyAppClientId = privyAppClientIdRaw
     static let privyAppURLScheme = env("PRIVY_APP_URL_SCHEME", fallback: "ironlog")
     static let privyAuthProxyURL = URL(string: privyAuthProxyRaw)!
+    static let reownProjectId = env("REOWN_PROJECT_ID", fallback: "")
+    static let reownAppGroup = env("REOWN_APP_GROUP", fallback: "group.com.syntaxis.ironlog")
+    static let privySiweDomain = env("PRIVY_SIWE_DOMAIN", fallback: "ironlog.app")
+    static let privySiweURI = env("PRIVY_SIWE_URI", fallback: "ironlog://")
 
     static let privyAuthProxyURLCandidates: [URL] = {
         guard let primary = URL(string: privyAuthProxyRaw) else { return [] }
@@ -56,6 +60,11 @@ enum Constants {
         let process = ProcessInfo.processInfo.environment[key]?.trimmingCharacters(in: .whitespacesAndNewlines)
         if let process, !process.isEmpty {
             return process
+        }
+        let plist = (Bundle.main.object(forInfoDictionaryKey: key) as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if let plist, !plist.isEmpty {
+            return plist
         }
         return fallback
     }
