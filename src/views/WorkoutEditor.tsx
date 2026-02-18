@@ -1024,6 +1024,9 @@ const WorkoutEditor: React.FC = () => {
     scheduleAutosave({ ...workout, exercises });
   };
 
+  const topActionButtonBaseClass =
+    'w-10 h-10 rounded-full flex items-center justify-center border shadow-[var(--surface-shadow)] active:scale-95 transition-all duration-300';
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 view-enter transition-colors">
       <div className="bg-white/80 dark:bg-gray-950/85 backdrop-blur-md px-4 py-3 flex items-center justify-between sticky top-0 z-20 border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
@@ -1044,7 +1047,7 @@ const WorkoutEditor: React.FC = () => {
         <div className="flex gap-2">
             <button
               onClick={startRestTimer}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-sky-500 shadow-lg shadow-sky-300/45 dark:shadow-sky-900/45 active:scale-95 transition-all"
+              className={`${topActionButtonBaseClass} border-[var(--surface-border)] bg-[var(--surface-card)] text-[var(--botanical-text-soft)]`}
               aria-label={`${t('workoutEditor.restTimer')} (${restTimerSeconds}s)`}
               title={`${t('workoutEditor.restTimer')} (${restTimerSeconds}s)`}
             >
@@ -1055,10 +1058,10 @@ const WorkoutEditor: React.FC = () => {
                 onClick={toggleTimer}
                 aria-label={workout.startTimestamp ? t('workoutEditor.pauseTimer') : t('workoutEditor.startTimer')}
                 title={workout.startTimestamp ? t('workoutEditor.pauseTimer') : t('workoutEditor.startTimer')}
-                className={`w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-all shadow-lg ${
+                className={`${topActionButtonBaseClass} ${
                   workout.startTimestamp
-                    ? 'bg-brand text-gray-900 shadow-brand-soft'
-                    : 'bg-green-400 text-white shadow-green-300/55 dark:shadow-green-900/45'
+                    ? 'border-brand bg-brand-tint-strong text-[var(--botanical-text)]'
+                    : 'border-[var(--surface-border)] bg-[var(--surface-card)] text-[var(--botanical-text-soft)]'
                 }`}
               >
                 {workout.startTimestamp ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-0.5"/>}
@@ -1069,10 +1072,10 @@ const WorkoutEditor: React.FC = () => {
               data-testid="finish-workout-button"
               aria-label={t('workoutEditor.finishWorkout')}
               title={t('workoutEditor.finishWorkout')}
-              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all ${
+              className={`${topActionButtonBaseClass} ${
                 workout.completed
-                  ? 'bg-gray-300 dark:bg-gray-700 text-white'
-                  : 'bg-brand text-gray-900 shadow-brand-soft'
+                  ? 'border-[var(--surface-border)] bg-[var(--surface-muted)] text-[var(--botanical-text-soft)]'
+                  : 'border-brand bg-brand-tint-strong text-[var(--botanical-text)]'
               }`}
             >
               <Check size={20} strokeWidth={3} />
