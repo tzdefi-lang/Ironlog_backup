@@ -75,9 +75,7 @@ export interface UserProfile {
   name: string;
   email: string;
   photoUrl?: string;
-  walletAddress?: string;  // EVM wallet address (if connected)
-  solanaAddress?: string;  // Solana wallet address (if connected)
-  loginMethod?: 'google' | 'email' | 'wallet';
+  loginMethod?: 'google' | 'email';
   preferences: {
     defaultUnit: Unit;
     restTimerSeconds: number;

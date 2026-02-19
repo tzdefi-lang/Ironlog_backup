@@ -110,8 +110,6 @@ struct UserProfile: Codable, Hashable, Sendable {
     var name: String
     var email: String
     var photoUrl: String?
-    var walletAddress: String?
-    var solanaAddress: String?
     var loginMethod: String?
     var preferences: UserPreferences
 }

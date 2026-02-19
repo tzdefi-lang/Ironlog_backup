@@ -3,15 +3,21 @@ import Supabase
 
 final class SupabaseClientProvider {
     static let shared = SupabaseClientProvider()
+    private let lock = NSLock()
+    private var _client: SupabaseClient
 
-    private(set) var client: SupabaseClient
+    var client: SupabaseClient {
+        lock.lock()
+        defer { lock.unlock() }
+        return _client
+    }
 
     private init() {
-        client = SupabaseClient(supabaseURL: Constants.supabaseURL, supabaseKey: Constants.supabaseAnonKey)
+        _client = SupabaseClient(supabaseURL: Constants.supabaseURL, supabaseKey: Constants.supabaseAnonKey)
     }
 
     func setAuthToken(_ jwt: String) {
-        client = SupabaseClient(
+        let newClient = SupabaseClient(
             supabaseURL: Constants.supabaseURL,
             supabaseKey: Constants.supabaseAnonKey,
             options: SupabaseClientOptions(
@@ -19,9 +25,16 @@ final class SupabaseClientProvider {
                 global: .init(headers: ["Authorization": "Bearer \(jwt)"])
             )
         )
+
+        lock.lock()
+        _client = newClient
+        lock.unlock()
     }
 
     func clearAuthToken() {
-        client = SupabaseClient(supabaseURL: Constants.supabaseURL, supabaseKey: Constants.supabaseAnonKey)
+        let newClient = SupabaseClient(supabaseURL: Constants.supabaseURL, supabaseKey: Constants.supabaseAnonKey)
+        lock.lock()
+        _client = newClient
+        lock.unlock()
     }
 }

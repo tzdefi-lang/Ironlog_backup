@@ -37,21 +37,6 @@ struct ProfileView: View {
                                     .font(.botanicalBody(13))
                                     .foregroundStyle(Color.botanicalTextSecondary)
                             }
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("profile.solanaWallet")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(Color.botanicalTextSecondary)
-                                    .textCase(.uppercase)
-                                    .tracking(0.4)
-
-                                Text(preferredWalletAddress ?? "Not connected")
-                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                    .foregroundStyle(preferredWalletAddress == nil ? Color.botanicalTextSecondary : Color.botanicalTextPrimary)
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-                            }
-                            .padding(.top, 4)
                         }
                     }
                 }
@@ -87,16 +72,6 @@ struct ProfileView: View {
         let name = store.user?.name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let name, !name.isEmpty else { return "U" }
         return name.split(separator: " ").prefix(2).compactMap { $0.first }.map(String.init).joined()
-    }
-
-    private var preferredWalletAddress: String? {
-        if let solana = store.user?.solanaAddress?.trimmingCharacters(in: .whitespacesAndNewlines), !solana.isEmpty {
-            return solana
-        }
-        if let wallet = store.user?.walletAddress?.trimmingCharacters(in: .whitespacesAndNewlines), !wallet.isEmpty {
-            return wallet
-        }
-        return nil
     }
 
     private func actionRow(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {

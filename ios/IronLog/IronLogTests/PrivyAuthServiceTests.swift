@@ -4,7 +4,6 @@ import XCTest
 final class PrivyAuthServiceTests: XCTestCase {
     func testNonOAuthProvidersHaveNoOAuthProvider() {
         XCTAssertNil(PrivyLoginProvider.email.oauthProvider)
-        XCTAssertNil(PrivyLoginProvider.wallet.oauthProvider)
     }
 
     func testOAuthProvidersRemainMapped() {
@@ -12,8 +11,7 @@ final class PrivyAuthServiceTests: XCTestCase {
         XCTAssertEqual(PrivyLoginProvider.apple.oauthProvider, .apple)
     }
 
-    func testAllCasesContainsEmailAndWallet() {
+    func testAllCasesContainsEmail() {
         XCTAssertTrue(PrivyLoginProvider.allCases.contains(.email))
-        XCTAssertTrue(PrivyLoginProvider.allCases.contains(.wallet))
     }
 }

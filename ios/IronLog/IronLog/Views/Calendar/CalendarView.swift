@@ -72,7 +72,7 @@ struct CalendarView: View {
 
                 ZStack {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 7), spacing: 8) {
-                        ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
+                        ForEach(Array(["S", "M", "T", "W", "T", "F", "S"].enumerated()), id: \.offset) { _, day in
                             Text(day)
                                 .font(.caption2)
                                 .foregroundStyle(Color.botanicalTextSecondary)

@@ -29,18 +29,6 @@ packages:
   Privy:
     url: https://github.com/privy-io/privy-ios
     exactVersion: 2.8.0
-  Reown:
-    url: https://github.com/reown-com/reown-swift
-    exactVersion: 2.2.2
-  Starscream:
-    url: https://github.com/daltoniam/Starscream
-    exactVersion: 3.1.2
-  Web3:
-    url: https://github.com/Boilertalk/Web3.swift
-    exactVersion: 0.8.8
-  CryptoSwift:
-    url: https://github.com/krzyzanowskim/CryptoSwift.git
-    exactVersion: 1.8.3
 targets:
   IronLog:
     type: application
@@ -74,15 +62,6 @@ targets:
             CFBundleURLName: com.syntaxis.ironlog.auth
             CFBundleURLSchemes:
               - ironlog
-        LSApplicationQueriesSchemes:
-          - metamask
-          - rainbow
-          - trust
-          - zerion
-          - cbwallet
-          - wallet
-          - wc
-        REOWN_PROJECT_ID: 8ce707b5d51eae9d998ba388bc924999
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.syntaxis.ironlog
@@ -104,18 +83,6 @@ targets:
         product: Reachability
       - package: Privy
         product: Privy
-      - package: Reown
-        product: ReownAppKit
-      - package: Reown
-        product: WalletConnectNetworking
-      - package: Reown
-        product: WalletConnect
-      - package: Starscream
-        product: Starscream
-      - package: Web3
-        product: Web3
-      - package: CryptoSwift
-        product: CryptoSwift
   IronLogTests:
     type: bundle.unit-test
     platform: iOS

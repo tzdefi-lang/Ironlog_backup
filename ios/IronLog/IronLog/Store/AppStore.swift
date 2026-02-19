@@ -13,8 +13,6 @@ private struct CachedUserIdentity: Codable, Sendable {
     var name: String?
     var email: String?
     var photoUrl: String?
-    var walletAddress: String?
-    var solanaAddress: String?
     var loginMethod: String?
 }
 
@@ -100,20 +98,6 @@ final class AppStore {
             let result = try await authService.handlePrivyToken(token)
             guard isActiveAuthAttempt(attemptId) else { return }
             await completeLogin(exchange: result, profile: nil)
-        } catch {
-            guard isActiveAuthAttempt(attemptId) else { return }
-            handleLoginFailure(error)
-        }
-    }
-
-    func loginWithWallet() async {
-        let attemptId = beginAuthAttempt()
-        defer { finishAuthAttempt(attemptId) }
-
-        do {
-            let login = try await authService.loginWithWallet()
-            guard isActiveAuthAttempt(attemptId) else { return }
-            await completeLogin(exchange: login.exchange, profile: login.profile)
         } catch {
             guard isActiveAuthAttempt(attemptId) else { return }
             handleLoginFailure(error)
@@ -526,8 +510,6 @@ final class AppStore {
 
         let finalPrivyDid = normalize(profile?.privyDid) ?? normalize(inMemory?.privyDid) ?? normalize(cached?.privyDid)
         let finalPhoto = normalize(profile?.photoUrl) ?? normalize(inMemory?.photoUrl) ?? normalize(cached?.photoUrl)
-        let finalWallet = normalize(profile?.walletAddress) ?? normalize(inMemory?.walletAddress) ?? normalize(cached?.walletAddress)
-        let finalSolana = normalize(profile?.solanaAddress) ?? normalize(inMemory?.solanaAddress) ?? normalize(cached?.solanaAddress)
         let finalLoginMethod = normalize(profile?.loginMethod) ?? normalize(inMemory?.loginMethod) ?? normalize(cached?.loginMethod) ?? "privy"
 
         user = UserProfile(
@@ -536,8 +518,6 @@ final class AppStore {
             name: finalName,
             email: finalEmail,
             photoUrl: finalPhoto,
-            walletAddress: finalWallet,
-            solanaAddress: finalSolana,
             loginMethod: finalLoginMethod,
             preferences: saved
         )
@@ -548,8 +528,6 @@ final class AppStore {
                 name: finalName,
                 email: finalEmail,
                 photoUrl: finalPhoto,
-                walletAddress: finalWallet,
-                solanaAddress: finalSolana,
                 loginMethod: finalLoginMethod
             ),
             for: userId

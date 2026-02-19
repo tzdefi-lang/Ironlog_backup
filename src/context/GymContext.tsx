@@ -452,27 +452,15 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await initInFlightRef.current;
   };
 
-  const shortenAddress = (addr?: string) => (addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : undefined);
-
   const mapPrivyUser = (pUser: any | null | undefined, determinedUserId: string) => {
     const email = pUser?.email?.address || pUser?.google?.email || '';
-    const name =
-      pUser?.google?.name ||
-      (email ? email.split('@')[0] : null) ||
-      shortenAddress(pUser?.wallet?.address) ||
-      'User';
+    const name = pUser?.google?.name || (email ? email.split('@')[0] : null) || 'User';
     const photoUrl =
       pUser?.google?.profilePictureUrl ||
       `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff`;
 
-    let loginMethod: 'google' | 'email' | 'wallet' = 'email';
+    let loginMethod: 'google' | 'email' = 'email';
     if (pUser?.google) loginMethod = 'google';
-    else if (pUser?.wallet && !pUser?.email) loginMethod = 'wallet';
-
-    const linkedAccounts = pUser?.linkedAccounts || [];
-
-    const evmWallet = linkedAccounts.find((a: any) => a.type === 'wallet' && a.chainType === 'ethereum');
-    const solWallet = linkedAccounts.find((a: any) => a.type === 'wallet' && a.chainType === 'solana');
 
     const unitKey = `ironlog_unit_${determinedUserId}`;
     const savedUnit = localStorage.getItem(unitKey);
@@ -492,8 +480,6 @@ export const GymProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name,
       email,
       photoUrl,
-      walletAddress: evmWallet?.address,
-      solanaAddress: solWallet?.address,
       loginMethod,
       preferences: { defaultUnit, restTimerSeconds, themeMode, notificationsEnabled },
     });

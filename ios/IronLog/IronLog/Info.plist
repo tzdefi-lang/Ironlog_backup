@@ -33,18 +33,6 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>metamask</string>
-		<string>rainbow</string>
-		<string>trust</string>
-		<string>zerion</string>
-		<string>cbwallet</string>
-		<string>wallet</string>
-		<string>wc</string>
-	</array>
-	<key>REOWN_PROJECT_ID</key>
-	<string>8ce707b5d51eae9d998ba388bc924999</string>
 	<key>NSCameraUsageDescription</key>
 	<string>IronLog uses the camera to capture exercise demonstration media.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

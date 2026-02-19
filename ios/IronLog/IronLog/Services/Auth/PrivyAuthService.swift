@@ -5,7 +5,6 @@ enum PrivyLoginProvider: String, CaseIterable, Identifiable, Sendable {
     case google
     case apple
     case email
-    case wallet
 
     var id: String { rawValue }
 
@@ -17,8 +16,6 @@ enum PrivyLoginProvider: String, CaseIterable, Identifiable, Sendable {
             return "Continue with Apple"
         case .email:
             return "Continue with Email"
-        case .wallet:
-            return "Continue with Wallet"
         }
     }
 
@@ -28,7 +25,7 @@ enum PrivyLoginProvider: String, CaseIterable, Identifiable, Sendable {
             return .google
         case .apple:
             return .apple
-        case .email, .wallet:
+        case .email:
             return nil
         }
     }
@@ -39,8 +36,6 @@ struct PrivyNativeProfile: Sendable {
     let email: String
     let name: String?
     let photoUrl: String?
-    let walletAddress: String?
-    let solanaAddress: String?
     let loginMethod: String
 }
 
@@ -51,15 +46,12 @@ struct PrivyNativeLoginResult: Sendable {
 
 final class PrivyAuthService {
     private let tokenExchangeService: TokenExchangeService
-    private let walletSIWEService: WalletSIWEService
     private let privy: any Privy
 
     init(
-        tokenExchangeService: TokenExchangeService = TokenExchangeService(),
-        walletSIWEService: WalletSIWEService = .shared
+        tokenExchangeService: TokenExchangeService = TokenExchangeService()
     ) {
         self.tokenExchangeService = tokenExchangeService
-        self.walletSIWEService = walletSIWEService
         privy = PrivySdk.initialize(
             config: PrivyConfig(appId: Constants.privyAppId, appClientId: Constants.privyAppClientId)
         )
@@ -71,13 +63,10 @@ final class PrivyAuthService {
 
     func loginWithOAuth(provider: PrivyLoginProvider) async throws -> PrivyNativeLoginResult {
         guard let oauthProvider = provider.oauthProvider else {
-            let message = provider == .email
-                ? "Email login should use OTP flow"
-                : "Wallet login should use SIWS flow"
             throw NSError(
                 domain: "PrivyAuth",
                 code: -1,
-                userInfo: [NSLocalizedDescriptionKey: message]
+                userInfo: [NSLocalizedDescriptionKey: "Email login should use OTP flow"]
             )
         }
 
@@ -88,27 +77,6 @@ final class PrivyAuthService {
         let token = try await user.getAccessToken()
         let exchange = try await tokenExchangeService.exchange(privyToken: token)
         let profile = profileFromPrivyUser(user, fallbackProvider: provider)
-        return PrivyNativeLoginResult(exchange: exchange, profile: profile)
-    }
-
-    func loginWithWallet() async throws -> PrivyNativeLoginResult {
-        let connection = try await walletSIWEService.connectWallet()
-        let params = SiwsMessageParams(
-            domain: Constants.privySiweDomain,
-            uri: Constants.privySiweURI,
-            address: connection.address
-        )
-        let message = try await privy.siws.generateMessage(params: params)
-        let signature = try await walletSIWEService.signSolanaMessage(message, with: connection)
-        let metadata = WalletLoginMetadata(walletClientType: nil, connectorType: "reown_appkit")
-        let user = try await privy.siws.login(
-            message: message,
-            signature: signature,
-            metadata: metadata
-        )
-        let token = try await user.getAccessToken()
-        let exchange = try await tokenExchangeService.exchange(privyToken: token)
-        let profile = profileFromPrivyUser(user, fallbackProvider: .wallet)
         return PrivyNativeLoginResult(exchange: exchange, profile: profile)
     }
 
@@ -142,7 +110,6 @@ final class PrivyAuthService {
     func logout() {
         tokenExchangeService.clear()
         Task {
-            await walletSIWEService.disconnectAllSessions()
             if let user = await privy.getUser() {
                 await user.logout()
             }
@@ -152,8 +119,6 @@ final class PrivyAuthService {
     private func profileFromPrivyUser(_ user: any PrivyUser, fallbackProvider: PrivyLoginProvider) -> PrivyNativeProfile {
         var email = ""
         var name: String?
-        var walletAddress: String?
-        var solanaAddress: String?
         var loginMethod = fallbackProvider.rawValue
 
         for account in user.linkedAccounts {
@@ -180,22 +145,6 @@ final class PrivyAuthService {
                 if loginMethod == fallbackProvider.rawValue {
                     loginMethod = "email"
                 }
-            case .externalWallet(let wallet):
-                switch wallet.chainType {
-                case .ethereum:
-                    if walletAddress == nil || walletAddress?.isEmpty == true {
-                        walletAddress = wallet.address
-                    }
-                case .solana:
-                    if solanaAddress == nil || solanaAddress?.isEmpty == true {
-                        solanaAddress = wallet.address
-                    }
-                @unknown default:
-                    break
-                }
-                if loginMethod == fallbackProvider.rawValue {
-                    loginMethod = "wallet"
-                }
             default:
                 continue
             }
@@ -206,8 +155,6 @@ final class PrivyAuthService {
             email: email,
             name: name,
             photoUrl: nil,
-            walletAddress: walletAddress,
-            solanaAddress: solanaAddress,
             loginMethod: loginMethod
         )
     }

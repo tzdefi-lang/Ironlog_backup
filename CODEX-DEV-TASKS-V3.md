@@ -1,6 +1,6 @@
 # CODEX-DEV-TASKS-V3
 
-Five targeted fixes identified after the second Codex pass. Each section contains the exact file paths, the problem, and a precise implementation spec.
+Four targeted fixes identified after the second Codex pass. Each section contains the exact file paths, the problem, and a precise implementation spec.
 
 ---
 
@@ -237,168 +237,7 @@ No other files need changes.
 
 ---
 
-## Problem 4 — Wallet login missing from Login screen
-
-**Files:**
-- `ios/IronLog/IronLog/Services/Auth/PrivyAuthService.swift`
-- `ios/IronLog/IronLog/Views/Auth/LoginView.swift`
-- `ios/IronLog/IronLog/Store/AppStore.swift`
-
-### Context
-The PWA supported Privy's wallet-based login (MetaMask / WalletConnect via SIWE). The iOS Privy SDK exposes wallet connectivity. The iOS flow differs from the PWA: instead of injecting a browser extension, Privy iOS uses WalletConnect deep-linking to open a wallet app, signs a message, and authenticates.
-
-### Fix — Step 1: Add wallet case to PrivyAuthService
-
-In `PrivyAuthService.swift`, add `.wallet` to the enum and implement the login method:
-
-```swift
-enum PrivyLoginProvider: String, CaseIterable, Identifiable, Sendable {
-    case google
-    case apple
-    case email
-    case wallet            // NEW
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .google:  return "Continue with Google"
-        case .apple:   return "Continue with Apple"
-        case .email:   return "Continue with Email"
-        case .wallet:  return "Continue with Wallet"    // NEW
-        }
-    }
-
-    var oauthProvider: OAuthProvider? {
-        switch self {
-        case .google: return .google
-        case .apple:  return .apple
-        case .email, .wallet: return nil
-        }
-    }
-}
-```
-
-Add wallet login method to `PrivyAuthService`:
-
-```swift
-/// Initiates Privy wallet login via WalletConnect / SIWE.
-/// Reference: https://docs.privy.io/guide/ios/authentication/external-wallets
-func loginWithWallet() async throws -> PrivyNativeLoginResult {
-    // Privy iOS SDK: connect an external wallet and sign a SIWE message.
-    // The exact API may be privy.siwe.authenticate() or privy.connectWallet() —
-    // check the installed PrivySDK version's public interface.
-    //
-    // Pattern based on Privy iOS SDK docs:
-    let user = try await privy.siwe.authenticate(
-        appUrlScheme: Constants.privyAppURLScheme
-    )
-    let token = try await user.getAccessToken()
-    let exchange = try await tokenExchangeService.exchange(privyToken: token)
-    let profile = profileFromWalletUser(user)
-    return PrivyNativeLoginResult(exchange: exchange, profile: profile)
-}
-
-private func profileFromWalletUser(_ user: any PrivyUser) -> PrivyNativeProfile {
-    var walletAddress = ""
-    for account in user.linkedAccounts {
-        switch account {
-        case .wallet(let wallet):
-            walletAddress = wallet.address
-        default:
-            continue
-        }
-    }
-    return PrivyNativeProfile(
-        privyDid: user.id,
-        email: "",
-        name: nil,
-        photoUrl: nil,
-        loginMethod: "wallet"
-    )
-}
-```
-
-> **Important for Codex:** The exact Privy iOS SDK method for SIWE/wallet login must match the version installed in the project. Check `PrivySDK`'s public interface by looking at `privy.` autocomplete — the method may be `privy.siwe.authenticate(appUrlScheme:)`, `privy.connectWallet()`, or similar. Adjust the call accordingly. If the installed SDK version does not support wallet login, update the Privy package to the latest version in `Package.swift` / SPM.
-
-### Fix — Step 2: Add wallet button to AppStore
-
-In `AppStore.swift`, add:
-
-```swift
-func loginWithWallet() async {
-    isLoading = true
-    authError = nil
-    defer { isLoading = false }
-
-    do {
-        let login = try await authService.loginWithWallet()
-        await completeLogin(exchange: login.exchange, profile: login.profile)
-    } catch {
-        handleLoginFailure(error)
-    }
-}
-```
-
-### Fix — Step 3: Add wallet button to LoginView
-
-In `LoginView.swift`, inside the `.initial` case of the `switch loginStep`, add the wallet button after the Email divider section:
-
-```swift
-case .initial:
-    VStack(spacing: 12) {
-        oauthButton(
-            icon: "g.circle.fill",
-            title: "Continue with Google",
-            color: Color(hex: "#4285F4")
-        ) {
-            Task { await store.loginWithPrivy(provider: .google) }
-        }
-
-        oauthButton(
-            icon: "apple.logo",
-            title: "Continue with Apple",
-            color: Color.botanicalTextPrimary
-        ) {
-            Task { await store.loginWithPrivy(provider: .apple) }
-        }
-
-        HStack {
-            Rectangle().fill(Color.botanicalBorderSubtle).frame(height: 1)
-            Text("or")
-                .font(.botanicalBody(13))
-                .foregroundStyle(Color.botanicalTextSecondary)
-                .padding(.horizontal, 12)
-            Rectangle().fill(Color.botanicalBorderSubtle).frame(height: 1)
-        }
-
-        oauthButton(
-            icon: "envelope.fill",
-            title: "Continue with Email",
-            color: Color.botanicalAccent
-        ) {
-            withAnimation(.easeOut(duration: 0.25)) {
-                loginStep = .emailEntry
-                store.authError = nil
-            }
-        }
-
-        // NEW: Wallet login
-        oauthButton(
-            icon: "wallet.pass.fill",
-            title: "Continue with Wallet",
-            color: Color(hex: "#6C63FF")
-        ) {
-            Task { await store.loginWithWallet() }
-        }
-    }
-```
-
-The wallet button uses SF Symbol `wallet.pass.fill` and a purple accent to visually distinguish it from the other options. If `wallet.pass.fill` is not available on the minimum iOS target, use `creditcard.fill` or `person.crop.circle.badge.checkmark` instead.
-
----
-
-## Problem 5 — App requires re-login after being killed from background
+## Problem 4 — App requires re-login after being killed from background
 
 **Files:**
 - `ios/IronLog/IronLog/Services/Auth/TokenExchangeService.swift`
@@ -558,9 +397,7 @@ This guarantees the user never sees a login screen flash before the Keychain res
 | `Resources/en.lproj/Localizable.strings` | **New file** — English localization keys |
 | `Resources/zh-Hans.lproj/Localizable.strings` | **New file** — Chinese localization keys |
 | `Views/Profile/ProfileSettingsView.swift` | Remove Rest Timer card; wire language chips to LanguageManager |
-| `Services/Auth/PrivyAuthService.swift` | Add `.wallet` provider case and `loginWithWallet()` method |
-| `Views/Auth/LoginView.swift` | Add wallet login button in `.initial` step |
-| `Store/AppStore.swift` | Add `loginWithWallet()`, `attemptSessionRestore()`, remove `isLoading = false` from init |
+| `Store/AppStore.swift` | Add `attemptSessionRestore()`, remove `isLoading = false` from init |
 | `Services/Auth/TokenExchangeService.swift` | Save/restore/clear `expiresAt` in Keychain; add `restoreSession()` |
 | `App/IronLogApp.swift` | Add `.task { await store.attemptSessionRestore() }` |
 | `App/RootView.swift` | Add loading state branch before login/main check |

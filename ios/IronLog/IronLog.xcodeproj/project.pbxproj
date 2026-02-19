@@ -3,13 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		003A7226A04AE1B3047FCC0C /* YouTubeWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B87F11393A1BC6E99E2300 /* YouTubeWebView.swift */; };
 		0158E738EF8002CB11B32A37 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 2EA2BF1EDA87E7BBD910470A /* Localizable.xcstrings */; };
-		02EF51DBFFAA70A920C55413 /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E01171C27FF6BF9A21B60432 /* CryptoSwift */; };
 		0453CA49D82F830C4F7DE01B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C0AE20400F50A238B47E8B25 /* PrivacyInfo.xcprivacy */; };
 		04CBEE4476FEC41A8F69CF67 /* MediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D38F39B6E41A0E691E00735 /* MediaUploadService.swift */; };
 		05D5D4ABC5B9B27652867C3F /* EditExerciseSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 073D188DA1B97BF70AE0AB1D /* EditExerciseSheet.swift */; };
@@ -20,7 +19,6 @@
 		0FB229A8C7481C52E7ABFBE0 /* WorkoutEditorViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB30383FFC494D379468516B /* WorkoutEditorViewModel.swift */; };
 		1085E6CA83CDEA078906295E /* WorkoutTemplateRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1BEDC318D74A05409D52D3F /* WorkoutTemplateRow.swift */; };
 		11C7D7512B95FC7F76F4435F /* LocalizationKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CC14730BDF0F2EBAE9BCEB /* LocalizationKey.swift */; };
-		1205CD55EC9C0A5F89774657 /* ReownAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = D204CAC1F537F4F2E807BAE7 /* ReownAppKit */; };
 		12DC0D8D756507BCFA6EFB26 /* BotanicalButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7842374BAEFD704EF86F653B /* BotanicalButton.swift */; };
 		148F2485401A9795396C0574 /* StatsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19BB4EF19BE8FD07E3D174B /* StatsViewModel.swift */; };
 		150ED71E6B21F368F5C76705 /* WorkoutRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E5A0A7B2083A60AF229BE0 /* WorkoutRow.swift */; };
@@ -39,8 +37,6 @@
 		36961199CA2C4EDDEB3821BA /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4A0D89F7B1F2C5DB6A2431B /* RootView.swift */; };
 		3896CE47228C2A34260CDF5C /* ExerciseDefModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19D1B3DA0E838234754825FD /* ExerciseDefModel.swift */; };
 		397073CA35EDD0599F18E260 /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50620E56B4E6CFABDEBC6CE2 /* Types.swift */; };
-		3B7B3529FF1E5C903286F29D /* Web3 in Frameworks */ = {isa = PBXBuildFile; productRef = B0AFFD62FDF79B7D59E88A77 /* Web3 */; };
-		41247633863EE3ACDAF9875B /* WalletSIWEService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF952772A5F45A767548138E /* WalletSIWEService.swift */; };
 		418862C9144D6D26796851C1 /* DayWorkoutListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5175EBF0E5559E04D9983E41 /* DayWorkoutListView.swift */; };
 		49EA6B956CE82344BB8B5DB1 /* PRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AA444093664A03BD7B7F49F /* PRService.swift */; };
 		5259E04EE8D7387545301C37 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3546CCF1405ECC208820E429 /* Assets.xcassets */; };
@@ -55,7 +51,6 @@
 		6C11D36B98EDFD268D902106 /* WorkoutSetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D90F4B258E61397454BB98F /* WorkoutSetModel.swift */; };
 		6EB5C43DC9A1FB90E95018F9 /* BotanicalCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B501F2E8A2A768631B6DD704 /* BotanicalCard.swift */; };
 		700F83873E6A3B4F08033398 /* SkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA2ECEC7861DC9157B123EB5 /* SkeletonView.swift */; };
-		74569577A67667CD474A554C /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 9A379C99703C0E9A14DA49B4 /* Starscream */; };
 		7697810A2B7132CA2DDF4F4F /* Font+Botanical.swift in Sources */ = {isa = PBXBuildFile; fileRef = B724B1AE89DB5B86391DE761 /* Font+Botanical.swift */; };
 		79C46386FD7B4336F4402572 /* DateUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14EE121DDD9E8575393E8973 /* DateUtils.swift */; };
 		7C994E3378F7F9EDD87934D9 /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 5A78DDB0DDBE591069C26DD2 /* KeychainSwift */; };
@@ -100,9 +95,7 @@
 		CB60AB8EE2F6405746C42150 /* RestDayCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C524F5785739553574A8AB /* RestDayCardView.swift */; };
 		CDF9BDE5C88B0DAAFA4FA70A /* BodyPartPieChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042D956599FBDCFB7E62D001 /* BodyPartPieChart.swift */; };
 		D0D9C6E39737364F0CF80B4F /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50DD0DCFA25E75B70EA1C405 /* ToastView.swift */; };
-		D3C226F4C357BA66AFA109A5 /* WalletConnect in Frameworks */ = {isa = PBXBuildFile; productRef = 9CF1FE9EFE4836F109519B47 /* WalletConnect */; };
 		D4233032B89E43C044AB40A6 /* SupabaseClientProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF1572959497549AFCC874A8 /* SupabaseClientProvider.swift */; };
-		D5FB6C5BCDE43898F627C58D /* WalletConnectNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = EA950A655091B95A53DD03FE /* WalletConnectNetworking */; };
 		D81D524D507DF4DD9B6B5305 /* ConfirmDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DDF833C4D2B00874CED66FD /* ConfirmDialog.swift */; };
 		D828C456619324726437BE1B /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 462DD0F6E02AD7FB204CAC3E /* HistoryViewModel.swift */; };
 		DA2D3B1E016ABAAC4C2CBFF6 /* SessionReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD966DDD8CBB27C0CC5963C1 /* SessionReportView.swift */; };
@@ -160,7 +153,7 @@
 		462DD0F6E02AD7FB204CAC3E /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
 		47D9ACE082C7DA25F3FA5C76 /* CreateExerciseSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateExerciseSheet.swift; sourceTree = "<group>"; };
 		4EFE2C887F4DB20709E56AA8 /* WorkoutDurationChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutDurationChart.swift; sourceTree = "<group>"; };
-		4F1ECA9B8A0D3D673881C83E /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
+		4F1ECA9B8A0D3D673881C83E /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		50620E56B4E6CFABDEBC6CE2 /* Types.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
 		50DD0DCFA25E75B70EA1C405 /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
 		5175EBF0E5559E04D9983E41 /* DayWorkoutListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayWorkoutListView.swift; sourceTree = "<group>"; };
@@ -201,11 +194,11 @@
 		AF998A2ED29F7DD41B36AF21 /* HistoryFilterSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryFilterSheet.swift; sourceTree = "<group>"; };
 		B501F2E8A2A768631B6DD704 /* BotanicalCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotanicalCard.swift; sourceTree = "<group>"; };
 		B724B1AE89DB5B86391DE761 /* Font+Botanical.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Font+Botanical.swift"; sourceTree = "<group>"; };
-		BA7B0C3CDFB7A63DD8DDDB50 /* IronLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IronLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BA7B0C3CDFB7A63DD8DDDB50 /* IronLog.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = IronLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2A36FBEB1BE0057663601D /* PrivyAuthServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivyAuthServiceTests.swift; sourceTree = "<group>"; };
 		BBCD0A852BDC9BF7BBF73F29 /* LoadRiskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadRiskView.swift; sourceTree = "<group>"; };
 		BD966DDD8CBB27C0CC5963C1 /* SessionReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionReportView.swift; sourceTree = "<group>"; };
-		C0AE20400F50A238B47E8B25 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C0AE20400F50A238B47E8B25 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		C0CC14730BDF0F2EBAE9BCEB /* LocalizationKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationKey.swift; sourceTree = "<group>"; };
 		C900D2DC3721D95BB94BDCC8 /* IronLogUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = IronLogUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C944DC8B7DB76AB7739A9704 /* ManageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageView.swift; sourceTree = "<group>"; };
@@ -218,7 +211,6 @@
 		D9C76028811AA437DBB38047 /* ExercisePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExercisePickerSheet.swift; sourceTree = "<group>"; };
 		DA09F4813D44215E873407A3 /* CalendarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarViewModel.swift; sourceTree = "<group>"; };
 		DF1572959497549AFCC874A8 /* SupabaseClientProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseClientProvider.swift; sourceTree = "<group>"; };
-		DF952772A5F45A767548138E /* WalletSIWEService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletSIWEService.swift; sourceTree = "<group>"; };
 		E1EDAFC681B974F2874F7FEC /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
 		E4A0D89F7B1F2C5DB6A2431B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		E994D669C7E0883D947EAE86 /* GifVideoPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifVideoPlayer.swift; sourceTree = "<group>"; };
@@ -244,12 +236,6 @@
 				7C994E3378F7F9EDD87934D9 /* KeychainSwift in Frameworks */,
 				0A9C3D5A7D40D78E544EA6DB /* Reachability in Frameworks */,
 				158BBF04AE74B06E34E041D8 /* Privy in Frameworks */,
-				1205CD55EC9C0A5F89774657 /* ReownAppKit in Frameworks */,
-				D5FB6C5BCDE43898F627C58D /* WalletConnectNetworking in Frameworks */,
-				D3C226F4C357BA66AFA109A5 /* WalletConnect in Frameworks */,
-				74569577A67667CD474A554C /* Starscream in Frameworks */,
-				3B7B3529FF1E5C903286F29D /* Web3 in Frameworks */,
-				02EF51DBFFAA70A920C55413 /* CryptoSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -387,7 +373,6 @@
 			children = (
 				39EBEB9070121E82D4B1EE77 /* PrivyAuthService.swift */,
 				2B94B789785ACF7F102E255F /* TokenExchangeService.swift */,
-				DF952772A5F45A767548138E /* WalletSIWEService.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -650,12 +635,6 @@
 				5A78DDB0DDBE591069C26DD2 /* KeychainSwift */,
 				39CBC4D0471BD59ABDFD5A09 /* Reachability */,
 				074EC5457E8DAAFBD92FCAB8 /* Privy */,
-				D204CAC1F537F4F2E807BAE7 /* ReownAppKit */,
-				EA950A655091B95A53DD03FE /* WalletConnectNetworking */,
-				9CF1FE9EFE4836F109519B47 /* WalletConnect */,
-				9A379C99703C0E9A14DA49B4 /* Starscream */,
-				B0AFFD62FDF79B7D59E88A77 /* Web3 */,
-				E01171C27FF6BF9A21B60432 /* CryptoSwift */,
 			);
 			productName = IronLog;
 			productReference = BA7B0C3CDFB7A63DD8DDDB50 /* IronLog.app */;
@@ -691,6 +670,9 @@
 					2B52870E96751A366903E3A9 = {
 						DevelopmentTeam = "";
 					};
+					68F127FF37A8B7D8E5F786A1 = {
+						DevelopmentTeam = "";
+					};
 					7D9FEC9EEFAF3AC447420808 = {
 						DevelopmentTeam = "";
 						TestTargetID = 68F127FF37A8B7D8E5F786A1;
@@ -709,17 +691,14 @@
 			mainGroup = 6DAF1FD744C12AF759FA6153;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				F6BEF9AC24B1FAB640672C39 /* XCRemoteSwiftPackageReference "CryptoSwift" */,
 				6FBCD14C37DC9BD03AFBC650 /* XCRemoteSwiftPackageReference "keychain-swift" */,
 				1EB331BADE8CD67CD23F32BE /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 				6A6828C46C015EDF8573625B /* XCRemoteSwiftPackageReference "privy-ios" */,
-				76AE6EB4D4604F0D5924DC08 /* XCRemoteSwiftPackageReference "Reachability" */,
-				C555C39592C7662615228EA9 /* XCRemoteSwiftPackageReference "reown-swift" */,
+				76AE6EB4D4604F0D5924DC08 /* XCRemoteSwiftPackageReference "Reachability.swift" */,
 				C1CF2F1789C2A2EBFEA6008C /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
-				3C3624CCAACD55392FE1AEC8 /* XCRemoteSwiftPackageReference "Starscream" */,
 				9EB138AB94C27CA9E2F71660 /* XCRemoteSwiftPackageReference "supabase-swift" */,
-				3B350E9DB4BD57BF389AB89E /* XCRemoteSwiftPackageReference "Web3" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -829,7 +808,6 @@
 				ABB1A1752DB9D4A7ADA97BA2 /* TokenExchangeService.swift in Sources */,
 				397073CA35EDD0599F18E260 /* Types.swift in Sources */,
 				ACBAFE344B9739E202298836 /* ViewModifiers.swift in Sources */,
-				41247633863EE3ACDAF9875B /* WalletSIWEService.swift in Sources */,
 				C45C010FEA4806D90AA501C0 /* WeeklyFrequencyChart.swift in Sources */,
 				C8CB136C387807E8F18DF904 /* WeeklyVolumeChart.swift in Sources */,
 				310DC9B05F5DCEABB7C2B899 /* WorkoutCardView.swift in Sources */,
@@ -894,7 +872,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = IronLog/IronLog.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 29ZNKRF7B6;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = IronLog/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -913,7 +890,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = IronLog/IronLog.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 29ZNKRF7B6;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = IronLog/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1152,22 +1128,6 @@
 				version = 2.4.0;
 			};
 		};
-		3B350E9DB4BD57BF389AB89E /* XCRemoteSwiftPackageReference "Web3" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Boilertalk/Web3.swift";
-			requirement = {
-				kind = exactVersion;
-				version = 0.8.8;
-			};
-		};
-		3C3624CCAACD55392FE1AEC8 /* XCRemoteSwiftPackageReference "Starscream" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/daltoniam/Starscream";
-			requirement = {
-				kind = exactVersion;
-				version = 3.1.2;
-			};
-		};
 		6A6828C46C015EDF8573625B /* XCRemoteSwiftPackageReference "privy-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/privy-io/privy-ios";
@@ -1184,7 +1144,7 @@
 				version = 21.0.0;
 			};
 		};
-		76AE6EB4D4604F0D5924DC08 /* XCRemoteSwiftPackageReference "Reachability" */ = {
+		76AE6EB4D4604F0D5924DC08 /* XCRemoteSwiftPackageReference "Reachability.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ashleymills/Reachability.swift";
 			requirement = {
@@ -1208,22 +1168,6 @@
 				version = 3.1.1;
 			};
 		};
-		C555C39592C7662615228EA9 /* XCRemoteSwiftPackageReference "reown-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/reown-com/reown-swift";
-			requirement = {
-				kind = exactVersion;
-				version = 2.2.2;
-			};
-		};
-		F6BEF9AC24B1FAB640672C39 /* XCRemoteSwiftPackageReference "CryptoSwift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/krzyzanowskim/CryptoSwift.git";
-			requirement = {
-				kind = exactVersion;
-				version = 1.8.3;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1239,7 +1183,7 @@
 		};
 		39CBC4D0471BD59ABDFD5A09 /* Reachability */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 76AE6EB4D4604F0D5924DC08 /* XCRemoteSwiftPackageReference "Reachability" */;
+			package = 76AE6EB4D4604F0D5924DC08 /* XCRemoteSwiftPackageReference "Reachability.swift" */;
 			productName = Reachability;
 		};
 		5A78DDB0DDBE591069C26DD2 /* KeychainSwift */ = {
@@ -1252,40 +1196,10 @@
 			package = 9EB138AB94C27CA9E2F71660 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
 		};
-		9A379C99703C0E9A14DA49B4 /* Starscream */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3C3624CCAACD55392FE1AEC8 /* XCRemoteSwiftPackageReference "Starscream" */;
-			productName = Starscream;
-		};
-		9CF1FE9EFE4836F109519B47 /* WalletConnect */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C555C39592C7662615228EA9 /* XCRemoteSwiftPackageReference "reown-swift" */;
-			productName = WalletConnect;
-		};
-		B0AFFD62FDF79B7D59E88A77 /* Web3 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3B350E9DB4BD57BF389AB89E /* XCRemoteSwiftPackageReference "Web3" */;
-			productName = Web3;
-		};
 		C93C6F1077B7A079AC16E248 /* SDWebImageSwiftUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C1CF2F1789C2A2EBFEA6008C /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
 			productName = SDWebImageSwiftUI;
-		};
-		D204CAC1F537F4F2E807BAE7 /* ReownAppKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C555C39592C7662615228EA9 /* XCRemoteSwiftPackageReference "reown-swift" */;
-			productName = ReownAppKit;
-		};
-		E01171C27FF6BF9A21B60432 /* CryptoSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F6BEF9AC24B1FAB640672C39 /* XCRemoteSwiftPackageReference "CryptoSwift" */;
-			productName = CryptoSwift;
-		};
-		EA950A655091B95A53DD03FE /* WalletConnectNetworking */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C555C39592C7662615228EA9 /* XCRemoteSwiftPackageReference "reown-swift" */;
-			productName = WalletConnectNetworking;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

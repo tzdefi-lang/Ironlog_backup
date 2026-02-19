@@ -144,11 +144,6 @@ Required iOS config values:
 - `PRIVY_APP_ID`
 - `PRIVY_APP_CLIENT_ID`
 - `PRIVY_APP_URL_SCHEME` (default in this repo: `ironlog`)
-- `REOWN_PROJECT_ID` (for WalletConnect / wallet login)
-
-Set `REOWN_PROJECT_ID` in:
-
-- `ios/IronLog/IronLog/Info.plist` -> `REOWN_PROJECT_ID`
 
 Privy dashboard requirements:
 

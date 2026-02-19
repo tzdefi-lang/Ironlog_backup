@@ -17,15 +17,7 @@ const AppRoot: React.FC<AppRootProps> = ({ appId }) => {
           accentColor: botanicalDesignTokens.color.accent.primary,
           logo: '/icons/icon-192x192.png',
         },
-        loginMethods: ['google', 'email', 'wallet'],
-        embeddedWallets: {
-          ethereum: {
-            createOnLogin: 'users-without-wallets',
-          },
-          solana: {
-            createOnLogin: 'users-without-wallets',
-          },
-        },
+        loginMethods: ['google', 'email'],
       }}
     >
       <App />

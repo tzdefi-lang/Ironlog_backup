@@ -47,7 +47,8 @@ struct LoginView: View {
                     oauthButton(
                         icon: "g.circle.fill",
                         title: "auth.login.continueGoogle",
-                        color: Color(hex: "#4285F4")
+                        color: Color(hex: "#4285F4"),
+                        disabled: store.isLoading
                     ) {
                         Task { await store.loginWithPrivy(provider: .google) }
                     }
@@ -55,25 +56,10 @@ struct LoginView: View {
                     oauthButton(
                         icon: "apple.logo",
                         title: "auth.login.continueApple",
-                        color: Color.botanicalTextPrimary
+                        color: Color.botanicalTextPrimary,
+                        disabled: store.isLoading
                     ) {
                         Task { await store.loginWithPrivy(provider: .apple) }
-                    }
-
-                    oauthButton(
-                        icon: "wallet.pass.fill",
-                        title: "auth.login.continueWallet",
-                        color: Color(hex: "#2D6A4F"),
-                        disabled: !walletLoginAvailable
-                    ) {
-                        Task { await store.loginWithWallet() }
-                    }
-
-                    if !walletLoginAvailable {
-                        Text("Wallet login requires REOWN_PROJECT_ID in Info.plist.")
-                            .font(.botanicalBody(12))
-                            .foregroundStyle(Color.botanicalTextSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     HStack {
@@ -88,7 +74,8 @@ struct LoginView: View {
                     oauthButton(
                         icon: "envelope.fill",
                         title: "auth.login.continueEmail",
-                        color: Color.botanicalAccent
+                        color: Color.botanicalAccent,
+                        disabled: store.isLoading
                     ) {
                         withAnimation(.easeOut(duration: 0.25)) {
                             loginStep = .emailEntry
@@ -193,10 +180,6 @@ struct LoginView: View {
         }
         .padding(28)
         .background(Color.botanicalBackground.ignoresSafeArea())
-    }
-
-    private var walletLoginAvailable: Bool {
-        !Constants.reownProjectId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func oauthButton(

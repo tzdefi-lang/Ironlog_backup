@@ -81,10 +81,6 @@ struct IronLogApp: App {
                 .task {
                     await store.attemptSessionRestore()
                 }
-                .onOpenURL { url in
-                    guard WalletSIWEService.shared.isConfigured else { return }
-                    _ = WalletSIWEService.shared.handleOpenURL(url)
-                }
         }
     }
 }

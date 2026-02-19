@@ -17,7 +17,7 @@ const ProfileView: React.FC = () => {
           <img src={user?.photoUrl} alt="Profile" className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-900" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{user?.name}</h2>
-        <p className="text-gray-400 dark:text-gray-500 text-sm">{user?.email || user?.walletAddress || user?.solanaAddress || ''}</p>
+        <p className="text-gray-400 dark:text-gray-500 text-sm">{user?.email || ''}</p>
       </div>
 
       <div className="space-y-3 list-stagger">
@@ -47,24 +47,6 @@ const ProfileView: React.FC = () => {
           </span>
           <ChevronRight size={18} className="text-gray-300 dark:text-gray-600" />
         </button>
-
-        {user?.walletAddress && (
-          <div className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center transition-colors">
-            <span className="font-medium text-gray-700 dark:text-gray-300">{t('profile.evmWallet')}</span>
-            <span className="text-sm text-gray-400 dark:text-gray-500 font-mono opacity-70">
-              {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
-            </span>
-          </div>
-        )}
-
-        {user?.solanaAddress && (
-          <div className="card-lift bg-[var(--surface-card)] dark:bg-[var(--surface-card)] p-4 rounded-3xl border border-[var(--surface-border)] flex justify-between items-center transition-colors">
-            <span className="font-medium text-gray-700 dark:text-gray-300">{t('profile.solanaWallet')}</span>
-            <span className="text-sm text-gray-400 dark:text-gray-500 font-mono opacity-70">
-              {user.solanaAddress.slice(0, 4)}...{user.solanaAddress.slice(-4)}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );
