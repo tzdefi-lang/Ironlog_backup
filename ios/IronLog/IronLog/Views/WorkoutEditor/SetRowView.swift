@@ -6,8 +6,35 @@ struct SetRowView: View {
     let isPR: Bool
     let onDelete: () -> Void
 
+    @State private var rowOffset: CGFloat = 0
+    @State private var isDeleting = false
+
+    private let deleteTriggerDistance: CGFloat = 72
+    private let maxSwipeOffset: CGFloat = 92
+
     var body: some View {
+        ZStack(alignment: .trailing) {
+            deleteBackground
+
+            rowContent
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.botanicalSurface)
+                .offset(x: rowOffset)
+                .contentShape(Rectangle())
+                .simultaneousGesture(rowSwipeGesture)
+                .animation(.spring(duration: 0.24, bounce: 0.2), value: rowOffset)
+        }
+        .clipped()
+    }
+
+    private var rowContent: some View {
         HStack(spacing: 8) {
+            HStack(spacing: 8) {
+                weightField
+                repsField
+            }
+            .frame(maxWidth: .infinity)
+
             Button {
                 set.completed.toggle()
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -15,10 +42,10 @@ struct SetRowView: View {
                 ZStack {
                     Circle()
                         .fill(set.completed ? Color.botanicalSuccess : Color.clear)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 34, height: 34)
                         .overlay(
                             Circle()
-                                .stroke(set.completed ? Color.botanicalSuccess : Color.botanicalBorderSubtle, lineWidth: 2)
+                                .stroke(set.completed ? Color.botanicalSuccess : Color.botanicalBorderSubtle, lineWidth: 1.5)
                         )
 
                     if set.completed {
@@ -30,37 +57,8 @@ struct SetRowView: View {
             }
             .buttonStyle(.plain)
             .animation(.spring(duration: 0.22, bounce: 0.3), value: set.completed)
-
-            TextField("0", value: $set.weight, format: .number.precision(.fractionLength(0 ... 1)))
-                .keyboardType(.decimalPad)
-                .textFieldStyle(.plain)
-                .multilineTextAlignment(.center)
-                .font(.botanicalSemibold(16))
-                .frame(width: 80, height: 44)
-                .background(Color.botanicalSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(set.completed ? Color.botanicalSuccess.opacity(0.45) : Color.botanicalBorderSubtle, lineWidth: 1)
-                )
-
-            Text(unit.rawValue.uppercased())
-                .font(.caption)
-                .foregroundStyle(Color.botanicalTextSecondary)
-
-            TextField("0", value: $set.reps, format: .number)
-                .keyboardType(.numberPad)
-                .textFieldStyle(.plain)
-                .multilineTextAlignment(.center)
-                .font(.botanicalSemibold(16))
-                .frame(width: 64, height: 44)
-                .background(Color.botanicalSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(set.completed ? Color.botanicalSuccess.opacity(0.45) : Color.botanicalBorderSubtle, lineWidth: 1)
-                )
-
+        }
+        .overlay(alignment: .topTrailing) {
             if isPR, set.completed {
                 Text("PR")
                     .font(.system(size: 10, weight: .bold))
@@ -69,15 +67,107 @@ struct SetRowView: View {
                     .padding(.vertical, 2)
                     .background(Color.botanicalEmphasis)
                     .clipShape(Capsule())
+                    .offset(x: -44, y: -8)
             }
-
-            Spacer(minLength: 0)
-
-            Button(role: .destructive, action: onDelete) {
-                Image(systemName: "trash")
-            }
-            .buttonStyle(.plain)
-            .frame(width: 28, height: 28)
         }
+    }
+
+    private var weightField: some View {
+        HStack(spacing: 6) {
+            TextField("0", value: $set.weight, format: .number.precision(.fractionLength(0 ... 1)))
+                .keyboardType(.decimalPad)
+                .textFieldStyle(.plain)
+                .multilineTextAlignment(.center)
+                .font(.botanicalSemibold(18))
+                .frame(maxWidth: .infinity)
+
+            Text(unit.rawValue.uppercased())
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.botanicalTextSecondary)
+        }
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, minHeight: 46)
+        .background(Color.botanicalSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(set.completed ? Color.botanicalSuccess.opacity(0.45) : Color.botanicalBorderSubtle, lineWidth: 1)
+        )
+    }
+
+    private var repsField: some View {
+        HStack(spacing: 6) {
+            TextField("0", value: $set.reps, format: .number)
+                .keyboardType(.numberPad)
+                .textFieldStyle(.plain)
+                .multilineTextAlignment(.center)
+                .font(.botanicalSemibold(18))
+                .frame(maxWidth: .infinity)
+
+            Text("REPS")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.botanicalTextSecondary)
+        }
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, minHeight: 46)
+        .background(Color.botanicalSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(set.completed ? Color.botanicalSuccess.opacity(0.45) : Color.botanicalBorderSubtle, lineWidth: 1)
+        )
+    }
+
+    private var deleteBackground: some View {
+        HStack {
+            Spacer()
+
+            Image(systemName: "trash.fill")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(Color.red)
+                .padding(.trailing, 14)
+                .opacity(rowOffset < -10 ? 1 : 0)
+                .animation(.easeOut(duration: 0.12), value: rowOffset)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.red.opacity(0.1))
+    }
+
+    private var rowSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 12, coordinateSpace: .local)
+            .onChanged { value in
+                guard !isDeleting else { return }
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+
+                if value.translation.width < 0 {
+                    rowOffset = max(-maxSwipeOffset, value.translation.width)
+                } else {
+                    rowOffset = 0
+                }
+            }
+            .onEnded { value in
+                guard !isDeleting else { return }
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+
+                if value.translation.width <= -deleteTriggerDistance {
+                    triggerDelete()
+                } else {
+                    resetRowOffset()
+                }
+            }
+    }
+
+    private func triggerDelete() {
+        isDeleting = true
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        rowOffset = -maxSwipeOffset
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            onDelete()
+        }
+    }
+
+    private func resetRowOffset() {
+        rowOffset = 0
     }
 }

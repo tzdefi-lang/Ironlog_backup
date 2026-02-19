@@ -124,7 +124,13 @@ struct CalendarView: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
-            .padding(.bottom, 120)
+            .padding(.bottom, 24)
+        }
+        .safeAreaPadding(.top, 6)
+        .safeAreaInset(edge: .bottom) {
+            Color.clear
+                .frame(height: 98)
+                .allowsHitTesting(false)
         }
         .background(Color.botanicalBackground.ignoresSafeArea())
     }

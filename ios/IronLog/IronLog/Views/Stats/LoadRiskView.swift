@@ -70,7 +70,6 @@ struct LoadRiskView: View {
                     .padding(.vertical, 5)
                     .background(statusColor.opacity(0.12))
                     .clipShape(Capsule())
-                    .overlay(Capsule().stroke(statusColor.opacity(0.3), lineWidth: 1))
             }
 
             Text(adviceText)

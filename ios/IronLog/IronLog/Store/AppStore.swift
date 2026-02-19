@@ -8,6 +8,16 @@ struct AppToast: Identifiable, Equatable, Sendable {
     let duration: Double
 }
 
+private struct CachedUserIdentity: Codable, Sendable {
+    var privyDid: String?
+    var name: String?
+    var email: String?
+    var photoUrl: String?
+    var walletAddress: String?
+    var solanaAddress: String?
+    var loginMethod: String?
+}
+
 @MainActor
 @Observable
 final class AppStore {
@@ -36,6 +46,7 @@ final class AppStore {
     private let officialRepo: OfficialContentRepository
     private let networkMonitor: NetworkMonitor
     private let syncQueue: SyncQueue
+    private var activeAuthAttemptId: UUID?
     private var toastQueue: [AppToast] = []
     private var toastTask: Task<Void, Never>?
 
@@ -68,40 +79,43 @@ final class AppStore {
     }
 
     func loginWithPrivy(provider: PrivyLoginProvider) async {
-        isLoading = true
-        authError = nil
-        defer { isLoading = false }
+        let attemptId = beginAuthAttempt()
+        defer { finishAuthAttempt(attemptId) }
 
         do {
             let login = try await authService.loginWithOAuth(provider: provider)
+            guard isActiveAuthAttempt(attemptId) else { return }
             await completeLogin(exchange: login.exchange, profile: login.profile)
         } catch {
+            guard isActiveAuthAttempt(attemptId) else { return }
             handleLoginFailure(error)
         }
     }
 
     func login(withPrivyToken token: String) async {
-        isLoading = true
-        authError = nil
-        defer { isLoading = false }
+        let attemptId = beginAuthAttempt()
+        defer { finishAuthAttempt(attemptId) }
 
         do {
             let result = try await authService.handlePrivyToken(token)
+            guard isActiveAuthAttempt(attemptId) else { return }
             await completeLogin(exchange: result, profile: nil)
         } catch {
+            guard isActiveAuthAttempt(attemptId) else { return }
             handleLoginFailure(error)
         }
     }
 
     func loginWithWallet() async {
-        isLoading = true
-        authError = nil
-        defer { isLoading = false }
+        let attemptId = beginAuthAttempt()
+        defer { finishAuthAttempt(attemptId) }
 
         do {
             let login = try await authService.loginWithWallet()
+            guard isActiveAuthAttempt(attemptId) else { return }
             await completeLogin(exchange: login.exchange, profile: login.profile)
         } catch {
+            guard isActiveAuthAttempt(attemptId) else { return }
             handleLoginFailure(error)
         }
     }
@@ -122,14 +136,15 @@ final class AppStore {
     }
 
     func verifyEmailOTP(code: String, email: String) async {
-        isLoading = true
-        authError = nil
-        defer { isLoading = false }
+        let attemptId = beginAuthAttempt()
+        defer { finishAuthAttempt(attemptId) }
 
         do {
             let result = try await authService.verifyEmailOTP(code: code, to: email)
+            guard isActiveAuthAttempt(attemptId) else { return }
             await completeLogin(exchange: result.exchange, profile: result.profile)
         } catch {
+            guard isActiveAuthAttempt(attemptId) else { return }
             handleLoginFailure(error, fallbackMessage: "Invalid code. Please try again.")
         }
     }
@@ -172,10 +187,19 @@ final class AppStore {
         defer { isBootstrappingSession = false }
 
         guard user == nil else { return }
-        guard let restored = tokenExchangeService.restoreSession() else { return }
+        if let restored = tokenExchangeService.restoreSession() {
+            SupabaseClientProvider.shared.setAuthToken(restored.token)
+            let restoredProfile = await authService.restoreProfileIfPossible()
+            mapPrivyUser(userId: restored.userId, profile: restoredProfile)
+            await refreshData()
+            await consumeSyncQueue()
+            return
+        }
 
-        SupabaseClientProvider.shared.setAuthToken(restored.token)
-        mapPrivyUser(userId: restored.userId, profile: nil)
+        guard let refreshed = await authService.restoreSessionIfPossible() else { return }
+        SupabaseClientProvider.shared.setAuthToken(refreshed.token)
+        let refreshedProfile = await authService.restoreProfileIfPossible()
+        mapPrivyUser(userId: refreshed.userId, profile: refreshedProfile)
         await refreshData()
         await consumeSyncQueue()
     }
@@ -456,6 +480,24 @@ final class AppStore {
         clearSessionState()
     }
 
+    private func beginAuthAttempt() -> UUID {
+        let attemptId = UUID()
+        activeAuthAttemptId = attemptId
+        isLoading = true
+        authError = nil
+        return attemptId
+    }
+
+    private func finishAuthAttempt(_ attemptId: UUID) {
+        guard activeAuthAttemptId == attemptId else { return }
+        activeAuthAttemptId = nil
+        isLoading = false
+    }
+
+    private func isActiveAuthAttempt(_ attemptId: UUID) -> Bool {
+        activeAuthAttemptId == attemptId
+    }
+
     private func clearSessionState() {
         user = nil
         workouts = []
@@ -468,21 +510,49 @@ final class AppStore {
 
     private func mapPrivyUser(userId: String, profile: PrivyNativeProfile?) {
         let saved = loadPreferences(for: userId)
-        let email = profile?.email.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let suppliedName = profile?.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let fallbackName = email.split(separator: "@").first.map(String.init) ?? "User"
-        let name = suppliedName.isEmpty ? fallbackName : suppliedName
+        let cached = loadCachedIdentity(for: userId)
+        let inMemory = user?.id == userId ? user : nil
+
+        let profileEmail = normalize(profile?.email)
+        let memoryEmail = normalize(inMemory?.email)
+        let cachedEmail = normalize(cached?.email)
+        let finalEmail = profileEmail ?? memoryEmail ?? cachedEmail ?? ""
+
+        let profileName = normalize(profile?.name)
+        let memoryName = normalize(inMemory?.name)
+        let cachedName = normalize(cached?.name)
+        let fallbackName = finalEmail.split(separator: "@").first.map(String.init)
+        let finalName = profileName ?? memoryName ?? cachedName ?? fallbackName ?? "User"
+
+        let finalPrivyDid = normalize(profile?.privyDid) ?? normalize(inMemory?.privyDid) ?? normalize(cached?.privyDid)
+        let finalPhoto = normalize(profile?.photoUrl) ?? normalize(inMemory?.photoUrl) ?? normalize(cached?.photoUrl)
+        let finalWallet = normalize(profile?.walletAddress) ?? normalize(inMemory?.walletAddress) ?? normalize(cached?.walletAddress)
+        let finalSolana = normalize(profile?.solanaAddress) ?? normalize(inMemory?.solanaAddress) ?? normalize(cached?.solanaAddress)
+        let finalLoginMethod = normalize(profile?.loginMethod) ?? normalize(inMemory?.loginMethod) ?? normalize(cached?.loginMethod) ?? "privy"
 
         user = UserProfile(
             id: userId,
-            privyDid: profile?.privyDid,
-            name: name.isEmpty ? "User" : name,
-            email: email,
-            photoUrl: profile?.photoUrl,
-            walletAddress: profile?.walletAddress,
-            solanaAddress: profile?.solanaAddress,
-            loginMethod: profile?.loginMethod ?? "privy",
+            privyDid: finalPrivyDid,
+            name: finalName,
+            email: finalEmail,
+            photoUrl: finalPhoto,
+            walletAddress: finalWallet,
+            solanaAddress: finalSolana,
+            loginMethod: finalLoginMethod,
             preferences: saved
+        )
+
+        saveCachedIdentity(
+            CachedUserIdentity(
+                privyDid: finalPrivyDid,
+                name: finalName,
+                email: finalEmail,
+                photoUrl: finalPhoto,
+                walletAddress: finalWallet,
+                solanaAddress: finalSolana,
+                loginMethod: finalLoginMethod
+            ),
+            for: userId
         )
     }
 
@@ -561,6 +631,30 @@ final class AppStore {
             return .default
         }
         return decoded
+    }
+
+    private func cachedIdentityKey(for userId: String) -> String {
+        "ironlog_cached_identity_\(userId)"
+    }
+
+    private func saveCachedIdentity(_ identity: CachedUserIdentity, for userId: String) {
+        guard let data = try? JSONEncoder().encode(identity) else { return }
+        UserDefaults.standard.set(data, forKey: cachedIdentityKey(for: userId))
+    }
+
+    private func loadCachedIdentity(for userId: String) -> CachedUserIdentity? {
+        guard let data = UserDefaults.standard.data(forKey: cachedIdentityKey(for: userId)),
+              let identity = try? JSONDecoder().decode(CachedUserIdentity.self, from: data) else {
+            return nil
+        }
+        return identity
+    }
+
+    private func normalize(_ value: String?) -> String? {
+        guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
+            return nil
+        }
+        return value
     }
 
     private func restoreThemeFromGlobal() {

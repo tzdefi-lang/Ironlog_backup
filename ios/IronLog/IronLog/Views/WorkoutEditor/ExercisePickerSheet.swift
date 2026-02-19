@@ -40,10 +40,6 @@ struct ExercisePickerSheet: View {
                     .padding(10)
                     .background(Color.botanicalSurface)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.botanicalBorderSubtle, lineWidth: 1)
-                    )
                     .padding(.horizontal, 16)
 
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -138,7 +134,6 @@ struct ExercisePickerSheet: View {
                                 }
                             }
 
-                            Divider().padding(.leading, 76)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -154,6 +149,8 @@ struct ExercisePickerSheet: View {
         }
         .sheet(item: $previewDef) { def in
             ExerciseDetailModal(exerciseDef: def, currentExercise: nil, workouts: [])
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
     }
 

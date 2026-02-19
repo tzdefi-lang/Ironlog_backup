@@ -17,7 +17,7 @@ enum Constants {
     static let reownProjectId = env("REOWN_PROJECT_ID", fallback: "")
     static let reownAppGroup = env("REOWN_APP_GROUP", fallback: "group.com.syntaxis.ironlog")
     static let privySiweDomain = env("PRIVY_SIWE_DOMAIN", fallback: "ironlog.app")
-    static let privySiweURI = env("PRIVY_SIWE_URI", fallback: "ironlog://")
+    static let privySiweURI = env("PRIVY_SIWE_URI", fallback: "https://ironlog.app")
 
     static let privyAuthProxyURLCandidates: [URL] = {
         guard let primary = URL(string: privyAuthProxyRaw) else { return [] }

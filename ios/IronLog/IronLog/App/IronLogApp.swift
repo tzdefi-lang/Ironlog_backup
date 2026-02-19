@@ -10,6 +10,7 @@ struct IronLogApp: App {
     @State private var store: AppStore
 
     init() {
+        Self.configureScrollIndicatorAppearance()
         Self.configureNavigationBarAppearance()
 
         let schema = Schema([
@@ -61,6 +62,15 @@ struct IronLogApp: App {
         UIBarButtonItem.appearance().setTitleTextAttributes([
             .font: UIFont(name: "SourceSans3-SemiBold", size: 16) ?? UIFont.systemFont(ofSize: 16, weight: .semibold),
         ], for: .normal)
+    }
+
+    private static func configureScrollIndicatorAppearance() {
+        UIScrollView.appearance().showsVerticalScrollIndicator = false
+        UIScrollView.appearance().showsHorizontalScrollIndicator = false
+        UITableView.appearance().showsVerticalScrollIndicator = false
+        UITableView.appearance().showsHorizontalScrollIndicator = false
+        UICollectionView.appearance().showsVerticalScrollIndicator = false
+        UICollectionView.appearance().showsHorizontalScrollIndicator = false
     }
 
     var body: some Scene {

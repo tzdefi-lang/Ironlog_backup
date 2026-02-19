@@ -20,73 +20,138 @@ struct CreateExerciseSheet: View {
 
     let onCreated: (ExerciseDef) -> Void
 
+    private var canSave: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isUploading
+    }
+
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Basic") {
-                    TextField("Name", text: $name)
-                    TextField("Description", text: $detail, axis: .vertical)
-                        .lineLimit(3 ... 6)
-                }
-
-                Section("Category") {
-                    Picker("Category", selection: $category) {
-                        ForEach(Constants.bodyPartOptions, id: \.self) { Text($0).tag($0) }
-                    }
-                }
-
-                Section("Barbell") {
-                    Toggle("Uses Barbell", isOn: $usesBarbell)
-                    if usesBarbell {
-                        HStack {
-                            Text("Bar Weight")
-                            Spacer()
-                            TextField("kg", value: $barbellWeight, format: .number)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 90)
-                            Text("kg")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-
-                Section("Media") {
-                    PhotosPicker(selection: $selectedPhoto, matching: .any(of: [.images, .videos])) {
-                        HStack {
-                            Image(systemName: "photo.on.rectangle.angled")
-                            Text(uploadedMediaURL == nil ? "Add Photo or Video" : "Media Uploaded ✓")
-                        }
-                    }
-                    .onChange(of: selectedPhoto) { _, item in
-                        guard let item else { return }
-                        Task { await uploadMedia(from: item) }
-                    }
-
-                    if isUploading {
-                        ProgressView("Uploading...")
-                    }
-
-                    if let uploadError {
-                        Text(uploadError)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                    }
-
-                    if uploadedMediaURL != nil {
-                        Button("Remove Uploaded Media", role: .destructive) {
-                            uploadedMediaURL = nil
-                            uploadedMediaType = nil
+            ScrollView {
+                VStack(spacing: 12) {
+                    BotanicalCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            sectionHeader("Basic")
+                            BotanicalTextField(title: "Name", value: $name)
+                            TextField("Description", text: $detail, axis: .vertical)
+                                .lineLimit(3 ... 6)
+                                .textFieldStyle(.plain)
+                                .font(.botanicalBody(15))
+                                .padding(12)
+                                .background(Color.botanicalSurface)
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .stroke(Color.botanicalBorderSubtle, lineWidth: 1)
+                                )
                         }
                     }
 
-                    TextField("YouTube Link (optional)", text: $youtubeLink)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    BotanicalCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            sectionHeader("Category")
+                            categoryPickerGrid
+                        }
+                    }
+
+                    BotanicalCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            sectionHeader("Barbell")
+                            Toggle("Uses Barbell", isOn: $usesBarbell)
+                                .tint(Color.botanicalAccent)
+                                .font(.botanicalBody(15))
+
+                            if usesBarbell {
+                                HStack(spacing: 10) {
+                                    Text("Bar Weight")
+                                        .font(.botanicalBody(15))
+                                        .foregroundStyle(Color.botanicalTextPrimary)
+                                    Spacer()
+                                    TextField("0", value: $barbellWeight, format: .number.precision(.fractionLength(0 ... 1)))
+                                        .keyboardType(.decimalPad)
+                                        .textFieldStyle(.plain)
+                                        .multilineTextAlignment(.trailing)
+                                        .font(.botanicalSemibold(15))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(width: 110)
+                                        .background(Color.botanicalSurface)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .stroke(Color.botanicalBorderSubtle, lineWidth: 1)
+                                        )
+                                    Text("kg")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.botanicalTextSecondary)
+                                }
+                            }
+                        }
+                    }
+
+                    BotanicalCard {
+                        VStack(alignment: .leading, spacing: 12) {
+                            sectionHeader("Media")
+
+                            PhotosPicker(selection: $selectedPhoto, matching: .any(of: [.images, .videos])) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "photo.on.rectangle.angled")
+                                    Text(uploadedMediaURL == nil ? "Add Photo or Video" : "Media Uploaded")
+                                }
+                                .font(.botanicalSemibold(14))
+                                .foregroundStyle(Color.botanicalTextPrimary)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(Color.botanicalAccent.opacity(0.45))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .onChange(of: selectedPhoto) { _, item in
+                                guard let item else { return }
+                                Task { await uploadMedia(from: item) }
+                            }
+
+                            if isUploading {
+                                HStack(spacing: 8) {
+                                    ProgressView()
+                                        .tint(Color.botanicalTextSecondary)
+                                    Text("Uploading...")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.botanicalTextSecondary)
+                                }
+                            }
+
+                            if let uploadError {
+                                Text(uploadError)
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                            }
+
+                            if uploadedMediaURL != nil {
+                                Button {
+                                    uploadedMediaURL = nil
+                                    uploadedMediaType = nil
+                                } label: {
+                                    Label("Remove Uploaded Media", systemImage: "xmark")
+                                        .font(.caption)
+                                }
+                                .foregroundStyle(.red)
+                                .buttonStyle(.plain)
+                            }
+
+                            BotanicalTextField(title: "YouTube Link (optional)", value: $youtubeLink)
+                                .keyboardType(.URL)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                        }
+                    }
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 24)
+            .background(Color.botanicalBackground.ignoresSafeArea())
             .navigationTitle("New Exercise")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Cancel") { dismiss() }
@@ -95,10 +160,36 @@ struct CreateExerciseSheet: View {
                     Button("Save") {
                         Task { await saveExercise() }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isUploading)
+                    .disabled(!canSave)
                 }
             }
         }
+    }
+
+    private var categoryPickerGrid: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 94), spacing: 8)], spacing: 8) {
+            ForEach(Constants.bodyPartOptions, id: \.self) { option in
+                Button(option) {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        category = option
+                    }
+                }
+                .font(.botanicalSemibold(13))
+                .foregroundStyle(category == option ? Color.botanicalTextPrimary : Color.botanicalTextSecondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .background(category == option ? Color.botanicalAccent : Color.botanicalMuted.opacity(0.65))
+                .clipShape(Capsule())
+            }
+        }
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.botanicalSemibold(14))
+            .foregroundStyle(Color.botanicalTextSecondary)
+            .textCase(.uppercase)
     }
 
     private func uploadMedia(from item: PhotosPickerItem) async {

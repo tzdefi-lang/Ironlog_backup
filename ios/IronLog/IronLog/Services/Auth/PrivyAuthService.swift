@@ -73,7 +73,7 @@ final class PrivyAuthService {
         guard let oauthProvider = provider.oauthProvider else {
             let message = provider == .email
                 ? "Email login should use OTP flow"
-                : "Wallet login should use SIWE flow"
+                : "Wallet login should use SIWS flow"
             throw NSError(
                 domain: "PrivyAuth",
                 code: -1,
@@ -93,19 +93,17 @@ final class PrivyAuthService {
 
     func loginWithWallet() async throws -> PrivyNativeLoginResult {
         let connection = try await walletSIWEService.connectWallet()
-        let params = SiweMessageParams(
-            appDomain: Constants.privySiweDomain,
-            appUri: Constants.privySiweURI,
-            chainId: connection.chainId,
-            walletAddress: connection.address
+        let params = SiwsMessageParams(
+            domain: Constants.privySiweDomain,
+            uri: Constants.privySiweURI,
+            address: connection.address
         )
-        let message = try await privy.siwe.generateMessage(params: params)
-        let signature = try await walletSIWEService.signPersonalMessage(message, with: connection)
+        let message = try await privy.siws.generateMessage(params: params)
+        let signature = try await walletSIWEService.signSolanaMessage(message, with: connection)
         let metadata = WalletLoginMetadata(walletClientType: nil, connectorType: "reown_appkit")
-        let user = try await privy.siwe.login(
+        let user = try await privy.siws.login(
             message: message,
             signature: signature,
-            params: params,
             metadata: metadata
         )
         let token = try await user.getAccessToken()
@@ -126,9 +124,25 @@ final class PrivyAuthService {
         return PrivyNativeLoginResult(exchange: exchange, profile: profile)
     }
 
+    func restoreSessionIfPossible() async -> TokenExchangeResult? {
+        guard let user = await privy.getUser() else { return nil }
+        do {
+            let token = try await user.getAccessToken()
+            return try await tokenExchangeService.exchange(privyToken: token)
+        } catch {
+            return nil
+        }
+    }
+
+    func restoreProfileIfPossible() async -> PrivyNativeProfile? {
+        guard let user = await privy.getUser() else { return nil }
+        return profileFromPrivyUser(user, fallbackProvider: .email)
+    }
+
     func logout() {
         tokenExchangeService.clear()
         Task {
+            await walletSIWEService.disconnectAllSessions()
             if let user = await privy.getUser() {
                 await user.logout()
             }

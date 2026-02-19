@@ -86,6 +86,8 @@ struct WorkoutEditorView: View {
         }
         .sheet(item: $detailExercise) { payload in
             ExerciseDetailModal(exerciseDef: payload.def, currentExercise: payload.exercise, workouts: store.workouts)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .fullScreenCover(isPresented: $showRestTimer) {
             RestTimerView(
@@ -201,8 +203,6 @@ struct WorkoutEditorView: View {
                         .foregroundStyle(Color.botanicalTextPrimary)
                         .padding(.vertical, 4)
 
-                        Divider().background(Color.botanicalBorderSubtle)
-
                         TextField("Note", text: Binding(
                             get: { vm.workout.note },
                             set: { vm.setNote($0) { workout in await persistWorkout(workout) } }
@@ -243,7 +243,7 @@ struct WorkoutEditorView: View {
                                 detailExercise = ExerciseDetailPayload(id: exercise.id, exercise: exercise, def: def)
                             }
                         )
-                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                     }
@@ -257,10 +257,12 @@ struct WorkoutEditorView: View {
                     BotanicalButton(title: "Add Exercise", variant: .secondary) {
                         showExercisePicker = true
                     }
+                    .listRowSeparator(.hidden)
 
                     BotanicalButton(title: "Create Exercise", variant: .secondary) {
                         showCreateExercise = true
                     }
+                    .listRowSeparator(.hidden)
 
                     if vm.workout.completed {
                         BotanicalButton(title: "Resume Workout", variant: .primary) {
@@ -270,16 +272,18 @@ struct WorkoutEditorView: View {
                                 }
                             }
                         }
+                        .listRowSeparator(.hidden)
                     }
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
                 .listRowBackground(Color.clear)
             }
             .listStyle(.plain)
+            .listRowSeparator(.hidden)
             .scrollContentBackground(.hidden)
             .background(Color.clear)
-            .environment(\.editMode, .constant(.active))
         }
+        .safeAreaPadding(.top, 6)
         .background(Color.botanicalBackground.ignoresSafeArea())
     }
 

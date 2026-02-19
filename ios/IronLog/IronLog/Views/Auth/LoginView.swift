@@ -228,7 +228,7 @@ struct LoginView: View {
             )
         }
         .buttonStyle(PressableButtonStyle())
-        .disabled(store.isLoading || disabled)
+        .disabled(disabled)
     }
 
     private var disclosureGroupDevFallback: some View {

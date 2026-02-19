@@ -10,64 +10,105 @@ struct ExerciseCardView: View {
     let onRemoveExercise: () -> Void
     let onShowDetail: () -> Void
 
-    @State private var isExpanded = true
-
     var body: some View {
         BotanicalCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Button {
-                    withAnimation(.spring(duration: 0.3, bounce: 0.16)) {
-                        isExpanded.toggle()
-                    }
-                } label: {
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(exerciseDef?.name ?? "Unknown Exercise")
-                                .font(.botanicalSemibold(18))
-                                .foregroundStyle(Color.botanicalTextPrimary)
-                            Text(exerciseDef?.category ?? "Other")
-                                .font(.caption)
-                                .foregroundStyle(Color.botanicalTextSecondary)
-                        }
-
-                        Spacer()
-
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 13, weight: .semibold))
-                            .rotationEffect(.degrees(isExpanded ? 0 : -90))
-                            .foregroundStyle(Color.botanicalTextSecondary)
-                    }
-                }
-                .buttonStyle(.plain)
-
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
                     Button(action: onShowDetail) {
-                        Image(systemName: "info.circle")
-                            .foregroundStyle(Color.botanicalAccent)
-                            .frame(width: 30, height: 30)
+                        thumbnailView
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Show exercise details")
 
-                    Spacer()
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(exerciseDef?.name ?? "Unknown Exercise")
+                            .font(.botanicalSemibold(19))
+                            .foregroundStyle(Color.botanicalTextPrimary)
 
-                    Button(role: .destructive, action: onRemoveExercise) {
-                        Image(systemName: "trash")
-                            .frame(width: 30, height: 30)
+                        Text(subtitleText)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Color.botanicalTextSecondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    Button(action: onRemoveExercise) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color.botanicalTextSecondary)
+                            .frame(width: 24, height: 24)
+                            .background(Color.botanicalMuted.opacity(0.55))
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.botanicalBorderSubtle, lineWidth: 1)
+                            )
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Delete exercise")
                 }
 
-                if isExpanded {
-                    ForEach($exercise.sets) { $set in
-                        SetRowView(set: $set, unit: unit, isPR: checkIfSetIsPR(set: set)) {
-                            onDeleteSet(set.id)
-                        }
+                ForEach($exercise.sets) { $set in
+                    SetRowView(set: $set, unit: unit, isPR: checkIfSetIsPR(set: set)) {
+                        onDeleteSet(set.id)
                     }
-
-                    BotanicalButton(title: "Add Set", variant: .secondary, action: onAddSet)
                 }
+
+                BotanicalButton(title: "Add Set", variant: .secondary, action: onAddSet)
             }
         }
+    }
+
+    private var subtitleText: String {
+        var parts: [String] = ["\(exercise.sets.count) Sets", exerciseDef?.category ?? "Other"]
+        if exerciseDef?.usesBarbell == true {
+            parts.append("Barbell")
+        }
+        if exerciseDef?.source == .official {
+            parts.append("Official")
+        }
+        return parts.joined(separator: " • ")
+    }
+
+    @ViewBuilder
+    private var thumbnailView: some View {
+        if let url = previewURL {
+            AsyncImage(url: url) { image in
+                image
+                    .resizable()
+                    .scaledToFill()
+            } placeholder: {
+                Color.botanicalMuted
+            }
+            .frame(width: 56, height: 56)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        } else {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.botanicalMuted)
+                .frame(width: 56, height: 56)
+                .overlay(
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .foregroundStyle(Color.botanicalTextSecondary)
+                )
+        }
+    }
+
+    private var previewURL: URL? {
+        if let thumb = exerciseDef?.thumbnailUrl, let url = URL(string: thumb) {
+            return url
+        }
+
+        if let imageMedia = exerciseDef?.mediaItems.first(where: { $0.contentType == .image }),
+           let url = URL(string: imageMedia.url) {
+            return url
+        }
+
+        if let mediaURL = exerciseDef?.mediaUrl, let url = URL(string: mediaURL) {
+            return url
+        }
+
+        return nil
     }
 
     private func checkIfSetIsPR(set: WorkoutSet) -> Bool {
