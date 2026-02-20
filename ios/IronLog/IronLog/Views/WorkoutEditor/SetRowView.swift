@@ -37,12 +37,12 @@ struct SetRowView: View {
 
             Button {
                 set.completed.toggle()
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                HapticManager.shared.medium()
             } label: {
                 ZStack {
                     Circle()
                         .fill(set.completed ? Color.botanicalSuccess : Color.clear)
-                        .frame(width: 34, height: 34)
+                        .frame(width: 44, height: 44)
                         .overlay(
                             Circle()
                                 .stroke(set.completed ? Color.botanicalSuccess : Color.botanicalBorderSubtle, lineWidth: 1.5)
@@ -52,10 +52,14 @@ struct SetRowView: View {
                         Image(systemName: "checkmark")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(Color.white)
+                            .transition(.scale.combined(with: .opacity))
                     }
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Mark set as completed")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityValue(set.completed ? "Completed" : "Not completed")
             .animation(.spring(duration: 0.22, bounce: 0.3), value: set.completed)
         }
         .overlay(alignment: .topTrailing) {
@@ -124,13 +128,13 @@ struct SetRowView: View {
 
             Image(systemName: "trash.fill")
                 .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(Color.red)
+                .foregroundStyle(Color.botanicalDanger)
                 .padding(.trailing, 14)
                 .opacity(rowOffset < -10 ? 1 : 0)
                 .animation(.easeOut(duration: 0.12), value: rowOffset)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.red.opacity(0.1))
+        .background(Color.botanicalDangerLight.opacity(0.4))
     }
 
     private var rowSwipeGesture: some Gesture {
@@ -159,7 +163,7 @@ struct SetRowView: View {
 
     private func triggerDelete() {
         isDeleting = true
-        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        HapticManager.shared.rigid()
         rowOffset = -maxSwipeOffset
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {

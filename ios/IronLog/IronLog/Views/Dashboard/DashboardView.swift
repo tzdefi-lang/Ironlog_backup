@@ -15,7 +15,10 @@ struct DashboardView: View {
                     .font(.display(42))
                     .foregroundStyle(Color.botanicalTextPrimary)
 
-                if let todays = store.workouts.first(where: { $0.date == today && !$0.completed }) {
+                if store.isLoading, store.workouts.isEmpty {
+                    LoadingStateView(message: "Loading workouts...")
+                        .transition(.opacity)
+                } else if let todays = store.workouts.first(where: { $0.date == today && !$0.completed }) {
                     WorkoutCardView(
                         workout: todays,
                         subtitle: "Today",
@@ -25,8 +28,10 @@ struct DashboardView: View {
                             Task { await store.copyWorkout(workoutId: todays.id, targetDate: today) }
                         }
                     )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else {
                     RestDayCardView { store.openNewWorkout() }
+                        .transition(.opacity)
                 }
 
                 if let last = store.workouts.filter({ $0.completed && $0.date < today }).sorted(by: { $0.date > $1.date }).first {
@@ -39,6 +44,7 @@ struct DashboardView: View {
                             Task { await store.copyWorkout(workoutId: last.id, targetDate: today) }
                         }
                     )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
                 if !store.templates.isEmpty {
@@ -51,6 +57,10 @@ struct DashboardView: View {
             .padding(.horizontal, BotanicalTheme.pagePadding)
             .padding(.top, 24)
             .padding(.bottom, 140)
+            .animation(BotanicalMotion.standard, value: store.workouts.map(\.id))
+        }
+        .refreshable {
+            await store.refreshData()
         }
         .background(Color.botanicalBackground.ignoresSafeArea())
         .sheet(isPresented: $showTemplatePicker) {
@@ -67,6 +77,7 @@ struct DashboardView: View {
                                     withAnimation(BotanicalMotion.quick) {
                                         selectedTemplateId = template.id
                                     }
+                                    HapticManager.shared.selection()
                                 } label: {
                                     BotanicalCard {
                                         HStack {
@@ -110,6 +121,7 @@ struct DashboardView: View {
                                 }
                                 showTemplatePicker = false
                             }
+                            HapticManager.shared.success()
                         }
                     }
                 }

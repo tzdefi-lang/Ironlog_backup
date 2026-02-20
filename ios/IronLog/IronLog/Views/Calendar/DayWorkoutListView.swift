@@ -5,20 +5,18 @@ struct DayWorkoutListView: View {
     let onOpen: (Workout) -> Void
     let onCopy: (Workout) -> Void
     let onDelete: (Workout) -> Void
+    var onStartWorkout: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             if workouts.isEmpty {
-                VStack(spacing: 8) {
-                    Image(systemName: "calendar.badge.plus")
-                        .font(.system(size: 32))
-                        .foregroundStyle(Color.botanicalMuted)
-                    Text("No workouts on this day")
-                        .font(.botanicalBody(14))
-                        .foregroundStyle(Color.botanicalTextSecondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 32)
+                EmptyStateView(
+                    icon: "calendar.badge.plus",
+                    title: "No workouts on this day",
+                    description: "Start a new workout to log training for this date.",
+                    actionTitle: onStartWorkout == nil ? nil : "Start Workout",
+                    action: onStartWorkout
+                )
             } else {
                 ForEach(workouts) { workout in
                     SwipeToDeleteWorkoutCard(
@@ -80,11 +78,12 @@ private struct SwipeToDeleteWorkoutCard: View {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Color.botanicalTextSecondary)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 44, height: 44)
                     .background(Color.botanicalMuted.opacity(0.45))
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Workout options")
             .padding(.top, 10)
             .padding(.trailing, 10)
         }
@@ -108,6 +107,7 @@ private struct SwipeToDeleteWorkoutCard: View {
                             .padding(.vertical, 3)
                             .background(Color.botanicalSuccess.opacity(0.12))
                             .clipShape(Capsule())
+                            .accessibilityLabel("In Progress")
                         } else if workout.completed {
                             Text("Completed")
                                 .font(.system(size: 11, weight: .semibold))
@@ -116,6 +116,7 @@ private struct SwipeToDeleteWorkoutCard: View {
                                 .padding(.vertical, 3)
                                 .background(Color.botanicalAccent.opacity(0.12))
                                 .clipShape(Capsule())
+                                .accessibilityLabel("Completed")
                         }
 
                         Text(workout.title)
@@ -136,7 +137,7 @@ private struct SwipeToDeleteWorkoutCard: View {
 
     private var deleteBackground: some View {
         RoundedRectangle(cornerRadius: BotanicalTheme.cardCornerRadius, style: .continuous)
-            .fill(Color.red.opacity(0.14))
+            .fill(Color.botanicalDangerLight.opacity(0.45))
             .overlay(alignment: .trailing) {
                 HStack(spacing: 6) {
                     Image(systemName: "trash.fill")
@@ -144,7 +145,7 @@ private struct SwipeToDeleteWorkoutCard: View {
                     Text("Delete")
                         .font(.system(size: 13, weight: .semibold))
                 }
-                .foregroundStyle(Color.red)
+                .foregroundStyle(Color.botanicalDanger)
                 .padding(.trailing, 18)
                 .opacity(rowOffset < -10 ? 1 : 0)
                 .animation(.easeOut(duration: 0.12), value: rowOffset)
@@ -181,7 +182,7 @@ private struct SwipeToDeleteWorkoutCard: View {
     private func triggerDelete() {
         guard !isDeleting else { return }
         isDeleting = true
-        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        HapticManager.shared.rigid()
         rowOffset = -360
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {

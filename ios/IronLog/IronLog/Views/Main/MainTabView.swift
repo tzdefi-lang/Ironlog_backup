@@ -19,6 +19,7 @@ struct MainTabView: View {
                 tabLayer(.stats)
                 tabLayer(.profile)
             }
+            .animation(.easeInOut(duration: 0.2), value: selectedTab)
 
             VStack(spacing: 10) {
                 if let toast = store.activeToast {
@@ -69,6 +70,7 @@ struct MainTabView: View {
     private func tabLayer(_ tab: Tab) -> some View {
         tabContent(tab)
             .opacity(selectedTab == tab ? 1 : 0)
+            .transition(.opacity)
             .allowsHitTesting(selectedTab == tab)
     }
 }

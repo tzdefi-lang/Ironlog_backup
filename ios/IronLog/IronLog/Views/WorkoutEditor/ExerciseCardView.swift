@@ -37,7 +37,7 @@ struct ExerciseCardView: View {
                         Image(systemName: "xmark")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(Color.botanicalTextSecondary)
-                            .frame(width: 24, height: 24)
+                            .frame(width: 44, height: 44)
                             .background(Color.botanicalMuted.opacity(0.55))
                             .clipShape(Circle())
                             .overlay(
@@ -46,7 +46,7 @@ struct ExerciseCardView: View {
                             )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Delete exercise")
+                    .accessibilityLabel("Remove exercise")
                 }
 
                 ForEach($exercise.sets) { $set in

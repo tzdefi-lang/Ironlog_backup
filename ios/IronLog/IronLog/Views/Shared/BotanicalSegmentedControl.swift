@@ -13,6 +13,7 @@ struct BotanicalSegmentedControl<Option: Hashable>: View {
                     withAnimation(BotanicalMotion.quick) {
                         selection = option
                     }
+                    HapticManager.shared.selection()
                 } label: {
                     Text(title(option))
                         .font(.botanicalSemibold(14))

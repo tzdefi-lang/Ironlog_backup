@@ -48,9 +48,11 @@ struct CalendarView: View {
                             viewModel.previousMonth()
                             calendarID = UUID()
                         }
+                        HapticManager.shared.selection()
                     } label: {
                         Image(systemName: "chevron.left")
                     }
+                    .accessibilityLabel("Previous month")
 
                     Spacer()
 
@@ -64,9 +66,11 @@ struct CalendarView: View {
                             viewModel.nextMonth()
                             calendarID = UUID()
                         }
+                        HapticManager.shared.selection()
                     } label: {
                         Image(systemName: "chevron.right")
                     }
+                    .accessibilityLabel("Next month")
                 }
                 .buttonStyle(.plain)
 
@@ -89,6 +93,7 @@ struct CalendarView: View {
 
                             Button {
                                 selectedDate = dayString
+                                HapticManager.shared.selection()
                             } label: {
                                 VStack(spacing: 4) {
                                     Text(String(Calendar.current.component(.day, from: day)))
@@ -102,6 +107,7 @@ struct CalendarView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("Select \(dayString)")
                         }
                     }
                     .id(calendarID)
@@ -119,6 +125,9 @@ struct CalendarView: View {
                     },
                     onDelete: { workout in
                         Task { await store.deleteWorkout(id: workout.id) }
+                    },
+                    onStartWorkout: {
+                        store.openNewWorkout()
                     }
                 )
             }
@@ -127,6 +136,25 @@ struct CalendarView: View {
             .padding(.bottom, 24)
         }
         .safeAreaPadding(.top, 6)
+        .refreshable {
+            await store.refreshData()
+        }
+        .gesture(
+            DragGesture(minimumDistance: 20)
+                .onEnded { value in
+                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    guard abs(value.translation.width) > 50 else { return }
+                    withAnimation(.easeInOut(duration: 0.28)) {
+                        if value.translation.width < 0 {
+                            viewModel.nextMonth()
+                        } else {
+                            viewModel.previousMonth()
+                        }
+                        calendarID = UUID()
+                    }
+                    HapticManager.shared.selection()
+                }
+        )
         .safeAreaInset(edge: .bottom) {
             Color.clear
                 .frame(height: 98)

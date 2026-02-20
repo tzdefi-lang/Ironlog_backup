@@ -55,19 +55,21 @@ struct RestTimerView: View {
                         Button("\(sec)s") {
                             onDurationChange(sec)
                             restart(duration: sec)
+                            HapticManager.shared.selection()
                         }
                         .font(.botanicalSemibold(13))
                         .foregroundStyle(durationSeconds == sec ? Color.botanicalTextPrimary : Color.botanicalTextSecondary)
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.vertical, 12)
                         .background(durationSeconds == sec ? Color.botanicalAccent : Color.botanicalMuted.opacity(0.6))
                         .clipShape(Capsule())
                         .animation(.easeOut(duration: 0.22), value: durationSeconds)
+                        .accessibilityLabel("Set timer to \(sec) seconds")
                     }
                 }
 
                 BotanicalButton(title: "Done", variant: .primary) {
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    HapticManager.shared.success()
                     onClose()
                 }
                 .frame(maxWidth: 200)
@@ -91,12 +93,12 @@ struct RestTimerView: View {
 
                 remaining = max(0, remaining - 1)
                 if remaining > 0 {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    HapticManager.shared.light()
                 }
             }
 
             guard !Task.isCancelled else { return }
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            HapticManager.shared.success()
             AudioServicesPlaySystemSound(1007)
             onClose()
         }

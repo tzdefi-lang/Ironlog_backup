@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 private struct ExerciseDetailPayload: Identifiable {
     let id: String
@@ -63,8 +64,8 @@ struct WorkoutEditorView: View {
                     }
                 },
                 onEdit: { def in
-                    showExercisePicker = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    withAnimation(BotanicalMotion.standard) {
+                        showExercisePicker = false
                         editingDef = def
                     }
                 },
@@ -125,15 +126,17 @@ struct WorkoutEditorView: View {
                         store.showWorkoutEditor = false
                         dismiss()
                     }
+                    HapticManager.shared.light()
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.botanicalTextSecondary)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 44, height: 44)
                         .background(Color.botanicalMuted.opacity(0.5))
                         .clipShape(Circle())
                 }
                 .buttonStyle(PressableButtonStyle())
+                .accessibilityLabel("Close workout editor")
 
                 Spacer()
 
@@ -175,17 +178,19 @@ struct WorkoutEditorView: View {
                                 await persistWorkout(workout)
                             }
                             showReport = true
+                            HapticManager.shared.success()
                         }
                     } label: {
                         Image(systemName: "checkmark")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(.white)
-                            .frame(width: 40, height: 40)
+                            .frame(width: 44, height: 44)
                             .background(Color.botanicalEmphasis)
                             .clipShape(Circle())
                             .shadow(color: Color.botanicalEmphasis.opacity(0.4), radius: 8, x: 0, y: 4)
                     }
                     .buttonStyle(PressableButtonStyle())
+                    .accessibilityLabel("Complete workout")
                 }
             }
             .padding(.horizontal, 16)
@@ -285,10 +290,21 @@ struct WorkoutEditorView: View {
         }
         .safeAreaPadding(.top, 6)
         .background(Color.botanicalBackground.ignoresSafeArea())
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+            }
+        }
     }
 
     private func headerActionButton(icon: String, color: Color = .botanicalTextPrimary, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            HapticManager.shared.light()
+            action()
+        } label: {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(color)
@@ -298,6 +314,7 @@ struct WorkoutEditorView: View {
                 .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel(headerButtonAccessibilityLabel(icon))
     }
 
     private func binding(for exercise: ExerciseInstance, in vm: WorkoutEditorViewModel) -> Binding<ExerciseInstance> {
@@ -317,6 +334,19 @@ struct WorkoutEditorView: View {
             await store.updateWorkout(workout)
         } else {
             await store.addWorkout(workout)
+        }
+    }
+
+    private func headerButtonAccessibilityLabel(_ icon: String) -> String {
+        switch icon {
+        case "clock":
+            return "Open rest timer"
+        case "play.fill":
+            return "Start timer"
+        case "pause.fill":
+            return "Pause timer"
+        default:
+            return "Workout action"
         }
     }
 }

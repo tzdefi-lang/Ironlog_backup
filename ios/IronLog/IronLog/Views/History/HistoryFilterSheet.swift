@@ -33,7 +33,10 @@ struct HistoryFilterSheet: View {
 
     private func filterButton(_ title: String, value: String) -> some View {
         Button(title) {
-            status = value
+            withAnimation(BotanicalMotion.quick) {
+                status = value
+            }
+            HapticManager.shared.selection()
         }
         .font(.botanicalSemibold(13))
         .foregroundStyle(status == value ? Color.botanicalTextPrimary : Color.botanicalTextSecondary)

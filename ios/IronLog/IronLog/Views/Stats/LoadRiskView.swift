@@ -70,6 +70,7 @@ struct LoadRiskView: View {
                     .padding(.vertical, 5)
                     .background(statusColor.opacity(0.12))
                     .clipShape(Capsule())
+                    .accessibilityLabel("Risk level \(statusLabel)")
             }
 
             Text(adviceText)

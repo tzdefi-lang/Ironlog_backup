@@ -50,13 +50,19 @@ struct ManageView: View {
 
                 if viewModel.tab == .exercises {
                     exerciseSection
+                        .transition(.opacity)
                 } else {
                     templateSection
+                        .transition(.opacity)
                 }
             }
             .padding(.horizontal, BotanicalTheme.pagePadding)
             .padding(.top, 16)
             .padding(.bottom, 36)
+            .animation(BotanicalMotion.standard, value: viewModel.tab)
+        }
+        .refreshable {
+            await store.refreshData()
         }
     }
 

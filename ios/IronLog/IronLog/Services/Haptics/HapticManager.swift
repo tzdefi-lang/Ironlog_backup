@@ -18,6 +18,10 @@ final class HapticManager {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 
+    func rigid() {
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+
     func warning() {
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }

@@ -40,15 +40,25 @@ struct HistoryView: View {
                     statusButton(title: "In Progress", value: "in_progress")
                 }
 
-                if filtered.isEmpty {
-                    Text("No workouts found")
-                        .font(.botanicalBody(14))
-                        .foregroundStyle(Color.botanicalTextSecondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 24)
+                if store.isLoading {
+                    LoadingStateView(message: "Loading history...")
+                } else if let error = store.authError, filtered.isEmpty {
+                    ErrorStateView(
+                        title: "Unable to load history",
+                        message: LocalizedStringKey(error),
+                        onRetry: {
+                            Task { await store.refreshData() }
+                        }
+                    )
+                } else if filtered.isEmpty {
+                    EmptyStateView(
+                        icon: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                        title: "No workouts found",
+                        description: "Try changing your filters or start your first session."
+                    )
                 }
 
-                ForEach(filtered) { workout in
+                ForEach(Array(filtered.enumerated()), id: \.element.id) { index, workout in
                     BotanicalCard {
                         VStack(alignment: .leading, spacing: 10) {
                             Button {
@@ -87,21 +97,30 @@ struct HistoryView: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("Delete workout")
                             }
                         }
                     }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(BotanicalMotion.standard.delay(Double(index) * 0.03), value: filtered.count)
                 }
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
             .padding(.bottom, 120)
         }
+        .refreshable {
+            await store.refreshData()
+        }
         .background(Color.botanicalBackground.ignoresSafeArea())
     }
 
     private func statusButton(title: String, value: String) -> some View {
         Button(title) {
-            viewModel.status = value
+            withAnimation(BotanicalMotion.quick) {
+                viewModel.status = value
+            }
+            HapticManager.shared.selection()
         }
         .font(.botanicalSemibold(13))
         .foregroundStyle(viewModel.status == value ? Color.botanicalTextPrimary : Color.botanicalTextSecondary)
