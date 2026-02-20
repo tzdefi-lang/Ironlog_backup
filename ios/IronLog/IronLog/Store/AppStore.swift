@@ -42,11 +42,13 @@ final class AppStore {
     private let exerciseRepo: ExerciseDefRepository
     private let templateRepo: TemplateRepository
     private let officialRepo: OfficialContentRepository
+    private let officialAdminService: OfficialContentAdminService
     private let networkMonitor: NetworkMonitor
     private let syncQueue: SyncQueue
     private var activeAuthAttemptId: UUID?
     private var toastQueue: [AppToast] = []
     private var toastTask: Task<Void, Never>?
+    private var restoredGlobalThemeMode: ThemeMode?
 
     init(
         modelContext: ModelContext,
@@ -56,6 +58,7 @@ final class AppStore {
         exerciseRepo: ExerciseDefRepository = ExerciseDefRepository(),
         templateRepo: TemplateRepository = TemplateRepository(),
         officialRepo: OfficialContentRepository = OfficialContentRepository(),
+        officialAdminService: OfficialContentAdminService = OfficialContentAdminService(),
         networkMonitor: NetworkMonitor = .shared
     ) {
         self.syncQueue = SyncQueue(modelContext: modelContext)
@@ -65,6 +68,7 @@ final class AppStore {
         self.exerciseRepo = exerciseRepo
         self.templateRepo = templateRepo
         self.officialRepo = officialRepo
+        self.officialAdminService = officialAdminService
         self.networkMonitor = networkMonitor
         registerReconnectObserver()
         restoreThemeFromGlobal()
@@ -348,6 +352,75 @@ final class AppStore {
         }
     }
 
+    func createOfficialExercise(name: String) async {
+        guard isAdmin else {
+            pushToast("Admin access denied")
+            return
+        }
+
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanName.isEmpty else { return }
+
+        let def = ExerciseDef(
+            id: UUID().uuidString,
+            name: cleanName,
+            description: "",
+            source: .official,
+            readOnly: true,
+            thumbnailUrl: nil,
+            markdown: "",
+            mediaItems: [],
+            mediaUrl: nil,
+            mediaType: nil,
+            category: "Other",
+            usesBarbell: false,
+            barbellWeight: 0
+        )
+
+        do {
+            try await officialAdminService.upsertOfficialExercise(def)
+            await refreshOfficialContent()
+            pushToast("Official exercise saved")
+        } catch {
+            authError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            pushToast("Failed to save official exercise")
+        }
+    }
+
+    func createOfficialTemplate(name: String) async {
+        guard isAdmin else {
+            pushToast("Admin access denied")
+            return
+        }
+
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanName.isEmpty else { return }
+        guard let seedExercise = officialExerciseDefs.first else {
+            pushToast("Create an official exercise first")
+            return
+        }
+
+        let template = WorkoutTemplate(
+            id: UUID().uuidString,
+            name: cleanName,
+            source: .official,
+            readOnly: true,
+            description: "",
+            tagline: "",
+            exercises: [WorkoutTemplateExercise(defId: seedExercise.id, defaultSets: 3)],
+            createdAt: ISO8601DateFormatter().string(from: Date())
+        )
+
+        do {
+            try await officialAdminService.upsertOfficialTemplate(template)
+            await refreshOfficialContent()
+            pushToast("Official template saved")
+        } catch {
+            authError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            pushToast("Failed to save official template")
+        }
+    }
+
     func startWorkoutFromTemplate(templateId: String, targetDate: String) async -> Workout? {
         guard let template = templates.first(where: { $0.id == templateId }) else { return nil }
 
@@ -493,7 +566,10 @@ final class AppStore {
     }
 
     private func mapPrivyUser(userId: String, profile: PrivyNativeProfile?) {
-        let saved = loadPreferences(for: userId)
+        var saved = loadPreferences(for: userId)
+        if let restoredGlobalThemeMode {
+            saved.themeMode = restoredGlobalThemeMode
+        }
         let cached = loadCachedIdentity(for: userId)
         let inMemory = user?.id == userId ? user : nil
 
@@ -551,6 +627,7 @@ final class AppStore {
 
     private func queueOfflineOperation<T: Encodable>(table: String, action: String, payload: T) async {
         guard let user else { return }
+        guard !user.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         guard let data = try? JSONEncoder().encode(payload) else { return }
         try? await syncQueue.enqueue(userId: user.id, table: table, action: action, payload: data)
     }
@@ -575,7 +652,10 @@ final class AppStore {
             }
         case ("exercise_defs", "upsert"):
             let row = try JSONDecoder().decode(ExerciseDefRow.self, from: item.payloadJSON)
-            let userId = row.user_id ?? user?.id ?? ""
+            guard let userId = resolvedUserId(row.user_id) else {
+                print("Skipping exercise_defs sync item with empty user id")
+                return
+            }
             try await exerciseRepo.upsert(row.toDomain(source: .personal), userId: userId)
         case ("exercise_defs", "delete"):
             let payload = try JSONSerialization.jsonObject(with: item.payloadJSON) as? [String: Any]
@@ -584,7 +664,10 @@ final class AppStore {
             }
         case ("workout_templates", "upsert"):
             let row = try JSONDecoder().decode(WorkoutTemplateRow.self, from: item.payloadJSON)
-            let userId = row.user_id ?? user?.id ?? ""
+            guard let userId = resolvedUserId(row.user_id) else {
+                print("Skipping workout_templates sync item with empty user id")
+                return
+            }
             try await templateRepo.upsert(row.toDomain(source: .personal), userId: userId)
         case ("workout_templates", "delete"):
             let payload = try JSONSerialization.jsonObject(with: item.payloadJSON) as? [String: Any]
@@ -641,8 +724,15 @@ final class AppStore {
               let mode = ThemeMode(rawValue: raw) else {
             return
         }
-        var defaults = UserPreferences.default
-        defaults.themeMode = mode
+        restoredGlobalThemeMode = mode
+    }
+
+    private func resolvedUserId(_ rowUserId: String?) -> String? {
+        let candidate = rowUserId ?? user?.id
+        guard let candidate = candidate?.trimmingCharacters(in: .whitespacesAndNewlines), !candidate.isEmpty else {
+            return nil
+        }
+        return candidate
     }
 
     private func registerReconnectObserver() {

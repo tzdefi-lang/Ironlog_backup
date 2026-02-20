@@ -6,7 +6,7 @@ import Observation
 final class NetworkMonitor {
     static let shared = NetworkMonitor()
 
-    var isConnected: Bool = true
+    var isConnected: Bool = false
 
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "com.ironlog.network", qos: .utility)
@@ -23,6 +23,10 @@ final class NetworkMonitor {
             }
         }
         monitor.start(queue: queue)
+
+        DispatchQueue.main.async { [weak self] in
+            self?.isConnected = self?.monitor.currentPath.status == .satisfied
+        }
     }
 
     deinit {

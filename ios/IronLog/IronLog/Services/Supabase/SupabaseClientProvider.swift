@@ -5,11 +5,18 @@ final class SupabaseClientProvider {
     static let shared = SupabaseClientProvider()
     private let lock = NSLock()
     private var _client: SupabaseClient
+    private var _authToken: String?
 
     var client: SupabaseClient {
         lock.lock()
         defer { lock.unlock() }
         return _client
+    }
+
+    var currentAuthToken: String? {
+        lock.lock()
+        defer { lock.unlock() }
+        return _authToken
     }
 
     private init() {
@@ -28,6 +35,7 @@ final class SupabaseClientProvider {
 
         lock.lock()
         _client = newClient
+        _authToken = jwt
         lock.unlock()
     }
 
@@ -35,6 +43,7 @@ final class SupabaseClientProvider {
         let newClient = SupabaseClient(supabaseURL: Constants.supabaseURL, supabaseKey: Constants.supabaseAnonKey)
         lock.lock()
         _client = newClient
+        _authToken = nil
         lock.unlock()
     }
 }

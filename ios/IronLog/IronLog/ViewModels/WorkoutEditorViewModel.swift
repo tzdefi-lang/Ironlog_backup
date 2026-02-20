@@ -124,7 +124,7 @@ final class WorkoutEditorViewModel {
 
     private func recalculateTime() {
         if let start = workout.startTimestamp {
-            let extra = Date().timeIntervalSince1970 - start / 1000
+            let extra = (Date().timeIntervalSince1970 * 1000 - start) / 1000
             currentTime = workout.elapsedSeconds + extra
         } else {
             currentTime = workout.elapsedSeconds

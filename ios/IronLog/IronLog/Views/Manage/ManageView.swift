@@ -57,24 +57,11 @@ struct ManageView: View {
                     }
 
                     TextField("New exercise name", text: $exerciseName)
-                    Button("Save Placeholder") {
-                        let def = ExerciseDef(
-                            id: UUID().uuidString,
-                            name: exerciseName.trimmingCharacters(in: .whitespacesAndNewlines),
-                            description: "",
-                            source: .official,
-                            readOnly: true,
-                            thumbnailUrl: nil,
-                            markdown: "",
-                            mediaItems: [],
-                            mediaUrl: nil,
-                            mediaType: nil,
-                            category: "Other",
-                            usesBarbell: false,
-                            barbellWeight: 0
-                        )
-                        store.exerciseDefs.append(def)
-                        exerciseName = ""
+                    Button("Save Exercise") {
+                        Task {
+                            await store.createOfficialExercise(name: exerciseName)
+                            exerciseName = ""
+                        }
                     }
                     .disabled(exerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
@@ -90,19 +77,11 @@ struct ManageView: View {
                     }
 
                     TextField("New template name", text: $templateName)
-                    Button("Save Placeholder") {
-                        let template = WorkoutTemplate(
-                            id: UUID().uuidString,
-                            name: templateName.trimmingCharacters(in: .whitespacesAndNewlines),
-                            source: .official,
-                            readOnly: true,
-                            description: "",
-                            tagline: "",
-                            exercises: [],
-                            createdAt: ISO8601DateFormatter().string(from: Date())
-                        )
-                        store.templates.append(template)
-                        templateName = ""
+                    Button("Save Template") {
+                        Task {
+                            await store.createOfficialTemplate(name: templateName)
+                            templateName = ""
+                        }
                     }
                     .disabled(templateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
