@@ -71,6 +71,7 @@ struct DashboardView: View {
             .padding(.bottom, 140)
             .animation(BotanicalMotion.standard, value: store.workouts.map(\.id))
         }
+        .scrollIndicators(.hidden)
         .refreshable {
             await store.refreshData()
         }
@@ -147,6 +148,7 @@ struct DashboardView: View {
                 ForEach(Array(carouselItems.enumerated()), id: \.element.id) { index, item in
                     cardView(item)
                         .tag(index)
+                        .padding(.horizontal, BotanicalTheme.pagePadding)
                         .padding(.vertical, 2)
                 }
             }
@@ -167,8 +169,9 @@ struct DashboardView: View {
                     .font(.botanicalSemibold(12))
                     .foregroundStyle(Color.botanicalTextSecondary)
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, BotanicalTheme.pagePadding + 4)
         }
+        .padding(.horizontal, -BotanicalTheme.pagePadding)
     }
 
     @ViewBuilder

@@ -43,6 +43,7 @@ struct WorkoutCardView: View {
 
                 HStack(spacing: 10) {
                     BotanicalButton(title: "Open", variant: .primary, action: onOpen)
+                        .accessibilityIdentifier("dashboard.openWorkoutButton")
                     BotanicalButton(title: "Copy", variant: .secondary, action: onCopy)
                 }
             }

@@ -39,7 +39,7 @@ struct MainTabView: View {
         }
         .animation(.easeOut(duration: 0.2), value: store.activeToast?.id)
         .background(Color.botanicalBackground.ignoresSafeArea())
-        .sheet(
+        .fullScreenCover(
             isPresented: Binding(
                 get: { store.showWorkoutEditor },
                 set: { store.showWorkoutEditor = $0 }
@@ -48,8 +48,6 @@ struct MainTabView: View {
             NavigationStack {
                 WorkoutEditorView(workoutId: store.activeWorkoutID)
             }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
         }
     }
 

@@ -21,6 +21,7 @@ struct CustomTabBar: View {
             .simultaneousGesture(TapGesture().onEnded { HapticManager.shared.medium() })
             .buttonStyle(PressableButtonStyle())
             .accessibilityLabel("Start new workout")
+            .accessibilityIdentifier("tabbar.newWorkoutButton")
 
             tabButton("chart.bar.fill", tab: .stats)
             tabButton("person.fill", tab: .profile)

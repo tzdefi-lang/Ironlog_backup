@@ -7,9 +7,12 @@ struct IronLogApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     private let modelContainer: ModelContainer
+    private let isUITestMode: Bool
     @State private var store: AppStore
 
     init() {
+        isUITestMode = ProcessInfo.processInfo.arguments.contains("UITEST_MODE")
+            || ProcessInfo.processInfo.environment["UITEST_MODE"] == "1"
         Self.configureScrollIndicatorAppearance()
         Self.configureNavigationBarAppearance()
 
@@ -79,7 +82,11 @@ struct IronLogApp: App {
                 .environment(store)
                 .modelContainer(modelContainer)
                 .task {
-                    await store.attemptSessionRestore()
+                    if isUITestMode {
+                        self.store.enableUITestMode()
+                    } else {
+                        await self.store.attemptSessionRestore()
+                    }
                 }
         }
     }

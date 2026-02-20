@@ -165,6 +165,7 @@ struct StatsView: View {
             .padding(.top, 20)
             .padding(.bottom, 120)
         }
+        .scrollIndicators(.hidden)
         .background(Color.botanicalBackground.ignoresSafeArea())
         .refreshable {
             await store.refreshData()

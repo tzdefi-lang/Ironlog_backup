@@ -39,11 +39,10 @@ private struct SwipeToDeleteWorkoutCard: View {
     let onDelete: () -> Void
 
     @State private var rowOffset: CGFloat = 0
-    @State private var isDeleteRevealed = false
     @State private var isDeleting = false
 
-    private let deleteActionWidth: CGFloat = 92
-    private let deleteTriggerDistance: CGFloat = 126
+    private let deleteTriggerDistance: CGFloat = 100
+    private let maxSwipeOffset: CGFloat = 120
 
     var body: some View {
         ZStack(alignment: .trailing) {
@@ -57,9 +56,13 @@ private struct SwipeToDeleteWorkoutCard: View {
                 .simultaneousGesture(rowSwipeGesture)
                 .onTapGesture {
                     guard !isDeleting else { return }
-                    isDeleteRevealed ? closeDeleteAction() : onOpen()
+                    if rowOffset < 0 {
+                        closeDeleteAction()
+                    } else {
+                        onOpen()
+                    }
                 }
-                .animation(.spring(duration: 0.24, bounce: 0.2), value: rowOffset)
+                .animation(.spring(duration: 0.18, bounce: 0.12), value: rowOffset)
                 .animation(.easeOut(duration: 0.18), value: isDeleting)
                 .allowsHitTesting(!isDeleting)
         }
@@ -67,70 +70,67 @@ private struct SwipeToDeleteWorkoutCard: View {
     }
 
     private var tappableCardContent: some View {
-        ZStack(alignment: .topTrailing) {
-            cardContent
-
-            Menu {
-                Button(action: onCopy) {
-                    Label("Copy", systemImage: "doc.on.doc")
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color.botanicalTextSecondary)
-                    .frame(width: 44, height: 44)
-                    .background(Color.botanicalMuted.opacity(0.45))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Workout options")
-            .padding(.top, 10)
-            .padding(.trailing, 10)
-        }
+        cardContent
     }
 
     private var cardContent: some View {
         BotanicalCard(elevated: true) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        if !workout.completed, workout.startTimestamp != nil {
-                            HStack(spacing: 4) {
-                                Circle()
-                                    .fill(Color.botanicalSuccess)
-                                    .frame(width: 6, height: 6)
-                                Text("In Progress")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(Color.botanicalSuccess)
-                            }
+            HStack(alignment: .center, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    if !workout.completed, workout.startTimestamp != nil {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Color.botanicalSuccess)
+                                .frame(width: 6, height: 6)
+                            Text("In Progress")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(Color.botanicalSuccess)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.botanicalSuccess.opacity(0.12))
+                        .clipShape(Capsule())
+                        .accessibilityLabel("In Progress")
+                    } else if workout.completed {
+                        Text("Completed")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.botanicalAccent)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(Color.botanicalSuccess.opacity(0.12))
+                            .background(Color.botanicalAccent.opacity(0.12))
                             .clipShape(Capsule())
-                            .accessibilityLabel("In Progress")
-                        } else if workout.completed {
-                            Text("Completed")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(Color.botanicalAccent)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(Color.botanicalAccent.opacity(0.12))
-                                .clipShape(Capsule())
-                                .accessibilityLabel("Completed")
-                        }
-
-                        Text(workout.title)
-                            .font(.botanicalSemibold(17))
-                            .foregroundStyle(Color.botanicalTextPrimary)
+                            .accessibilityLabel("Completed")
                     }
 
-                    Spacer()
-
-                    Text("\(workout.exercises.count) ex")
-                        .font(.botanicalBody(13))
-                        .foregroundStyle(Color.botanicalTextSecondary)
-                        .padding(.trailing, 38)
+                    Text(workout.title)
+                        .font(.botanicalSemibold(17))
+                        .foregroundStyle(Color.botanicalTextPrimary)
                 }
+
+                Spacer()
+
+                HStack(spacing: 4) {
+                    Image(systemName: "figure.strengthtraining.traditional")
+                        .font(.system(size: 11))
+                    Text("\(workout.exercises.count)")
+                        .font(.botanicalSemibold(13))
+                }
+                .foregroundStyle(Color.botanicalTextSecondary)
+
+                Menu {
+                    Button(action: onCopy) {
+                        Label("Copy", systemImage: "doc.on.doc")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.botanicalTextSecondary)
+                        .frame(width: 32, height: 32)
+                        .background(Color.botanicalMuted.opacity(0.35))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Workout options")
             }
         }
     }
@@ -153,26 +153,23 @@ private struct SwipeToDeleteWorkoutCard: View {
     }
 
     private var rowSwipeGesture: some Gesture {
-        DragGesture(minimumDistance: 12, coordinateSpace: .local)
+        DragGesture(minimumDistance: 20, coordinateSpace: .local)
             .onChanged { value in
                 guard !isDeleting else { return }
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                guard abs(value.translation.width) > abs(value.translation.height) * 1.5 else { return }
 
-                let anchoredOffset = isDeleteRevealed ? -deleteActionWidth : 0
-                let nextOffset = anchoredOffset + value.translation.width
-                rowOffset = min(0, max(-deleteActionWidth, nextOffset))
+                if value.translation.width < 0 {
+                    rowOffset = max(-maxSwipeOffset, value.translation.width)
+                } else {
+                    rowOffset = 0
+                }
             }
             .onEnded { value in
                 guard !isDeleting else { return }
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
 
-                let anchoredOffset = isDeleteRevealed ? -deleteActionWidth : 0
-                let finalOffset = anchoredOffset + value.translation.width
-
-                if finalOffset <= -deleteTriggerDistance {
+                if value.translation.width <= -deleteTriggerDistance,
+                   abs(value.translation.width) > abs(value.translation.height) * 1.5 {
                     triggerDelete()
-                } else if finalOffset <= -deleteActionWidth * 0.45 {
-                    revealDeleteAction()
                 } else {
                     closeDeleteAction()
                 }
@@ -190,13 +187,7 @@ private struct SwipeToDeleteWorkoutCard: View {
         }
     }
 
-    private func revealDeleteAction() {
-        rowOffset = -deleteActionWidth
-        isDeleteRevealed = true
-    }
-
     private func closeDeleteAction() {
         rowOffset = 0
-        isDeleteRevealed = false
     }
 }

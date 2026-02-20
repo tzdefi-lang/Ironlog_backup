@@ -36,10 +36,12 @@ struct WorkoutEditorView: View {
         Group {
             if let viewModel {
                 editorBody(viewModel)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
                 SkeletonView().padding(24)
             }
         }
+        .animation(BotanicalMotion.standard, value: viewModel != nil)
         .onAppear {
             if viewModel == nil {
                 let source = workoutId.flatMap { id in store.workouts.first(where: { $0.id == id }) }
@@ -122,11 +124,10 @@ struct WorkoutEditorView: View {
         VStack(spacing: 0) {
             HStack {
                 Button {
-                    Task {
-                        await persistWorkout(vm.workout)
-                        store.showWorkoutEditor = false
-                        dismiss()
-                    }
+                    let snapshot = vm.workout
+                    store.showWorkoutEditor = false
+                    dismiss()
+                    Task { await persistWorkout(snapshot) }
                     HapticManager.shared.light()
                 } label: {
                     Image(systemName: "xmark")
@@ -138,6 +139,7 @@ struct WorkoutEditorView: View {
                 }
                 .buttonStyle(PressableButtonStyle())
                 .accessibilityLabel("Close workout editor")
+                .accessibilityIdentifier("workoutEditor.closeButton")
 
                 Spacer()
 
@@ -226,6 +228,8 @@ struct WorkoutEditorView: View {
                     }
                     .listRowInsets(EdgeInsets(top: 14, leading: 20, bottom: 6, trailing: 20))
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listSectionSeparator(.hidden)
                 }
 
                 Section {
@@ -271,6 +275,7 @@ struct WorkoutEditorView: View {
                         Task { await persistWorkout(vm.workout) }
                     }
                 }
+                .listSectionSeparator(.hidden)
 
                 Section {
                     BotanicalButton(title: "Add Exercise", variant: .secondary) {
@@ -296,10 +301,12 @@ struct WorkoutEditorView: View {
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
                 .listRowBackground(Color.clear)
+                .listSectionSeparator(.hidden)
             }
             .listStyle(.plain)
             .listRowSeparator(.hidden)
             .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
             .background(Color.clear)
             .environment(\.editMode, $editMode)
         }

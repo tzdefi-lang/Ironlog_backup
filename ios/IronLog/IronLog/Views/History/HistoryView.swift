@@ -107,48 +107,16 @@ struct HistoryView: View {
                 }
 
                 ForEach(Array(filtered.enumerated()), id: \.element.id) { index, workout in
-                    BotanicalCard {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Button {
-                                store.openWorkout(id: workout.id)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(workout.title)
-                                        .font(.botanicalSemibold(17))
-                                        .foregroundStyle(Color.botanicalTextPrimary)
-                                    Text("\(workout.date) • \(workout.completed ? "Completed" : "In Progress")")
-                                        .font(.caption)
-                                        .foregroundStyle(Color.botanicalTextSecondary)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    HistoryWorkoutCard(
+                        workout: workout,
+                        onOpen: { store.openWorkout(id: workout.id) },
+                        onDelete: {
+                            withAnimation(.spring(duration: 0.35, bounce: 0.15)) {
+                                Task { await store.deleteWorkout(id: workout.id) }
                             }
-                            .buttonStyle(.plain)
-
-                            HStack(spacing: 10) {
-                                BotanicalButton(title: "Open", variant: .primary) {
-                                    store.openWorkout(id: workout.id)
-                                }
-
-                                BotanicalButton(title: "Copy", variant: .secondary) {
-                                    Task {
-                                        await store.copyWorkout(workoutId: workout.id, targetDate: DateUtils.formatDate())
-                                    }
-                                }
-
-                                Button(role: .destructive) {
-                                    Task { await store.deleteWorkout(id: workout.id) }
-                                } label: {
-                                    Image(systemName: "trash")
-                                        .foregroundStyle(.white)
-                                        .frame(width: 44, height: 44)
-                                        .background(Color.botanicalDanger)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Delete workout")
-                            }
+                            store.pushToast(L10n.string("history.workoutDeletedToast"))
                         }
-                    }
+                    )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .animation(BotanicalMotion.standard.delay(Double(index) * 0.03), value: filtered.count)
                 }
@@ -157,6 +125,7 @@ struct HistoryView: View {
             .padding(.top, 20)
             .padding(.bottom, 120)
         }
+        .scrollIndicators(.hidden)
         .refreshable {
             await store.refreshData()
         }
@@ -258,6 +227,123 @@ struct HistoryView: View {
             return "In Progress"
         default:
             return "All"
+        }
+    }
+}
+
+private struct HistoryWorkoutCard: View {
+    let workout: Workout
+    let onOpen: () -> Void
+    let onDelete: () -> Void
+
+    @State private var rowOffset: CGFloat = 0
+    @State private var isDeleting = false
+
+    private let deleteTriggerDistance: CGFloat = 80
+    private let maxSwipeOffset: CGFloat = 100
+
+    var body: some View {
+        ZStack(alignment: .trailing) {
+            HStack {
+                Spacer()
+                VStack(spacing: 4) {
+                    Image(systemName: "trash.fill")
+                        .font(.system(size: 16, weight: .bold))
+                    Text("Delete")
+                        .font(.system(size: 11, weight: .semibold))
+                }
+                .foregroundStyle(Color.botanicalDanger)
+                .padding(.trailing, 20)
+                .opacity(rowOffset < -10 ? 1 : 0)
+                .animation(.easeOut(duration: 0.12), value: rowOffset)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.botanicalDangerLight.opacity(0.4))
+            .clipShape(RoundedRectangle(cornerRadius: BotanicalTheme.cardCornerRadius, style: .continuous))
+
+            BotanicalCard {
+                Button(action: onOpen) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(workout.title)
+                            .font(.botanicalSemibold(17))
+                            .foregroundStyle(Color.botanicalTextPrimary)
+
+                        HStack(spacing: 8) {
+                            Text(DateUtils.formatDisplayDate(workout.date))
+                                .font(.botanicalBody(13))
+                                .foregroundStyle(Color.botanicalTextSecondary)
+
+                            Text("•")
+                                .foregroundStyle(Color.botanicalMuted)
+
+                            Text(workout.completed ? "Completed" : "In Progress")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(workout.completed ? Color.botanicalSuccess : Color.botanicalAccent)
+
+                            Spacer()
+
+                            Text(L10n.string("%@ exercises", "\(workout.exercises.count)"))
+                                .font(.botanicalBody(13))
+                                .foregroundStyle(Color.botanicalTextSecondary)
+                        }
+
+                        if !workout.exercises.isEmpty {
+                            Text(exerciseSummary)
+                                .font(.botanicalBody(12))
+                                .foregroundStyle(Color.botanicalTextSecondary)
+                                .lineLimit(1)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+            }
+            .offset(x: rowOffset)
+            .contentShape(Rectangle())
+            .highPriorityGesture(swipeGesture)
+            .animation(.spring(duration: 0.18, bounce: 0.12), value: rowOffset)
+        }
+        .clipped()
+        .accessibilityIdentifier("history.workoutCard.\(workout.id)")
+    }
+
+    private var exerciseSummary: String {
+        let completedSets = workout.exercises.flatMap(\.sets).filter(\.completed).count
+        return L10n.string("%@ sets", "\(completedSets)")
+    }
+
+    private var swipeGesture: some Gesture {
+        DragGesture(minimumDistance: 14, coordinateSpace: .local)
+            .onChanged { value in
+                guard !isDeleting else { return }
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+
+                if value.translation.width < 0 {
+                    rowOffset = max(-maxSwipeOffset, value.translation.width)
+                } else {
+                    rowOffset = 0
+                }
+            }
+            .onEnded { value in
+                guard !isDeleting else { return }
+
+                if value.translation.width <= -deleteTriggerDistance,
+                   abs(value.translation.width) > abs(value.translation.height) {
+                    triggerDelete()
+                } else {
+                    rowOffset = 0
+                }
+            }
+    }
+
+    private func triggerDelete() {
+        isDeleting = true
+        HapticManager.shared.rigid()
+        withAnimation(.spring(duration: 0.2)) {
+            rowOffset = -maxSwipeOffset
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            onDelete()
         }
     }
 }

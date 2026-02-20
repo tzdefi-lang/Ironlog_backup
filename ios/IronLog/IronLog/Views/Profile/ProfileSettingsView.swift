@@ -59,14 +59,24 @@ struct ProfileSettingsView: View {
                     }
                 }
 
-                settingCard(title: "profile.exportData") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("profile.exportData")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.botanicalTextSecondary)
+                        .tracking(1.2)
+
                     VStack(spacing: 10) {
                         BotanicalButton(title: "profile.exportJson", variant: .secondary) { exportJSON() }
                         BotanicalButton(title: "profile.exportCsv", variant: .secondary) { exportCSV() }
                     }
                 }
 
-                settingCard(title: "profile.account") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("profile.account")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.botanicalTextSecondary)
+                        .tracking(1.2)
+
                     BotanicalButton(title: "common.signOut", variant: .danger) {
                         Task { await store.logout() }
                     }
@@ -76,6 +86,7 @@ struct ProfileSettingsView: View {
             .padding(.top, 16)
             .padding(.bottom, 60)
         }
+        .scrollIndicators(.hidden)
         .background(Color.botanicalBackground.ignoresSafeArea())
         .navigationTitle("profile.settingsTitle")
         .sheet(isPresented: $showExporter) {

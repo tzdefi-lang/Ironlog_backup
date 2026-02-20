@@ -58,6 +58,7 @@ final class AppStore {
     private var toastQueue: [AppToast] = []
     private var toastTask: Task<Void, Never>?
     private var restoredGlobalThemeMode: ThemeMode?
+    private var isUITestModeEnabled = false
 
     init(
         modelContext: ModelContext,
@@ -89,6 +90,27 @@ final class AppStore {
     var isAdmin: Bool {
         guard let email = user?.email.lowercased() else { return false }
         return Constants.adminEmails.contains(email)
+    }
+
+    func enableUITestMode() {
+        let fixtures = defaultUITestFixtures()
+        isUITestModeEnabled = true
+        user = fixtures.user
+        workouts = fixtures.workouts.sorted { $0.date > $1.date }
+        personalExerciseDefs = fixtures.exerciseDefs.filter { $0.source == .personal }
+        officialExerciseDefs = fixtures.exerciseDefs.filter { $0.source == .official }
+        personalTemplates = fixtures.templates.filter { $0.source == .personal }
+        officialTemplates = fixtures.templates.filter { $0.source == .official }
+        mergeDerivedCollections()
+
+        authError = nil
+        isLoading = false
+        isBootstrappingSession = false
+        activeWorkoutID = nil
+        showWorkoutEditor = false
+        activeToast = nil
+        toastQueue.removeAll()
+        toastTask?.cancel()
     }
 
     func loginWithPrivy(provider: PrivyLoginProvider) async {
@@ -158,6 +180,7 @@ final class AppStore {
     }
 
     func refreshData() async {
+        if isUITestModeEnabled { return }
         guard user != nil else { return }
         isLoading = true
         defer { isLoading = false }
@@ -182,6 +205,10 @@ final class AppStore {
     }
 
     func attemptSessionRestore() async {
+        if isUITestModeEnabled {
+            isBootstrappingSession = false
+            return
+        }
         guard isBootstrappingSession else { return }
         defer { isBootstrappingSession = false }
 
@@ -206,6 +233,7 @@ final class AppStore {
     }
 
     func refreshOfficialContent() async {
+        if isUITestModeEnabled { return }
         do {
             let official = try await officialRepo.fetch(forceRefresh: true)
             officialExerciseDefs = official.exerciseDefs
@@ -219,6 +247,7 @@ final class AppStore {
     func addWorkout(_ workout: Workout) async {
         let persisted = normalizedForPersistence(workout)
         workouts.append(persisted)
+        if isUITestModeEnabled { return }
         guard let user else { return }
 
         do {
@@ -237,6 +266,7 @@ final class AppStore {
         let persisted = normalizedForPersistence(workout)
         let previous = workouts
         workouts = workouts.map { $0.id == persisted.id ? persisted : $0 }
+        if isUITestModeEnabled { return }
         guard let user else { return }
 
         do {
@@ -254,6 +284,7 @@ final class AppStore {
     func deleteWorkout(id: String) async {
         let previous = workouts
         workouts.removeAll { $0.id == id }
+        if isUITestModeEnabled { return }
         guard let user else { return }
 
         do {
@@ -301,6 +332,7 @@ final class AppStore {
         let previous = personalExerciseDefs
         personalExerciseDefs.append(def)
         mergeDerivedCollections()
+        if isUITestModeEnabled { return }
 
         do {
             try await exerciseRepo.upsert(def, userId: user.id)
@@ -322,6 +354,7 @@ final class AppStore {
         let previous = personalExerciseDefs
         personalExerciseDefs = personalExerciseDefs.map { $0.id == def.id ? def : $0 }
         mergeDerivedCollections()
+        if isUITestModeEnabled { return }
 
         do {
             try await exerciseRepo.upsert(def, userId: user.id)
@@ -341,6 +374,7 @@ final class AppStore {
         let previous = personalExerciseDefs
         personalExerciseDefs.removeAll { $0.id == id }
         mergeDerivedCollections()
+        if isUITestModeEnabled { return }
 
         do {
             try await exerciseRepo.delete(id: id)
@@ -377,6 +411,7 @@ final class AppStore {
 
         personalTemplates = ([template] + personalTemplates).sorted { $0.createdAt > $1.createdAt }
         mergeDerivedCollections()
+        if isUITestModeEnabled { return }
 
         do {
             try await templateRepo.upsert(template, userId: user.id)
@@ -498,6 +533,7 @@ final class AppStore {
         let previous = personalTemplates
         personalTemplates.removeAll { $0.id == id }
         mergeDerivedCollections()
+        if isUITestModeEnabled { return }
 
         do {
             try await templateRepo.delete(id: id)
@@ -786,6 +822,147 @@ final class AppStore {
         } else if result.applied {
             AppLogger.sync.debug("Applied queued sync operation idempotencyKey=\(item.idempotencyKey, privacy: .public)")
         }
+    }
+
+    private func defaultUITestFixtures() -> (
+        user: UserProfile,
+        exerciseDefs: [ExerciseDef],
+        workouts: [Workout],
+        templates: [WorkoutTemplate]
+    ) {
+        let benchDef = ExerciseDef(
+            id: "def-bench-press",
+            name: "Bench Press",
+            description: "Classic chest press movement.",
+            source: .official,
+            readOnly: true,
+            thumbnailUrl: nil,
+            markdown: "Lie on the bench, keep your feet grounded, and press with control.",
+            mediaItems: [],
+            mediaUrl: nil,
+            mediaType: nil,
+            category: "Chest",
+            usesBarbell: true,
+            barbellWeight: 20
+        )
+
+        let rowDef = ExerciseDef(
+            id: "def-row",
+            name: "Barbell Row",
+            description: "Pull with your back and keep the core braced.",
+            source: .official,
+            readOnly: true,
+            thumbnailUrl: nil,
+            markdown: "Hinge forward with a neutral spine and row toward your lower ribs.",
+            mediaItems: [],
+            mediaUrl: nil,
+            mediaType: nil,
+            category: "Back",
+            usesBarbell: true,
+            barbellWeight: 20
+        )
+
+        let todayWorkout = Workout(
+            id: "w-today",
+            date: DateUtils.formatDate(),
+            title: "Upper Body Session",
+            note: "UITest fixture",
+            exercises: [
+                ExerciseInstance(
+                    id: "ex-today-bench",
+                    defId: benchDef.id,
+                    sets: [
+                        WorkoutSet(id: "set-today-1", weight: 100, reps: 5, completed: true),
+                        WorkoutSet(id: "set-today-2", weight: 100, reps: 5, completed: false),
+                    ],
+                    sortOrder: 0
+                ),
+                ExerciseInstance(
+                    id: "ex-today-row",
+                    defId: rowDef.id,
+                    sets: [
+                        WorkoutSet(id: "set-row-1", weight: 80, reps: 8, completed: false),
+                    ],
+                    sortOrder: 1
+                ),
+            ],
+            completed: false,
+            elapsedSeconds: 900,
+            startTimestamp: nil
+        )
+
+        let yesterday = Calendar(identifier: .gregorian).date(byAdding: .day, value: -1, to: Date()) ?? Date()
+        let twoDaysAgo = Calendar(identifier: .gregorian).date(byAdding: .day, value: -2, to: Date()) ?? Date()
+
+        let lastCompleted = Workout(
+            id: "w-last",
+            date: DateUtils.formatDate(yesterday),
+            title: "Push Day",
+            note: "Previous session",
+            exercises: [
+                ExerciseInstance(
+                    id: "ex-last-bench",
+                    defId: benchDef.id,
+                    sets: [
+                        WorkoutSet(id: "set-last-1", weight: 95, reps: 5, completed: true),
+                        WorkoutSet(id: "set-last-2", weight: 100, reps: 4, completed: true),
+                    ],
+                    sortOrder: 0
+                ),
+            ],
+            completed: true,
+            elapsedSeconds: 2100,
+            startTimestamp: nil
+        )
+
+        let olderCompleted = Workout(
+            id: "w-older",
+            date: DateUtils.formatDate(twoDaysAgo),
+            title: "Bench Technique",
+            note: "Technique and speed",
+            exercises: [
+                ExerciseInstance(
+                    id: "ex-older-bench",
+                    defId: benchDef.id,
+                    sets: [
+                        WorkoutSet(id: "set-older-1", weight: 90, reps: 6, completed: true),
+                        WorkoutSet(id: "set-older-2", weight: 92.5, reps: 5, completed: true),
+                    ],
+                    sortOrder: 0
+                ),
+            ],
+            completed: true,
+            elapsedSeconds: 1800,
+            startTimestamp: nil
+        )
+
+        let template = WorkoutTemplate(
+            id: "tpl-upper",
+            name: "Upper Starter",
+            source: .official,
+            readOnly: true,
+            description: "Fixture template",
+            tagline: "Chest + Back",
+            exercises: [
+                WorkoutTemplateExercise(defId: benchDef.id, defaultSets: 3),
+                WorkoutTemplateExercise(defId: rowDef.id, defaultSets: 3),
+            ],
+            createdAt: ISO8601DateFormatter().string(from: Date())
+        )
+
+        let user = UserProfile(
+            id: "ui-test-user",
+            name: "UI Test",
+            email: "uitest@example.com",
+            preferences: UserPreferences(defaultUnit: .lbs, restTimerSeconds: 90, themeMode: .system, notificationsEnabled: false)
+        )
+
+        return (
+            user: user,
+            exerciseDefs: [benchDef, rowDef],
+            workouts: [todayWorkout, lastCompleted, olderCompleted],
+            templates: [template]
+        )
     }
 
     private func savePreferences(_ preferences: UserPreferences) {

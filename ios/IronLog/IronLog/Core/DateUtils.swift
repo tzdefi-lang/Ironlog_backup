@@ -17,6 +17,14 @@ enum DateUtils {
         return formatter.date(from: text) ?? Date()
     }
 
+    static func formatDisplayDate(_ text: String, locale: Locale = .current) -> String {
+        let date = parseDate(text)
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.setLocalizedDateFormatFromTemplate("MMM d, yyyy")
+        return formatter.string(from: date)
+    }
+
     static func formatDuration(_ seconds: Double) -> String {
         let total = Int(max(0, seconds.rounded(.down)))
         let h = total / 3600
