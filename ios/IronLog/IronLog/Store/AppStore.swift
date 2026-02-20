@@ -506,7 +506,9 @@ final class AppStore {
                 ExerciseInstance(
                     id: UUID().uuidString,
                     defId: item.defId,
-                    sets: Array(repeating: WorkoutSet(id: UUID().uuidString, weight: 0, reps: 0, completed: false), count: max(1, item.defaultSets)),
+                    sets: (0..<max(1, item.defaultSets)).map { _ in
+                        WorkoutSet(id: UUID().uuidString, weight: 0, reps: 0, completed: false)
+                    },
                     sortOrder: index
                 )
             }
