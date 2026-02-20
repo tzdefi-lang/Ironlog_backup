@@ -9,6 +9,8 @@ struct SetRowView: View {
 
     @State private var rowOffset: CGFloat = 0
     @State private var isDeleting = false
+    @State private var weightText: String = ""
+    @State private var repsText: String = ""
 
     private let deleteTriggerDistance: CGFloat = 72
     private let maxSwipeOffset: CGFloat = 92
@@ -123,12 +125,22 @@ struct SetRowView: View {
 
     private var weightField: some View {
         HStack(spacing: 6) {
-            TextField("0", value: $set.weight, format: .number.precision(.fractionLength(0 ... 1)))
+            TextField("0", text: $weightText)
                 .keyboardType(.decimalPad)
                 .textFieldStyle(.plain)
                 .multilineTextAlignment(.center)
                 .font(.botanicalSemibold(18))
+                .tint(Color.botanicalAccent)
+                .autocorrectionDisabled()
                 .frame(maxWidth: .infinity)
+                .onAppear { weightText = set.weight == 0 ? "" : formatWeight(set.weight) }
+                .onChange(of: weightText) { _, newValue in
+                    set.weight = Double(newValue) ?? 0
+                }
+                .onChange(of: set.weight) { _, newValue in
+                    let expected = newValue == 0 ? "" : formatWeight(newValue)
+                    if weightText != expected { weightText = expected }
+                }
 
             Text(unit.rawValue.uppercased())
                 .font(.botanicalSemibold(12))
@@ -142,16 +154,27 @@ struct SetRowView: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(set.completed ? Color.botanicalSuccess.opacity(0.45) : Color.botanicalBorderSubtle, lineWidth: 1)
         )
+        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private var repsField: some View {
         HStack(spacing: 6) {
-            TextField("0", value: $set.reps, format: .number)
+            TextField("0", text: $repsText)
                 .keyboardType(.numberPad)
                 .textFieldStyle(.plain)
                 .multilineTextAlignment(.center)
                 .font(.botanicalSemibold(18))
+                .tint(Color.botanicalAccent)
+                .autocorrectionDisabled()
                 .frame(maxWidth: .infinity)
+                .onAppear { repsText = set.reps == 0 ? "" : "\(set.reps)" }
+                .onChange(of: repsText) { _, newValue in
+                    set.reps = Int(newValue) ?? 0
+                }
+                .onChange(of: set.reps) { _, newValue in
+                    let expected = newValue == 0 ? "" : "\(newValue)"
+                    if repsText != expected { repsText = expected }
+                }
 
             Text("REPS")
                 .font(.botanicalSemibold(12))
@@ -165,6 +188,11 @@ struct SetRowView: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(set.completed ? Color.botanicalSuccess.opacity(0.45) : Color.botanicalBorderSubtle, lineWidth: 1)
         )
+        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private func formatWeight(_ value: Double) -> String {
+        value.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(value))" : String(format: "%.1f", value)
     }
 
     // MARK: - Swipe Gesture

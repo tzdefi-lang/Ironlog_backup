@@ -6,6 +6,8 @@ struct ProfileView: View {
     @State private var showHistory = false
     @State private var showManage = false
 
+    var popToRootToken: Int = 0
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -66,6 +68,11 @@ struct ProfileView: View {
         }
         .navigationDestination(isPresented: $showManage) {
             ManageView()
+        }
+        .onChange(of: popToRootToken) { _, _ in
+            showSettings = false
+            showHistory = false
+            showManage = false
         }
     }
 

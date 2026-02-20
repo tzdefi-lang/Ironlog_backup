@@ -9,21 +9,18 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
-    /// Creates a hidden UITextField briefly to force iOS to load the keyboard
-    /// input system on a background thread, avoiding lag on first text field focus.
+    /// Pre-loads the keyboard text-input frameworks on a background thread
+    /// so the first tap on a text field doesn't stall the UI.
+    /// We intentionally do NOT call becomeFirstResponder here to avoid
+    /// the keyboard flashing on screen during the session restore splash.
     private func prewarmKeyboard() {
-        DispatchQueue.main.async {
-            let window = UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .first?.windows.first
-            let field = UITextField(frame: .zero)
-            field.autocorrectionType = .no
-            field.inputAssistantItem.leadingBarButtonGroups = []
-            field.inputAssistantItem.trailingBarButtonGroups = []
-            window?.addSubview(field)
-            field.becomeFirstResponder()
-            field.resignFirstResponder()
-            field.removeFromSuperview()
+        DispatchQueue.global(qos: .userInitiated).async {
+            // Touching activeInputModes forces iOS to load the TextInput
+            // bundle and associated frameworks without showing the keyboard.
+            let _ = UITextInputMode.activeInputModes
+            // Allocating a UITextField (off-screen, never added to a window)
+            // warms additional internal caches.
+            let _ = UITextField(frame: .zero)
         }
     }
 }

@@ -89,6 +89,7 @@
 		BA272348765AFF705E31C5A6 /* OfficialContentRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CD97DAE59CAA1AF22E349A9 /* OfficialContentRepository.swift */; };
 		BA993F2BBBD7F8AB2E7A69BB /* LoadingStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB1837B1688F973092A34DEA /* LoadingStateView.swift */; };
 		BD5150140FCB6BE9D3E905FF /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80032C9659C0D593595D9A36 /* DashboardView.swift */; };
+		F1A2B3C4D5E6F7081234ABCD /* TemplatePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718ABCD1234 /* TemplatePickerSheet.swift */; };
 		BDFE8B09766E40D09B3A7831 /* StatsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B2B6CF6A28CC171C03496E /* StatsServiceTests.swift */; };
 		BE82E687686F174D59B00651 /* CalendarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA09F4813D44215E873407A3 /* CalendarViewModel.swift */; };
 		BEB65A4F80A1F169AAE66FCA /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 459B3084A0BE6B9A0DE34F34 /* StatsView.swift */; };
@@ -187,6 +188,7 @@
 		7D38F39B6E41A0E691E00735 /* MediaUploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaUploadService.swift; sourceTree = "<group>"; };
 		7FB8A89E56D00AB1E9359AFA /* IronLog.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IronLog.entitlements; sourceTree = "<group>"; };
 		80032C9659C0D593595D9A36 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718ABCD1234 /* TemplatePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplatePickerSheet.swift; sourceTree = "<group>"; };
 		80307970164A4CF129BD728A /* CategoryPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryPicker.swift; sourceTree = "<group>"; };
 		85B2B6CF6A28CC171C03496E /* StatsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsServiceTests.swift; sourceTree = "<group>"; };
 		8F82123ACBFC9488ED1AB195 /* BotanicalTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotanicalTextField.swift; sourceTree = "<group>"; };
@@ -470,6 +472,7 @@
 			children = (
 				80032C9659C0D593595D9A36 /* DashboardView.swift */,
 				61C524F5785739553574A8AB /* RestDayCardView.swift */,
+				A1B2C3D4E5F60718ABCD1234 /* TemplatePickerSheet.swift */,
 				31759D78CD07EC4EC5E677B1 /* WorkoutCardView.swift */,
 			);
 			path = Dashboard;
@@ -790,6 +793,7 @@
 				15FC498BED1E7E63FA5A9DF0 /* CreateExerciseSheet.swift in Sources */,
 				823B376DE91564AC36C95779 /* CustomTabBar.swift in Sources */,
 				BD5150140FCB6BE9D3E905FF /* DashboardView.swift in Sources */,
+				F1A2B3C4D5E6F7081234ABCD /* TemplatePickerSheet.swift in Sources */,
 				1AD4F392743E9E02FF62DDFA /* DashboardViewModel.swift in Sources */,
 				79C46386FD7B4336F4402572 /* DateUtils.swift in Sources */,
 				418862C9144D6D26796851C1 /* DayWorkoutListView.swift in Sources */,

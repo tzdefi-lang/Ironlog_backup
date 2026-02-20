@@ -20,17 +20,21 @@ struct ExerciseDefRow: Codable, Sendable {
     }
 
     func toDomain(source: ContentSource) -> ExerciseDef {
-        let firstUpload = data.mediaItems?.first(where: { $0.kind == .upload })
+        // Temporarily strip media/markdown from official exercises to avoid
+        // freeze caused by eager media loading. Re-enable once official
+        // content is re-populated with verified media URLs.
+        let isOfficial = source == .official
+        let firstUpload = isOfficial ? nil : data.mediaItems?.first(where: { $0.kind == .upload })
         return ExerciseDef(
             id: id,
             name: name,
-            description: description,
+            description: isOfficial ? "" : description,
             source: source,
-            readOnly: source == .official,
-            thumbnailUrl: thumbnail_url ?? data.thumbnailUrl,
-            markdown: data.markdown ?? "",
-            mediaItems: data.mediaItems ?? [],
-            mediaUrl: firstUpload?.url ?? media_url,
+            readOnly: isOfficial,
+            thumbnailUrl: isOfficial ? nil : (thumbnail_url ?? data.thumbnailUrl),
+            markdown: isOfficial ? "" : (data.markdown ?? ""),
+            mediaItems: isOfficial ? [] : (data.mediaItems ?? []),
+            mediaUrl: isOfficial ? nil : (firstUpload?.url ?? media_url),
             mediaType: {
                 if let raw = firstUpload?.contentType.rawValue ?? media_type {
                     return ExerciseMediaContentType(rawValue: raw)

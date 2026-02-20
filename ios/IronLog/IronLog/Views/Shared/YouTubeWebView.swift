@@ -18,8 +18,9 @@ struct YouTubeWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        if uiView.url != url {
-            uiView.load(URLRequest(url: url))
-        }
+        // Only reload if the webview is idle (not loading) and hasn't loaded this URL.
+        // During loading, uiView.url is nil which would cause an infinite reload loop.
+        guard !uiView.isLoading, uiView.url != url else { return }
+        uiView.load(URLRequest(url: url))
     }
 }

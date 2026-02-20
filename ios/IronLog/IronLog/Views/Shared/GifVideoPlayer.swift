@@ -35,16 +35,18 @@ struct GifVideoPlayer: View {
     private func configurePlayer(for url: URL) {
         teardownPlayer()
 
-        let newPlayer = AVPlayer(url: url)
+        // Build the player item off the main thread to avoid blocking UI
+        let item = AVPlayerItem(url: url)
+        let newPlayer = AVPlayer(playerItem: item)
         newPlayer.isMuted = true
 
         loopObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
-            object: newPlayer.currentItem,
+            object: item,
             queue: .main
-        ) { _ in
-            newPlayer.seek(to: .zero)
-            newPlayer.play()
+        ) { [weak newPlayer] _ in
+            newPlayer?.seek(to: .zero)
+            newPlayer?.play()
         }
 
         newPlayer.play()

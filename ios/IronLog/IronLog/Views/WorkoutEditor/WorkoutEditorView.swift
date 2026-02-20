@@ -22,16 +22,11 @@ struct WorkoutEditorView: View {
     @State private var editingDef: ExerciseDef?
     @State private var detailExercise: ExerciseDetailPayload?
     @State private var editMode: EditMode = .inactive
+    @State private var cachedPRs: [String: ExercisePR] = [:]
 
     private var userUnit: Unit { store.user?.preferences.defaultUnit ?? .lbs }
     private var restTimerSeconds: Int { store.user?.preferences.restTimerSeconds ?? 90 }
     private var autoRestTimer: Bool { store.user?.preferences.autoRestTimer ?? true }
-
-    private var historicalPRs: [String: ExercisePR] {
-        guard let viewModel else { return [:] }
-        let otherWorkouts = store.workouts.filter { $0.id != viewModel.workout.id }
-        return PRService.calculatePRs(workouts: otherWorkouts)
-    }
 
     var body: some View {
         Group {
@@ -67,6 +62,11 @@ struct WorkoutEditorView: View {
             // If still empty (refreshData may have returned early), load official content directly
             if store.exerciseDefs.isEmpty {
                 await store.refreshOfficialContent()
+            }
+            // Compute historical PRs once instead of every render
+            if let viewModel {
+                let otherWorkouts = store.workouts.filter { $0.id != viewModel.workout.id }
+                cachedPRs = PRService.calculatePRs(workouts: otherWorkouts)
             }
         }
         .sheet(isPresented: $showExercisePicker) {
@@ -251,7 +251,7 @@ struct WorkoutEditorView: View {
                             exercise: binding(for: exercise, in: vm),
                             exerciseDef: def,
                             unit: userUnit,
-                            historicalPRs: historicalPRs,
+                            historicalPRs: cachedPRs,
                             onAddSet: {
                                 vm.addSet(exerciseId: exercise.id) { workout in
                                     await persistWorkout(workout)
@@ -336,6 +336,7 @@ struct WorkoutEditorView: View {
         }
         .safeAreaPadding(.top, 6)
         .background(Color.botanicalBackground.ignoresSafeArea())
+        .dismissKeyboardOnTap()
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()

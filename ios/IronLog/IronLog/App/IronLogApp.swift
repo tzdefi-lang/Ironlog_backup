@@ -15,6 +15,7 @@ struct IronLogApp: App {
             || ProcessInfo.processInfo.environment["UITEST_MODE"] == "1"
         Self.configureScrollIndicatorAppearance()
         Self.configureNavigationBarAppearance()
+        Self.configureTextFieldAppearance()
 
         let schema = Schema([
             WorkoutModel.self,
@@ -65,6 +66,11 @@ struct IronLogApp: App {
         UIBarButtonItem.appearance().setTitleTextAttributes([
             .font: UIFont(name: "SourceSans3-SemiBold", size: 16) ?? UIFont.systemFont(ofSize: 16, weight: .semibold),
         ], for: .normal)
+    }
+
+    /// Removes the default iOS focus ring / shadow from text fields globally.
+    private static func configureTextFieldAppearance() {
+        UITextField.appearance().borderStyle = .none
     }
 
     private static func configureScrollIndicatorAppearance() {

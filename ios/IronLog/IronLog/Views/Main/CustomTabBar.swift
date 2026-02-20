@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CustomTabBar: View {
     @Binding var selectedTab: MainTabView.Tab
+    var onReselect: ((MainTabView.Tab) -> Void)?
     var onNewWorkout: () -> Void
 
     var body: some View {
@@ -35,8 +36,13 @@ struct CustomTabBar: View {
 
     private func tabButton(_ icon: String, tab: MainTabView.Tab) -> some View {
         Button {
-            withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
-                selectedTab = tab
+            if selectedTab == tab {
+                // Already on this tab — pop to root
+                onReselect?(tab)
+            } else {
+                withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
+                    selectedTab = tab
+                }
             }
             HapticManager.shared.selection()
         } label: {

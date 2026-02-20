@@ -21,7 +21,6 @@ struct DashboardView: View {
     @Environment(AppStore.self) private var store
 
     @State private var showTemplatePicker = false
-    @State private var selectedTemplateId: String?
     @State private var selectedCardIndex = 0
 
     private var today: String { DateUtils.formatDate() }
@@ -59,12 +58,16 @@ struct DashboardView: View {
                     carousel
                 }
 
-                if !store.templates.isEmpty {
-                    BotanicalButton(title: "Start From Template", variant: .secondary) {
-                        selectedTemplateId = store.templates.first?.id
-                        showTemplatePicker = true
-                    }
+                NavigationLink(destination: TemplatePickerView()) {
+                    Text("Start From Template")
+                        .font(.botanicalSemibold(16))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .foregroundStyle(Color.botanicalAccent)
+                        .background(Color.botanicalAccent.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
+                .buttonStyle(PressableButtonStyle())
             }
             .padding(.horizontal, BotanicalTheme.pagePadding)
             .padding(.top, 24)
@@ -76,68 +79,9 @@ struct DashboardView: View {
             await store.refreshData()
         }
         .background(Color.botanicalBackground.ignoresSafeArea())
-        .sheet(isPresented: $showTemplatePicker) {
-            NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Templates")
-                            .font(.botanicalSemibold(15))
-                            .foregroundStyle(Color.botanicalTextSecondary)
-
-                        LazyVStack(spacing: 10) {
-                            ForEach(store.templates) { template in
-                                Button {
-                                    withAnimation(BotanicalMotion.quick) {
-                                        selectedTemplateId = template.id
-                                    }
-                                    HapticManager.shared.selection()
-                                } label: {
-                                    BotanicalCard {
-                                        HStack {
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(template.name)
-                                                    .font(.botanicalSemibold(16))
-                                                    .foregroundStyle(Color.botanicalTextPrimary)
-                                                Text("\(template.exercises.count) exercises")
-                                                    .font(.botanicalBody(13))
-                                                    .foregroundStyle(Color.botanicalTextSecondary)
-                                            }
-                                            Spacer()
-                                            if selectedTemplateId == template.id {
-                                                Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundStyle(Color.botanicalAccent)
-                                            }
-                                        }
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, BotanicalTheme.pagePadding)
-                .padding(.vertical, 16)
-                .background(Color.botanicalBackground.ignoresSafeArea())
-                .navigationTitle("Template")
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Close") { showTemplatePicker = false }
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Start") {
-                            guard let selectedTemplateId else { return }
-                            Task {
-                                let created = await store.startWorkoutFromTemplate(templateId: selectedTemplateId, targetDate: today)
-                                if let created {
-                                    store.openWorkout(id: created.id)
-                                }
-                                showTemplatePicker = false
-                            }
-                            HapticManager.shared.success()
-                        }
-                    }
-                }
+        .task {
+            if store.templates.isEmpty {
+                await store.refreshOfficialContent()
             }
         }
     }

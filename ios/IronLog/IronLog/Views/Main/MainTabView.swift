@@ -10,6 +10,7 @@ struct MainTabView: View {
 
     @Environment(AppStore.self) private var store
     @State private var selectedTab: Tab = .dashboard
+    @State private var popToRootToken = 0
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -21,19 +22,23 @@ struct MainTabView: View {
             }
             .animation(.easeInOut(duration: 0.2), value: selectedTab)
 
-            VStack(spacing: 0) {
-                Spacer()
-
-                if let toast = store.activeToast {
+            // Toast floats above content without blocking interaction
+            if let toast = store.activeToast {
+                VStack {
+                    Spacer()
                     ToastView(message: toast.message)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .onTapGesture {
                             store.dismissToast()
                         }
-                        .padding(.bottom, 10)
+                        .padding(.bottom, 90)
                 }
+                .allowsHitTesting(false)
+            }
 
-                CustomTabBar(selectedTab: $selectedTab) {
+            VStack {
+                Spacer()
+                CustomTabBar(selectedTab: $selectedTab, onReselect: handleReselect) {
                     store.openNewWorkout()
                 }
                 .padding(.horizontal, 12)
@@ -65,7 +70,7 @@ struct MainTabView: View {
         case .stats:
             NavigationStack { StatsView() }
         case .profile:
-            NavigationStack { ProfileView() }
+            NavigationStack { ProfileView(popToRootToken: popToRootToken) }
         }
     }
 
@@ -74,5 +79,9 @@ struct MainTabView: View {
             .opacity(selectedTab == tab ? 1 : 0)
             .transition(.opacity)
             .allowsHitTesting(selectedTab == tab)
+    }
+
+    private func handleReselect(_ tab: Tab) {
+        popToRootToken += 1
     }
 }
