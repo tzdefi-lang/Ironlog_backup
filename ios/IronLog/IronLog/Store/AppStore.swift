@@ -16,18 +16,12 @@ private struct CachedUserIdentity: Codable, Sendable {
     var loginMethod: String?
 }
 
-private enum AppStoreSyncError: LocalizedError {
-    case invalidPayload(table: String, action: String)
-    case missingUserId(table: String)
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidPayload(let table, let action):
-            return "Invalid payload for sync item \(table).\(action)."
-        case .missingUserId(let table):
-            return "Missing user id for sync item \(table)."
-        }
-    }
+private struct UserProfileMetadataRow: Codable, Sendable {
+    var user_id: String
+    var created_at: String
+    var last_login_at: String?
+    var subscription_tier: String?
+    var subscription_status: String?
 }
 
 @MainActor
@@ -59,6 +53,7 @@ final class AppStore {
     private let officialAdminService: OfficialContentAdminService
     private let networkMonitor: NetworkMonitor
     private let syncQueue: SyncQueue
+    private let syncOperationService: SyncOperationService
     private var activeAuthAttemptId: UUID?
     private var toastQueue: [AppToast] = []
     private var toastTask: Task<Void, Never>?
@@ -73,6 +68,7 @@ final class AppStore {
         templateRepo: TemplateRepository = TemplateRepository(),
         officialRepo: OfficialContentRepository = OfficialContentRepository(),
         officialAdminService: OfficialContentAdminService = OfficialContentAdminService(),
+        syncOperationService: SyncOperationService = SyncOperationService(),
         networkMonitor: NetworkMonitor = .shared
     ) {
         self.syncQueue = SyncQueue(modelContext: modelContext)
@@ -83,6 +79,7 @@ final class AppStore {
         self.templateRepo = templateRepo
         self.officialRepo = officialRepo
         self.officialAdminService = officialAdminService
+        self.syncOperationService = syncOperationService
         self.networkMonitor = networkMonitor
         registerReconnectObserver()
         restoreThemeFromGlobal()
@@ -193,6 +190,7 @@ final class AppStore {
             SupabaseClientProvider.shared.setAuthToken(restored.token)
             let restoredProfile = await authService.restoreProfileIfPossible()
             mapPrivyUser(userId: restored.userId, profile: restoredProfile)
+            await syncUserProfileMetadata(for: restored.userId)
             await refreshData()
             await consumeSyncQueue()
             return
@@ -202,6 +200,7 @@ final class AppStore {
         SupabaseClientProvider.shared.setAuthToken(refreshed.token)
         let refreshedProfile = await authService.restoreProfileIfPossible()
         mapPrivyUser(userId: refreshed.userId, profile: refreshedProfile)
+        await syncUserProfileMetadata(for: refreshed.userId)
         await refreshData()
         await consumeSyncQueue()
     }
@@ -570,6 +569,7 @@ final class AppStore {
     private func completeLogin(exchange: TokenExchangeResult, profile: PrivyNativeProfile?) async {
         SupabaseClientProvider.shared.setAuthToken(exchange.token)
         mapPrivyUser(userId: exchange.userId, profile: profile)
+        await syncUserProfileMetadata(for: exchange.userId)
         await refreshData()
         await consumeSyncQueue()
     }
@@ -661,6 +661,57 @@ final class AppStore {
         )
     }
 
+    private func syncUserProfileMetadata(for userId: String) async {
+        guard var currentUser = user, currentUser.id == userId else {
+            return
+        }
+
+        let nowISO = ISO8601DateFormatter().string(from: Date())
+
+        do {
+            let existingRows: [UserProfileMetadataRow] = try await SupabaseClientProvider.shared.client.database
+                .from("user_profiles")
+                .select()
+                .eq("user_id", value: userId)
+                .limit(1)
+                .execute()
+                .value
+
+            let mergedRow: UserProfileMetadataRow
+            if var existing = existingRows.first {
+                existing.last_login_at = nowISO
+                if normalize(existing.subscription_tier) == nil {
+                    existing.subscription_tier = currentUser.subscriptionTier ?? "free"
+                }
+                if normalize(existing.subscription_status) == nil {
+                    existing.subscription_status = currentUser.subscriptionStatus ?? "active"
+                }
+                mergedRow = existing
+            } else {
+                mergedRow = UserProfileMetadataRow(
+                    user_id: userId,
+                    created_at: currentUser.createdAt ?? nowISO,
+                    last_login_at: nowISO,
+                    subscription_tier: currentUser.subscriptionTier ?? "free",
+                    subscription_status: currentUser.subscriptionStatus ?? "active"
+                )
+            }
+
+            try await SupabaseClientProvider.shared.client.database
+                .from("user_profiles")
+                .upsert(mergedRow)
+                .execute()
+
+            currentUser.createdAt = normalize(mergedRow.created_at) ?? currentUser.createdAt ?? nowISO
+            currentUser.lastLoginAt = normalize(mergedRow.last_login_at) ?? nowISO
+            currentUser.subscriptionTier = normalize(mergedRow.subscription_tier) ?? currentUser.subscriptionTier
+            currentUser.subscriptionStatus = normalize(mergedRow.subscription_status) ?? currentUser.subscriptionStatus
+            user = currentUser
+        } catch {
+            AppLogger.appStore.error("Failed to sync user profile metadata: \((error as NSError).localizedDescription, privacy: .public)")
+        }
+    }
+
     private func mergeDerivedCollections() {
         var defsById: [String: ExerciseDef] = [:]
         for def in officialExerciseDefs { defsById[def.id] = def }
@@ -677,7 +728,10 @@ final class AppStore {
     }
 
     private func shouldQueueForRetry(_ error: Error) -> Bool {
-        SyncErrorClassifier.disposition(for: error) == .retry
+        if !networkMonitor.isConnected {
+            AppLogger.sync.debug("Store write failed while network monitor reports offline")
+        }
+        return SyncErrorClassifier.disposition(for: error) == .retry
     }
 
     private func handleStoreWriteFailure(_ error: Error) {
@@ -726,33 +780,11 @@ final class AppStore {
     }
 
     private func executeQueueItem(_ item: SyncQueueItemModel) async throws {
-        switch (item.table, item.action) {
-        case ("workouts", "upsert"):
-            let row = try JSONDecoder().decode(WorkoutRow.self, from: item.payloadJSON)
-            try await workoutRepo.upsert(row.toDomain(), userId: row.user_id)
-        case ("workouts", "delete"):
-            let id = try extractID(from: item, key: "id")
-            try await workoutRepo.delete(id: id)
-        case ("exercise_defs", "upsert"):
-            let row = try JSONDecoder().decode(ExerciseDefRow.self, from: item.payloadJSON)
-            guard let userId = resolvedUserId(row.user_id) else {
-                throw AppStoreSyncError.missingUserId(table: item.table)
-            }
-            try await exerciseRepo.upsert(row.toDomain(source: .personal), userId: userId)
-        case ("exercise_defs", "delete"):
-            let id = try extractID(from: item, key: "id")
-            try await exerciseRepo.delete(id: id)
-        case ("workout_templates", "upsert"):
-            let row = try JSONDecoder().decode(WorkoutTemplateRow.self, from: item.payloadJSON)
-            guard let userId = resolvedUserId(row.user_id) else {
-                throw AppStoreSyncError.missingUserId(table: item.table)
-            }
-            try await templateRepo.upsert(row.toDomain(source: .personal), userId: userId)
-        case ("workout_templates", "delete"):
-            let id = try extractID(from: item, key: "id")
-            try await templateRepo.delete(id: id)
-        default:
-            AppLogger.sync.warning("Unsupported queued sync operation: table=\(item.table, privacy: .public) action=\(item.action, privacy: .public)")
+        let result = try await syncOperationService.execute(item: item)
+        if result.deduped {
+            AppLogger.sync.log("Deduped queued sync operation idempotencyKey=\(item.idempotencyKey, privacy: .public)")
+        } else if result.applied {
+            AppLogger.sync.debug("Applied queued sync operation idempotencyKey=\(item.idempotencyKey, privacy: .public)")
         }
     }
 
@@ -819,14 +851,6 @@ final class AppStore {
         restoredGlobalThemeMode = mode
     }
 
-    private func resolvedUserId(_ rowUserId: String?) -> String? {
-        let candidate = rowUserId ?? user?.id
-        guard let candidate = candidate?.trimmingCharacters(in: .whitespacesAndNewlines), !candidate.isEmpty else {
-            return nil
-        }
-        return candidate
-    }
-
     private func registerReconnectObserver() {
         NotificationCenter.default.addObserver(
             forName: .networkDidReconnect,
@@ -836,16 +860,6 @@ final class AppStore {
             AppLogger.sync.log("Received network reconnect event")
             Task { await self?.consumeSyncQueue() }
         }
-    }
-
-    private func extractID(from item: SyncQueueItemModel, key: String) throws -> String {
-        let raw = try JSONSerialization.jsonObject(with: item.payloadJSON)
-        guard let payload = raw as? [String: Any],
-              let id = payload[key] as? String,
-              !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw AppStoreSyncError.invalidPayload(table: item.table, action: item.action)
-        }
-        return id
     }
 
     private func showNextToastIfNeeded() {

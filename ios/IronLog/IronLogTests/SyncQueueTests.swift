@@ -48,4 +48,9 @@ final class SyncQueueTests: XCTestCase {
         let error = NSError(domain: "HTTP", code: 401, userInfo: [NSLocalizedDescriptionKey: "Unauthorized"])
         XCTAssertEqual(SyncErrorClassifier.disposition(for: error), .halt)
     }
+
+    func testSyncErrorClassifierRetriesSyncOperationServerErrors() {
+        let error = SyncOperationServiceError.serverError(status: 503, message: "Service unavailable")
+        XCTAssertEqual(SyncErrorClassifier.disposition(for: error), .retry)
+    }
 }
