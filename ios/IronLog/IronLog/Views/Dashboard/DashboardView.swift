@@ -1,12 +1,49 @@
 import SwiftUI
 
+private enum DashboardCarouselItem: Identifiable {
+    case today(Workout)
+    case lastCompleted(Workout)
+    case restDay
+
+    var id: String {
+        switch self {
+        case .today(let workout):
+            return "today-\(workout.id)"
+        case .lastCompleted(let workout):
+            return "last-\(workout.id)"
+        case .restDay:
+            return "rest-day"
+        }
+    }
+}
+
 struct DashboardView: View {
     @Environment(AppStore.self) private var store
 
     @State private var showTemplatePicker = false
     @State private var selectedTemplateId: String?
+    @State private var selectedCardIndex = 0
 
     private var today: String { DateUtils.formatDate() }
+
+    private var carouselItems: [DashboardCarouselItem] {
+        var items: [DashboardCarouselItem] = []
+
+        if let todays = store.workouts.first(where: { $0.date == today && !$0.completed }) {
+            items.append(.today(todays))
+        } else {
+            items.append(.restDay)
+        }
+
+        if let last = store.workouts
+            .filter({ $0.completed && $0.date < today })
+            .sorted(by: { $0.date > $1.date })
+            .first {
+            items.append(.lastCompleted(last))
+        }
+
+        return items
+    }
 
     var body: some View {
         ScrollView {
@@ -18,33 +55,8 @@ struct DashboardView: View {
                 if store.isLoading, store.workouts.isEmpty {
                     LoadingStateView(message: "Loading workouts...")
                         .transition(.opacity)
-                } else if let todays = store.workouts.first(where: { $0.date == today && !$0.completed }) {
-                    WorkoutCardView(
-                        workout: todays,
-                        subtitle: "Today",
-                        isInProgress: !todays.completed && todays.startTimestamp != nil,
-                        onOpen: { store.openWorkout(id: todays.id) },
-                        onCopy: {
-                            Task { await store.copyWorkout(workoutId: todays.id, targetDate: today) }
-                        }
-                    )
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else {
-                    RestDayCardView { store.openNewWorkout() }
-                        .transition(.opacity)
-                }
-
-                if let last = store.workouts.filter({ $0.completed && $0.date < today }).sorted(by: { $0.date > $1.date }).first {
-                    WorkoutCardView(
-                        workout: last,
-                        subtitle: "Last Completed",
-                        isInProgress: false,
-                        onOpen: { store.openWorkout(id: last.id) },
-                        onCopy: {
-                            Task { await store.copyWorkout(workoutId: last.id, targetDate: today) }
-                        }
-                    )
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    carousel
                 }
 
                 if !store.templates.isEmpty {
@@ -126,6 +138,64 @@ struct DashboardView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var carousel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            TabView(selection: $selectedCardIndex) {
+                ForEach(Array(carouselItems.enumerated()), id: \.element.id) { index, item in
+                    cardView(item)
+                        .tag(index)
+                        .padding(.vertical, 2)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 260)
+
+            HStack {
+                ForEach(Array(carouselItems.indices), id: \.self) { index in
+                    Capsule()
+                        .fill(index == selectedCardIndex ? Color.botanicalAccent : Color.botanicalMuted)
+                        .frame(width: index == selectedCardIndex ? 20 : 8, height: 8)
+                        .animation(BotanicalMotion.quick, value: selectedCardIndex)
+                }
+
+                Spacer()
+
+                Text("\(min(selectedCardIndex + 1, carouselItems.count))/\(carouselItems.count)")
+                    .font(.botanicalSemibold(12))
+                    .foregroundStyle(Color.botanicalTextSecondary)
+            }
+            .padding(.horizontal, 4)
+        }
+    }
+
+    @ViewBuilder
+    private func cardView(_ item: DashboardCarouselItem) -> some View {
+        switch item {
+        case .today(let workout):
+            WorkoutCardView(
+                workout: workout,
+                subtitle: "Today",
+                isInProgress: !workout.completed && workout.startTimestamp != nil,
+                onOpen: { store.openWorkout(id: workout.id) },
+                onCopy: {
+                    Task { await store.copyWorkout(workoutId: workout.id, targetDate: today) }
+                }
+            )
+        case .lastCompleted(let workout):
+            WorkoutCardView(
+                workout: workout,
+                subtitle: "Last Completed",
+                isInProgress: false,
+                onOpen: { store.openWorkout(id: workout.id) },
+                onCopy: {
+                    Task { await store.copyWorkout(workoutId: workout.id, targetDate: today) }
+                }
+            )
+        case .restDay:
+            RestDayCardView { store.openNewWorkout() }
         }
     }
 }

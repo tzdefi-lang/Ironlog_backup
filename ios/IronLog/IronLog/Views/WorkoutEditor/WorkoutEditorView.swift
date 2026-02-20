@@ -21,6 +21,7 @@ struct WorkoutEditorView: View {
     @State private var showReport = false
     @State private var editingDef: ExerciseDef?
     @State private var detailExercise: ExerciseDetailPayload?
+    @State private var editMode: EditMode = .inactive
 
     private var userUnit: Unit { store.user?.preferences.defaultUnit ?? .lbs }
     private var restTimerSeconds: Int { store.user?.preferences.restTimerSeconds ?? 90 }
@@ -163,6 +164,13 @@ struct WorkoutEditorView: View {
                         }
                     }
 
+                    headerActionButton(icon: "line.3.horizontal") {
+                        withAnimation(BotanicalMotion.quick) {
+                            editMode = editMode == .active ? .inactive : .active
+                        }
+                        HapticManager.shared.selection()
+                    }
+
                     Button {
                         Task {
                             if vm.workout.exercises.isEmpty {
@@ -254,6 +262,7 @@ struct WorkoutEditorView: View {
                     }
                     .onMove { from, to in
                         vm.workout.exercises.move(fromOffsets: from, toOffset: to)
+                        HapticManager.shared.medium()
                         Task { await persistWorkout(vm.workout) }
                     }
                 }
@@ -287,6 +296,7 @@ struct WorkoutEditorView: View {
             .listRowSeparator(.hidden)
             .scrollContentBackground(.hidden)
             .background(Color.clear)
+            .environment(\.editMode, $editMode)
         }
         .safeAreaPadding(.top, 6)
         .background(Color.botanicalBackground.ignoresSafeArea())
@@ -345,6 +355,8 @@ struct WorkoutEditorView: View {
             return "Start timer"
         case "pause.fill":
             return "Pause timer"
+        case "line.3.horizontal":
+            return editMode == .active ? "Stop reordering exercises" : "Reorder exercises"
         default:
             return "Workout action"
         }

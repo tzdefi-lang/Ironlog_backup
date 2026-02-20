@@ -3,13 +3,29 @@ import SwiftUI
 struct HistoryView: View {
     @Environment(AppStore.self) private var store
     @State private var viewModel = HistoryViewModel()
+    @State private var showFilterSheet = false
+
+    private var bodyPartByDefID: [String: String] {
+        Dictionary(uniqueKeysWithValues: store.exerciseDefs.map { ($0.id, $0.category) })
+    }
+
+    private var availableYears: [Int] {
+        let years = store.workouts.map {
+            Calendar.current.component(.year, from: DateUtils.parseDate($0.date))
+        }
+        return Array(Set(years)).sorted(by: >)
+    }
+
+    private var availableBodyParts: [String] {
+        let parts = store.exerciseDefs.map(\.category)
+        return Array(Set(parts)).sorted()
+    }
 
     private var filtered: [Workout] {
         store.workouts
             .filter { workout in
                 let query = viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                let matchesQuery = query.isEmpty ||
-                    workout.title.localizedCaseInsensitiveContains(query)
+                let matchesQuery = query.isEmpty || workout.title.localizedCaseInsensitiveContains(query)
 
                 let matchesStatus: Bool
                 switch viewModel.status {
@@ -21,7 +37,18 @@ struct HistoryView: View {
                     matchesStatus = true
                 }
 
-                return matchesQuery && matchesStatus
+                let workoutDate = DateUtils.parseDate(workout.date)
+                let components = Calendar.current.dateComponents([.year, .month], from: workoutDate)
+                let matchesYear = viewModel.selectedYear == nil || components.year == viewModel.selectedYear
+                let matchesMonth = viewModel.selectedMonth == nil || components.month == viewModel.selectedMonth
+
+                let workoutParts = Set(
+                    workout.exercises
+                        .compactMap { bodyPartByDefID[$0.defId] }
+                )
+                let matchesBodyPart = viewModel.selectedBodyParts.isEmpty || !workoutParts.intersection(viewModel.selectedBodyParts).isEmpty
+
+                return matchesQuery && matchesStatus && matchesYear && matchesMonth && matchesBodyPart
             }
             .sorted { $0.date > $1.date }
     }
@@ -38,6 +65,27 @@ struct HistoryView: View {
                     statusButton(title: "All", value: "all")
                     statusButton(title: "Completed", value: "completed")
                     statusButton(title: "In Progress", value: "in_progress")
+
+                    Button {
+                        showFilterSheet = true
+                        HapticManager.shared.selection()
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                            Text("Filters")
+                        }
+                        .font(.botanicalSemibold(13))
+                        .foregroundStyle(Color.botanicalTextPrimary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.botanicalAccent)
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if viewModel.hasAdvancedFilters {
+                    activeFilterChips
                 }
 
                 if store.isLoading {
@@ -113,6 +161,70 @@ struct HistoryView: View {
             await store.refreshData()
         }
         .background(Color.botanicalBackground.ignoresSafeArea())
+        .sheet(isPresented: $showFilterSheet) {
+            HistoryFilterSheet(
+                query: $viewModel.searchText,
+                status: $viewModel.status,
+                selectedYear: $viewModel.selectedYear,
+                selectedMonth: $viewModel.selectedMonth,
+                selectedBodyParts: $viewModel.selectedBodyParts,
+                availableYears: availableYears,
+                availableBodyParts: availableBodyParts
+            )
+            .presentationDetents([.medium, .large])
+        }
+    }
+
+    private var activeFilterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                if let year = viewModel.selectedYear {
+                    removableChip(title: "Year: \(year)") {
+                        viewModel.selectedYear = nil
+                    }
+                }
+
+                if let month = viewModel.selectedMonth {
+                    removableChip(title: "Month: \(monthTitle(month))") {
+                        viewModel.selectedMonth = nil
+                    }
+                }
+
+                if viewModel.status != "all" {
+                    removableChip(title: "Status: \(statusTitle(viewModel.status))") {
+                        viewModel.status = "all"
+                    }
+                }
+
+                ForEach(Array(viewModel.selectedBodyParts).sorted(), id: \.self) { part in
+                    removableChip(title: part) {
+                        viewModel.selectedBodyParts.remove(part)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
+    private func removableChip(title: String, onRemove: @escaping () -> Void) -> some View {
+        Button {
+            withAnimation(BotanicalMotion.quick) {
+                onRemove()
+            }
+            HapticManager.shared.selection()
+        } label: {
+            HStack(spacing: 6) {
+                Text(title)
+                Image(systemName: "xmark.circle.fill")
+            }
+            .font(.botanicalSemibold(12))
+            .foregroundStyle(Color.botanicalTextPrimary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.botanicalAccent.opacity(0.85))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private func statusButton(title: String, value: String) -> some View {
@@ -129,5 +241,23 @@ struct HistoryView: View {
         .background(viewModel.status == value ? Color.botanicalAccent : Color.botanicalMuted.opacity(0.6))
         .clipShape(Capsule())
         .buttonStyle(.plain)
+    }
+
+    private func monthTitle(_ month: Int) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM"
+        let components = DateComponents(year: 2026, month: month, day: 1)
+        return Calendar(identifier: .gregorian).date(from: components).map(formatter.string(from:)) ?? "M\(month)"
+    }
+
+    private func statusTitle(_ value: String) -> String {
+        switch value {
+        case "completed":
+            return "Completed"
+        case "in_progress":
+            return "In Progress"
+        default:
+            return "All"
+        }
     }
 }
