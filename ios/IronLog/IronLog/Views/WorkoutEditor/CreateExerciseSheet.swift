@@ -1,6 +1,7 @@
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
+import UIKit
 
 struct CreateExerciseSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -56,9 +57,13 @@ struct CreateExerciseSheet: View {
                     BotanicalCard {
                         VStack(alignment: .leading, spacing: 12) {
                             sectionHeader("Barbell")
-                            Toggle("Uses Barbell", isOn: $usesBarbell)
-                                .tint(Color.botanicalAccent)
-                                .font(.botanicalBody(15))
+                            HStack {
+                                Text("Uses Barbell")
+                                    .font(.botanicalBody(15))
+                                    .foregroundStyle(Color.botanicalTextPrimary)
+                                Spacer()
+                                BotanicalToggle(isOn: $usesBarbell)
+                            }
 
                             if usesBarbell {
                                 HStack(spacing: 10) {
@@ -111,19 +116,14 @@ struct CreateExerciseSheet: View {
                             }
 
                             if isUploading {
-                                HStack(spacing: 8) {
-                                    ProgressView()
-                                        .tint(Color.botanicalTextSecondary)
-                                    Text("Uploading...")
-                                        .font(.caption)
-                                        .foregroundStyle(Color.botanicalTextSecondary)
-                                }
+                                LoadingStateView(message: "Uploading...")
                             }
 
                             if let uploadError {
-                                Text(uploadError)
-                                    .font(.caption)
-                                    .foregroundStyle(.red)
+                                ErrorStateView(
+                                    title: "Upload failed",
+                                    message: LocalizedStringKey(uploadError)
+                                )
                             }
 
                             if uploadedMediaURL != nil {
@@ -162,6 +162,12 @@ struct CreateExerciseSheet: View {
                     }
                     .disabled(!canSave)
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                }
             }
         }
     }
@@ -173,6 +179,7 @@ struct CreateExerciseSheet: View {
                     withAnimation(.easeOut(duration: 0.2)) {
                         category = option
                     }
+                    HapticManager.shared.selection()
                 }
                 .font(.botanicalSemibold(13))
                 .foregroundStyle(category == option ? Color.botanicalTextPrimary : Color.botanicalTextSecondary)

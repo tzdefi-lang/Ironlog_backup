@@ -15,21 +15,24 @@ struct ExerciseCardView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top, spacing: 12) {
                     Button(action: onShowDetail) {
-                        thumbnailView
+                        HStack(alignment: .top, spacing: 12) {
+                            thumbnailView
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(exerciseDef?.name ?? "Unknown Exercise")
+                                    .font(.botanicalSemibold(19))
+                                    .foregroundStyle(Color.botanicalTextPrimary)
+
+                                Text(subtitleText)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(Color.botanicalTextSecondary)
+                                    .lineLimit(1)
+                            }
+                        }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Show exercise details")
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(exerciseDef?.name ?? "Unknown Exercise")
-                            .font(.botanicalSemibold(19))
-                            .foregroundStyle(Color.botanicalTextPrimary)
-
-                        Text(subtitleText)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(Color.botanicalTextSecondary)
-                            .lineLimit(1)
-                    }
+                    .accessibilityLabel("Show exercise details for \(exerciseDef?.name ?? "exercise")")
+                    .accessibilityIdentifier("exerciseCard.showDetailButton")
 
                     Spacer(minLength: 8)
 
@@ -37,7 +40,7 @@ struct ExerciseCardView: View {
                         Image(systemName: "xmark")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(Color.botanicalTextSecondary)
-                            .frame(width: 24, height: 24)
+                            .frame(width: 44, height: 44)
                             .background(Color.botanicalMuted.opacity(0.55))
                             .clipShape(Circle())
                             .overlay(
@@ -46,16 +49,30 @@ struct ExerciseCardView: View {
                             )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Delete exercise")
+                    .accessibilityLabel("Remove exercise")
                 }
 
                 ForEach($exercise.sets) { $set in
                     SetRowView(set: $set, unit: unit, isPR: checkIfSetIsPR(set: set)) {
                         onDeleteSet(set.id)
                     }
+                    .transition(
+                        .asymmetric(
+                            insertion: .move(edge: .bottom).combined(with: .opacity),
+                            removal: .opacity.combined(with: .scale(scale: 0.92, anchor: .trailing))
+                        )
+                    )
+                    .accessibilityIdentifier("exerciseCard.setRow")
                 }
+                .animation(.smooth(duration: 0.3), value: exercise.sets.map(\.id))
 
-                BotanicalButton(title: "Add Set", variant: .secondary, action: onAddSet)
+                BotanicalButton(title: "Add Set", variant: .secondary) {
+                    withAnimation(.smooth(duration: 0.3)) {
+                        onAddSet()
+                    }
+                    HapticManager.shared.light()
+                }
+                .accessibilityIdentifier("exerciseCard.addSetButton")
             }
         }
     }

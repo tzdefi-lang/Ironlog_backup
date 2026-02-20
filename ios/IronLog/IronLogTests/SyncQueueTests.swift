@@ -33,4 +33,24 @@ final class SyncQueueTests: XCTestCase {
         let ordered = operations.sorted { $0.timestamp < $1.timestamp }
         XCTAssertEqual(ordered.map(\.id), ["op-1", "op-2", "op-3"])
     }
+
+    func testSyncErrorClassifierRetriesNetworkErrors() {
+        let error = URLError(.timedOut)
+        XCTAssertEqual(SyncErrorClassifier.disposition(for: error), .retry)
+    }
+
+    func testSyncErrorClassifierDropsPayloadErrors() {
+        let error = DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "invalid payload"))
+        XCTAssertEqual(SyncErrorClassifier.disposition(for: error), .drop)
+    }
+
+    func testSyncErrorClassifierHaltsUnauthorizedErrors() {
+        let error = NSError(domain: "HTTP", code: 401, userInfo: [NSLocalizedDescriptionKey: "Unauthorized"])
+        XCTAssertEqual(SyncErrorClassifier.disposition(for: error), .halt)
+    }
+
+    func testSyncErrorClassifierRetriesSyncOperationServerErrors() {
+        let error = SyncOperationServiceError.serverError(status: 503, message: "Service unavailable")
+        XCTAssertEqual(SyncErrorClassifier.disposition(for: error), .retry)
+    }
 }

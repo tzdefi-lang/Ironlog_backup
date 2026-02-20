@@ -31,7 +31,7 @@ struct BotanicalButton: View {
         switch variant {
         case .primary: return .botanicalTextPrimary
         case .secondary: return .botanicalTextSecondary
-        case .danger: return Color(red: 0.98, green: 0.93, blue: 0.91)
+        case .danger: return .botanicalDangerLight
         }
     }
 
@@ -39,7 +39,7 @@ struct BotanicalButton: View {
         switch variant {
         case .primary: return .botanicalAccent
         case .secondary: return .botanicalMuted
-        case .danger: return Color(red: 0.72, green: 0.32, blue: 0.28).opacity(0.85)
+        case .danger: return .botanicalDanger.opacity(0.85)
         }
     }
 }

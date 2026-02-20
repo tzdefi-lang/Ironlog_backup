@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 private struct ExerciseDetailPayload: Identifiable {
     let id: String
@@ -20,6 +21,7 @@ struct WorkoutEditorView: View {
     @State private var showReport = false
     @State private var editingDef: ExerciseDef?
     @State private var detailExercise: ExerciseDetailPayload?
+    @State private var editMode: EditMode = .inactive
 
     private var userUnit: Unit { store.user?.preferences.defaultUnit ?? .lbs }
     private var restTimerSeconds: Int { store.user?.preferences.restTimerSeconds ?? 90 }
@@ -34,10 +36,12 @@ struct WorkoutEditorView: View {
         Group {
             if let viewModel {
                 editorBody(viewModel)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
                 SkeletonView().padding(24)
             }
         }
+        .animation(BotanicalMotion.standard, value: viewModel != nil)
         .onAppear {
             if viewModel == nil {
                 let source = workoutId.flatMap { id in store.workouts.first(where: { $0.id == id }) }
@@ -63,8 +67,8 @@ struct WorkoutEditorView: View {
                     }
                 },
                 onEdit: { def in
-                    showExercisePicker = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    withAnimation(BotanicalMotion.standard) {
+                        showExercisePicker = false
                         editingDef = def
                     }
                 },
@@ -120,20 +124,22 @@ struct WorkoutEditorView: View {
         VStack(spacing: 0) {
             HStack {
                 Button {
-                    Task {
-                        await persistWorkout(vm.workout)
-                        store.showWorkoutEditor = false
-                        dismiss()
-                    }
+                    let snapshot = vm.workout
+                    store.showWorkoutEditor = false
+                    dismiss()
+                    Task { await persistWorkout(snapshot) }
+                    HapticManager.shared.light()
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Color.botanicalTextSecondary)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 44, height: 44)
                         .background(Color.botanicalMuted.opacity(0.5))
                         .clipShape(Circle())
                 }
                 .buttonStyle(PressableButtonStyle())
+                .accessibilityLabel("Close workout editor")
+                .accessibilityIdentifier("workoutEditor.closeButton")
 
                 Spacer()
 
@@ -160,6 +166,13 @@ struct WorkoutEditorView: View {
                         }
                     }
 
+                    headerActionButton(icon: "line.3.horizontal") {
+                        withAnimation(BotanicalMotion.quick) {
+                            editMode = editMode == .active ? .inactive : .active
+                        }
+                        HapticManager.shared.selection()
+                    }
+
                     Button {
                         Task {
                             if vm.workout.exercises.isEmpty {
@@ -175,17 +188,19 @@ struct WorkoutEditorView: View {
                                 await persistWorkout(workout)
                             }
                             showReport = true
+                            HapticManager.shared.success()
                         }
                     } label: {
                         Image(systemName: "checkmark")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(.white)
-                            .frame(width: 40, height: 40)
+                            .frame(width: 44, height: 44)
                             .background(Color.botanicalEmphasis)
                             .clipShape(Circle())
                             .shadow(color: Color.botanicalEmphasis.opacity(0.4), radius: 8, x: 0, y: 4)
                     }
                     .buttonStyle(PressableButtonStyle())
+                    .accessibilityLabel("Complete workout")
                 }
             }
             .padding(.horizontal, 16)
@@ -199,7 +214,7 @@ struct WorkoutEditorView: View {
                             get: { vm.workout.title },
                             set: { vm.setTitle($0) { workout in await persistWorkout(workout) } }
                         ))
-                        .font(.display(34))
+                        .font(.display(BotanicalTheme.workoutTitleFontSize))
                         .foregroundStyle(Color.botanicalTextPrimary)
                         .padding(.vertical, 4)
 
@@ -213,6 +228,8 @@ struct WorkoutEditorView: View {
                     }
                     .listRowInsets(EdgeInsets(top: 14, leading: 20, bottom: 6, trailing: 20))
                     .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listSectionSeparator(.hidden)
                 }
 
                 Section {
@@ -249,9 +266,16 @@ struct WorkoutEditorView: View {
                     }
                     .onMove { from, to in
                         vm.workout.exercises.move(fromOffsets: from, toOffset: to)
+                        vm.workout.exercises = vm.workout.exercises.enumerated().map { index, exercise in
+                            var updated = exercise
+                            updated.sortOrder = index
+                            return updated
+                        }
+                        HapticManager.shared.medium()
                         Task { await persistWorkout(vm.workout) }
                     }
                 }
+                .listSectionSeparator(.hidden)
 
                 Section {
                     BotanicalButton(title: "Add Exercise", variant: .secondary) {
@@ -277,18 +301,32 @@ struct WorkoutEditorView: View {
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
                 .listRowBackground(Color.clear)
+                .listSectionSeparator(.hidden)
             }
             .listStyle(.plain)
             .listRowSeparator(.hidden)
             .scrollContentBackground(.hidden)
+            .scrollIndicators(.hidden)
             .background(Color.clear)
+            .environment(\.editMode, $editMode)
         }
         .safeAreaPadding(.top, 6)
         .background(Color.botanicalBackground.ignoresSafeArea())
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+            }
+        }
     }
 
     private func headerActionButton(icon: String, color: Color = .botanicalTextPrimary, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button {
+            HapticManager.shared.light()
+            action()
+        } label: {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(color)
@@ -298,6 +336,7 @@ struct WorkoutEditorView: View {
                 .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(PressableButtonStyle())
+        .accessibilityLabel(headerButtonAccessibilityLabel(icon))
     }
 
     private func binding(for exercise: ExerciseInstance, in vm: WorkoutEditorViewModel) -> Binding<ExerciseInstance> {
@@ -317,6 +356,21 @@ struct WorkoutEditorView: View {
             await store.updateWorkout(workout)
         } else {
             await store.addWorkout(workout)
+        }
+    }
+
+    private func headerButtonAccessibilityLabel(_ icon: String) -> String {
+        switch icon {
+        case "clock":
+            return "Open rest timer"
+        case "play.fill":
+            return "Start timer"
+        case "pause.fill":
+            return "Pause timer"
+        case "line.3.horizontal":
+            return editMode == .active ? "Stop reordering exercises" : "Reorder exercises"
+        default:
+            return "Workout action"
         }
     }
 }

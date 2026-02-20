@@ -8,11 +8,11 @@ struct LoadRiskView: View {
     private var statusColor: Color {
         switch insight.level {
         case .high:
-            return Color(hex: "EF4444")
+            return .botanicalDanger
         case .elevated:
             return Color.botanicalEmphasis
         case .low:
-            return Color(hex: "38BDF8")
+            return .botanicalInfo
         case .normal:
             return Color.botanicalSuccess
         case .insufficient:
@@ -70,6 +70,7 @@ struct LoadRiskView: View {
                     .padding(.vertical, 5)
                     .background(statusColor.opacity(0.12))
                     .clipShape(Capsule())
+                    .accessibilityLabel("Risk level \(statusLabel)")
             }
 
             Text(adviceText)
@@ -145,7 +146,7 @@ struct LoadRiskView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.7))
+        .background(Color.botanicalBackground.opacity(0.7))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 

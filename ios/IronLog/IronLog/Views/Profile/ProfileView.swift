@@ -41,7 +41,7 @@ struct ProfileView: View {
                     }
                 }
 
-                actionRow("history.title") { showHistory = true }
+                actionRow("history.title", identifier: "profile.historyRow") { showHistory = true }
                 actionRow("profile.settings") { showSettings = true }
 
                 if store.isAdmin {
@@ -56,6 +56,7 @@ struct ProfileView: View {
             .padding(.top, 20)
             .padding(.bottom, 120)
         }
+        .scrollIndicators(.hidden)
         .background(Color.botanicalBackground.ignoresSafeArea())
         .navigationDestination(isPresented: $showSettings) {
             ProfileSettingsView()
@@ -74,8 +75,13 @@ struct ProfileView: View {
         return name.split(separator: " ").prefix(2).compactMap { $0.first }.map(String.init).joined()
     }
 
-    private func actionRow(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    @ViewBuilder
+    private func actionRow(
+        _ title: LocalizedStringKey,
+        identifier: String? = nil,
+        action: @escaping () -> Void
+    ) -> some View {
+        let button = Button(action: action) {
             HStack {
                 Text(title)
                     .font(.botanicalSemibold(16))
@@ -85,8 +91,14 @@ struct ProfileView: View {
                     .foregroundStyle(Color.botanicalTextSecondary)
             }
             .padding(16)
-            .botanicalCard()
+                .botanicalCard()
         }
         .buttonStyle(.plain)
+
+        if let identifier {
+            button.accessibilityIdentifier(identifier)
+        } else {
+            button
+        }
     }
 }

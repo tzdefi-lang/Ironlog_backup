@@ -6,7 +6,7 @@ import Observation
 final class NetworkMonitor {
     static let shared = NetworkMonitor()
 
-    var isConnected: Bool = true
+    var isConnected: Bool = false
 
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "com.ironlog.network", qos: .utility)
@@ -17,12 +17,21 @@ final class NetworkMonitor {
                 guard let self else { return }
                 let wasOffline = !self.isConnected
                 self.isConnected = path.status == .satisfied
+                AppLogger.network.debug("Network path updated. connected=\(self.isConnected, privacy: .public)")
                 if wasOffline && self.isConnected {
+                    AppLogger.network.log("Network reconnected")
                     NotificationCenter.default.post(name: .networkDidReconnect, object: nil)
                 }
             }
         }
         monitor.start(queue: queue)
+
+        DispatchQueue.main.async { [weak self] in
+            self?.isConnected = self?.monitor.currentPath.status == .satisfied
+            if let isConnected = self?.isConnected {
+                AppLogger.network.debug("Initial network status connected=\(isConnected, privacy: .public)")
+            }
+        }
     }
 
     deinit {

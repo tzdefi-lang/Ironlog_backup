@@ -128,13 +128,13 @@ struct SessionReportView: View {
                 .font(.display(28))
 
             HStack(spacing: 20) {
-                statChip("⏱", "\(durationMinutes)min")
-                statChip("✓", "\(completion)%")
-                statChip("🏋️", "\(volume)")
+                statChip(systemName: "timer", "\(durationMinutes)min")
+                statChip(systemName: "checkmark.circle.fill", "\(completion)%")
+                statChip(systemName: "dumbbell.fill", "\(volume)")
             }
 
             if !prBreaks.isEmpty {
-                Text("🏆 \(prBreaks.count) PR broken!")
+                Label("\(prBreaks.count) PR broken!", systemImage: "trophy.fill")
                     .font(.botanicalSemibold(14))
             }
         }
@@ -144,9 +144,10 @@ struct SessionReportView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
     }
 
-    private func statChip(_ icon: String, _ text: String) -> some View {
+    private func statChip(systemName: String, _ text: String) -> some View {
         HStack(spacing: 6) {
-            Text(icon)
+            Image(systemName: systemName)
+                .font(.system(size: 12, weight: .semibold))
             Text(text)
                 .font(.botanicalSemibold(13))
         }

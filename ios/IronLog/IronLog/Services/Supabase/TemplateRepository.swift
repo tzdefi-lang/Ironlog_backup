@@ -7,23 +7,31 @@ final class TemplateRepository {
         self.provider = provider
     }
 
-    func fetchPersonal() async throws -> [WorkoutTemplate] {
+    func fetchPersonal(limit: Int = 200, offset: Int = 0) async throws -> [WorkoutTemplate] {
+        let safeLimit = max(1, limit)
+        let safeOffset = max(0, offset)
         let rows: [WorkoutTemplateRow] = try await provider.client.database
             .from("workout_templates")
             .select()
             .order("created_at", ascending: false)
+            .range(from: safeOffset, to: safeOffset + safeLimit - 1)
             .execute()
             .value
+        AppLogger.repository.debug("Fetched personal templates count=\(rows.count, privacy: .public) offset=\(safeOffset, privacy: .public) limit=\(safeLimit, privacy: .public)")
         return rows.map { $0.toDomain(source: .personal) }
     }
 
-    func fetchOfficial() async throws -> [WorkoutTemplate] {
+    func fetchOfficial(limit: Int = 200, offset: Int = 0) async throws -> [WorkoutTemplate] {
+        let safeLimit = max(1, limit)
+        let safeOffset = max(0, offset)
         let rows: [WorkoutTemplateRow] = try await provider.client.database
             .from("official_workout_templates")
             .select()
             .order("created_at", ascending: false)
+            .range(from: safeOffset, to: safeOffset + safeLimit - 1)
             .execute()
             .value
+        AppLogger.repository.debug("Fetched official templates count=\(rows.count, privacy: .public) offset=\(safeOffset, privacy: .public) limit=\(safeLimit, privacy: .public)")
         return rows.map { $0.toDomain(source: .official) }
     }
 

@@ -10,6 +10,7 @@ struct ExercisePickerSheet: View {
     @State private var category: String = "All"
     @State private var searchText = ""
     @State private var previewDef: ExerciseDef?
+    @State private var isFiltering = false
 
     private var categories: [String] {
         ["All"] + Constants.bodyPartOptions
@@ -36,10 +37,7 @@ struct ExercisePickerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                TextField("Search exercises...", text: $searchText)
-                    .padding(10)
-                    .background(Color.botanicalSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                BotanicalSearchField(placeholder: "Search exercises...", text: $searchText)
                     .padding(.horizontal, 16)
 
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -49,6 +47,7 @@ struct ExercisePickerSheet: View {
                                 withAnimation(.easeOut(duration: 0.2)) {
                                     category = item
                                 }
+                                HapticManager.shared.selection()
                             }
                             .font(.botanicalSemibold(13))
                             .foregroundStyle(category == item ? Color.botanicalTextPrimary : Color.botanicalTextSecondary)
@@ -63,12 +62,14 @@ struct ExercisePickerSheet: View {
 
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        if filtered.isEmpty {
-                            Text("No exercises found")
-                                .font(.botanicalBody(14))
-                                .foregroundStyle(Color.botanicalTextSecondary)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .padding(.vertical, 28)
+                        if isFiltering {
+                            LoadingStateView(message: "Filtering exercises...")
+                        } else if filtered.isEmpty {
+                            EmptyStateView(
+                                icon: "magnifyingglass",
+                                title: "No exercises found",
+                                description: "Try a different name or category."
+                            )
                         }
 
                         ForEach(filtered) { def in
@@ -110,8 +111,10 @@ struct ExercisePickerSheet: View {
                                     Image(systemName: "info.circle")
                                         .font(.system(size: 20))
                                         .foregroundStyle(Color.botanicalTextSecondary)
+                                        .frame(width: 44, height: 44)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("Exercise info")
 
                                 Button {
                                     onSelect(def)
@@ -120,8 +123,10 @@ struct ExercisePickerSheet: View {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.system(size: 22, weight: .semibold))
                                         .foregroundStyle(Color.botanicalAccent)
+                                        .frame(width: 44, height: 44)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel("Add exercise")
                             }
                             .contentShape(Rectangle())
                             .padding(.vertical, 10)
@@ -138,6 +143,7 @@ struct ExercisePickerSheet: View {
                     }
                     .padding(.horizontal, 16)
                 }
+                .animation(BotanicalMotion.quick, value: filtered.map(\.id))
             }
             .background(Color.botanicalBackground.ignoresSafeArea())
             .navigationTitle("Pick Exercise")
@@ -146,6 +152,12 @@ struct ExercisePickerSheet: View {
                     Button("Done") { dismiss() }
                 }
             }
+        }
+        .onChange(of: searchText) { _, _ in
+            triggerFilteringState()
+        }
+        .onChange(of: category) { _, _ in
+            triggerFilteringState()
         }
         .sheet(item: $previewDef) { def in
             ExerciseDetailModal(exerciseDef: def, currentExercise: nil, workouts: [])
@@ -174,6 +186,14 @@ struct ExercisePickerSheet: View {
                     Image(systemName: "figure.strengthtraining.traditional")
                         .foregroundStyle(Color.botanicalTextSecondary)
                 )
+        }
+    }
+
+    private func triggerFilteringState() {
+        isFiltering = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(120))
+            isFiltering = false
         }
     }
 }

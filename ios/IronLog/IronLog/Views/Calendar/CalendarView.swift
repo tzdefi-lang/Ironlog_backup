@@ -5,6 +5,7 @@ struct CalendarView: View {
     @State private var viewModel = CalendarViewModel()
     @State private var selectedDate = DateUtils.formatDate()
     @State private var calendarID = UUID()
+    @State private var dragOffset: CGFloat = 0
 
     private var monthTitle: String {
         let formatter = DateFormatter()
@@ -48,9 +49,11 @@ struct CalendarView: View {
                             viewModel.previousMonth()
                             calendarID = UUID()
                         }
+                        HapticManager.shared.selection()
                     } label: {
                         Image(systemName: "chevron.left")
                     }
+                    .accessibilityLabel("Previous month")
 
                     Spacer()
 
@@ -64,9 +67,11 @@ struct CalendarView: View {
                             viewModel.nextMonth()
                             calendarID = UUID()
                         }
+                        HapticManager.shared.selection()
                     } label: {
                         Image(systemName: "chevron.right")
                     }
+                    .accessibilityLabel("Next month")
                 }
                 .buttonStyle(.plain)
 
@@ -89,6 +94,7 @@ struct CalendarView: View {
 
                             Button {
                                 selectedDate = dayString
+                                HapticManager.shared.selection()
                             } label: {
                                 VStack(spacing: 4) {
                                     Text(String(Calendar.current.component(.day, from: day)))
@@ -102,6 +108,7 @@ struct CalendarView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             }
                             .buttonStyle(.plain)
+                            .accessibilityLabel("Select \(dayString)")
                         }
                     }
                     .id(calendarID)
@@ -110,6 +117,40 @@ struct CalendarView: View {
                         removal: .move(edge: viewModel.lastNavigationDirection == .forward ? .leading : .trailing)
                     ))
                 }
+                .offset(x: dragOffset)
+                .animation(.interactiveSpring(duration: 0.15), value: dragOffset)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 20)
+                        .onChanged { value in
+                            guard abs(value.translation.width) > abs(value.translation.height) * 1.5 else { return }
+                            dragOffset = value.translation.width * 0.4
+                        }
+                        .onEnded { value in
+                            let horizontal = value.translation.width
+                            let velocity = value.predictedEndTranslation.width
+                            let isHorizontal = abs(value.translation.width) > abs(value.translation.height) * 1.5
+
+                            if isHorizontal, (horizontal < -50 || velocity < -200) {
+                                withAnimation(.easeInOut(duration: 0.28)) {
+                                    viewModel.nextMonth()
+                                    calendarID = UUID()
+                                    dragOffset = 0
+                                }
+                                HapticManager.shared.selection()
+                            } else if isHorizontal, (horizontal > 50 || velocity > 200) {
+                                withAnimation(.easeInOut(duration: 0.28)) {
+                                    viewModel.previousMonth()
+                                    calendarID = UUID()
+                                    dragOffset = 0
+                                }
+                                HapticManager.shared.selection()
+                            } else {
+                                withAnimation(.spring(duration: 0.2, bounce: 0.1)) {
+                                    dragOffset = 0
+                                }
+                            }
+                        }
+                )
 
                 DayWorkoutListView(
                     workouts: selectedWorkouts,
@@ -119,6 +160,9 @@ struct CalendarView: View {
                     },
                     onDelete: { workout in
                         Task { await store.deleteWorkout(id: workout.id) }
+                    },
+                    onStartWorkout: {
+                        store.openNewWorkout()
                     }
                 )
             }
@@ -126,7 +170,11 @@ struct CalendarView: View {
             .padding(.top, 20)
             .padding(.bottom, 24)
         }
+        .scrollIndicators(.hidden)
         .safeAreaPadding(.top, 6)
+        .refreshable {
+            await store.refreshData()
+        }
         .safeAreaInset(edge: .bottom) {
             Color.clear
                 .frame(height: 98)

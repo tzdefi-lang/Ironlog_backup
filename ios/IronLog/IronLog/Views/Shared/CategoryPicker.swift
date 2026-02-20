@@ -10,5 +10,9 @@ struct CategoryPicker: View {
             }
         }
         .pickerStyle(.menu)
+        .accessibilityLabel("Select body part category")
+        .onChange(of: value) { _, _ in
+            HapticManager.shared.selection()
+        }
     }
 }

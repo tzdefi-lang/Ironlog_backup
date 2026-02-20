@@ -19,6 +19,7 @@ struct MainTabView: View {
                 tabLayer(.stats)
                 tabLayer(.profile)
             }
+            .animation(.easeInOut(duration: 0.2), value: selectedTab)
 
             VStack(spacing: 10) {
                 if let toast = store.activeToast {
@@ -38,7 +39,7 @@ struct MainTabView: View {
         }
         .animation(.easeOut(duration: 0.2), value: store.activeToast?.id)
         .background(Color.botanicalBackground.ignoresSafeArea())
-        .sheet(
+        .fullScreenCover(
             isPresented: Binding(
                 get: { store.showWorkoutEditor },
                 set: { store.showWorkoutEditor = $0 }
@@ -47,8 +48,6 @@ struct MainTabView: View {
             NavigationStack {
                 WorkoutEditorView(workoutId: store.activeWorkoutID)
             }
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
         }
     }
 
@@ -69,6 +68,7 @@ struct MainTabView: View {
     private func tabLayer(_ tab: Tab) -> some View {
         tabContent(tab)
             .opacity(selectedTab == tab ? 1 : 0)
+            .transition(.opacity)
             .allowsHitTesting(selectedTab == tab)
     }
 }

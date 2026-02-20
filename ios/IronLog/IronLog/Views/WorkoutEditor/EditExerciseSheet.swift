@@ -1,6 +1,7 @@
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
+import UIKit
 
 struct EditExerciseSheet: View {
     @Environment(AppStore.self) private var store
@@ -23,70 +24,18 @@ struct EditExerciseSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Basic") {
-                    TextField("Name", text: $draft.name)
-                    TextField("Description", text: $draft.description, axis: .vertical)
-                        .lineLimit(3 ... 6)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    basicCard
+                    categoryCard
+                    barbellCard
+                    mediaCard
                 }
-
-                Section("Category") {
-                    Picker("Category", selection: $draft.category) {
-                        ForEach(Constants.bodyPartOptions, id: \.self) { Text($0).tag($0) }
-                    }
-                }
-
-                Section("Barbell") {
-                    Toggle("Uses Barbell", isOn: $draft.usesBarbell)
-                    if draft.usesBarbell {
-                        HStack {
-                            Text("Bar Weight")
-                            Spacer()
-                            TextField("kg", value: $draft.barbellWeight, format: .number)
-                                .keyboardType(.decimalPad)
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 90)
-                            Text("kg")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-
-                Section("Media") {
-                    PhotosPicker(selection: $selectedPhoto, matching: .any(of: [.images, .videos])) {
-                        HStack {
-                            Image(systemName: "photo.on.rectangle.angled")
-                            Text(uploadedMediaURL == nil ? "Replace with Photo or Video" : "Media Uploaded ✓")
-                        }
-                    }
-                    .onChange(of: selectedPhoto) { _, item in
-                        guard let item else { return }
-                        Task { await uploadMedia(from: item) }
-                    }
-
-                    if isUploading {
-                        ProgressView("Uploading...")
-                    }
-
-                    if let uploadError {
-                        Text(uploadError)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                    }
-
-                    if uploadedMediaURL != nil {
-                        Button("Remove Uploaded Media", role: .destructive) {
-                            uploadedMediaURL = nil
-                            uploadedMediaType = nil
-                        }
-                    }
-
-                    TextField("YouTube Link (optional)", text: $youtubeLink)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                }
+                .padding(.horizontal, BotanicalTheme.pagePadding)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
             }
+            .background(Color.botanicalBackground.ignoresSafeArea())
             .navigationTitle("Edit Exercise")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -98,6 +47,132 @@ struct EditExerciseSheet: View {
                     }
                     .disabled(draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isUploading)
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                }
+            }
+        }
+    }
+
+    private var basicCard: some View {
+        BotanicalCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Basic")
+                    .font(.botanicalSemibold(15))
+                    .foregroundStyle(Color.botanicalTextSecondary)
+
+                TextField("Name", text: $draft.name)
+                    .textFieldStyle(.plain)
+                    .padding(12)
+                    .background(Color.botanicalBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                TextField("Description", text: $draft.description, axis: .vertical)
+                    .lineLimit(3 ... 6)
+                    .textFieldStyle(.plain)
+                    .padding(12)
+                    .background(Color.botanicalBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+        }
+    }
+
+    private var categoryCard: some View {
+        BotanicalCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Category")
+                    .font(.botanicalSemibold(15))
+                    .foregroundStyle(Color.botanicalTextSecondary)
+
+                BotanicalSegmentedControl(
+                    options: Constants.bodyPartOptions,
+                    selection: $draft.category,
+                    title: { $0 }
+                )
+            }
+        }
+    }
+
+    private var barbellCard: some View {
+        BotanicalCard {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Uses Barbell")
+                        .font(.botanicalBody(15))
+                        .foregroundStyle(Color.botanicalTextPrimary)
+                    Spacer()
+                    BotanicalToggle(isOn: $draft.usesBarbell)
+                }
+
+                if draft.usesBarbell {
+                    HStack {
+                        Text("Bar Weight")
+                            .font(.botanicalBody(14))
+                        Spacer()
+                        NumberStepperField(value: $draft.barbellWeight, step: 2.5)
+                            .frame(width: 170)
+                    }
+                }
+            }
+        }
+    }
+
+    private var mediaCard: some View {
+        BotanicalCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Media")
+                    .font(.botanicalSemibold(15))
+                    .foregroundStyle(Color.botanicalTextSecondary)
+
+                PhotosPicker(selection: $selectedPhoto, matching: .any(of: [.images, .videos])) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "photo.on.rectangle.angled")
+                        Text(uploadedMediaURL == nil ? "Replace with Photo or Video" : "Media Uploaded")
+                        if uploadedMediaURL != nil {
+                            Image(systemName: "checkmark.circle.fill")
+                        }
+                    }
+                    .font(.botanicalBody(14))
+                    .foregroundStyle(Color.botanicalTextPrimary)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.botanicalMuted.opacity(0.6))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .onChange(of: selectedPhoto) { _, item in
+                    guard let item else { return }
+                    Task { await uploadMedia(from: item) }
+                }
+
+                if isUploading {
+                    LoadingStateView(message: "Uploading media...")
+                }
+
+                if let uploadError {
+                    ErrorStateView(
+                        title: "Upload failed",
+                        message: LocalizedStringKey(uploadError)
+                    )
+                }
+
+                if uploadedMediaURL != nil {
+                    BotanicalButton(title: "Remove Uploaded Media", variant: .danger) {
+                        uploadedMediaURL = nil
+                        uploadedMediaType = nil
+                    }
+                }
+
+                TextField("YouTube Link (optional)", text: $youtubeLink)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .textFieldStyle(.plain)
+                    .padding(12)
+                    .background(Color.botanicalBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
         }
     }

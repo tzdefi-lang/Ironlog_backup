@@ -47,21 +47,36 @@ struct ProfileSettingsView: View {
                             .font(.botanicalBody(15))
                             .foregroundStyle(Color.botanicalTextPrimary)
                         Spacer()
-                        botanicalToggle(isOn: Binding(
-                            get: { prefs.notificationsEnabled },
-                            set: { store.setNotificationsEnabled($0) }
-                        ))
+                        BotanicalToggle(
+                            isOn: Binding(
+                                get: { prefs.notificationsEnabled },
+                                set: { store.setNotificationsEnabled($0) }
+                            ),
+                            onToggle: { _ in
+                                HapticManager.shared.light()
+                            }
+                        )
                     }
                 }
 
-                settingCard(title: "profile.exportData") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("profile.exportData")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.botanicalTextSecondary)
+                        .tracking(1.2)
+
                     VStack(spacing: 10) {
                         BotanicalButton(title: "profile.exportJson", variant: .secondary) { exportJSON() }
                         BotanicalButton(title: "profile.exportCsv", variant: .secondary) { exportCSV() }
                     }
                 }
 
-                settingCard(title: "profile.account") {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("profile.account")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.botanicalTextSecondary)
+                        .tracking(1.2)
+
                     BotanicalButton(title: "common.signOut", variant: .danger) {
                         Task { await store.logout() }
                     }
@@ -71,6 +86,7 @@ struct ProfileSettingsView: View {
             .padding(.top, 16)
             .padding(.bottom, 60)
         }
+        .scrollIndicators(.hidden)
         .background(Color.botanicalBackground.ignoresSafeArea())
         .navigationTitle("profile.settingsTitle")
         .sheet(isPresented: $showExporter) {
@@ -150,25 +166,6 @@ struct ProfileSettingsView: View {
             return "zh-Hans"
         }
         return raw
-    }
-
-    private func botanicalToggle(isOn: Binding<Bool>) -> some View {
-        Button {
-            isOn.wrappedValue.toggle()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        } label: {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(isOn.wrappedValue ? Color.botanicalAccent : Color.botanicalMuted)
-                .frame(width: 50, height: 28)
-                .overlay(
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 22, height: 22)
-                        .offset(x: isOn.wrappedValue ? 11 : -11)
-                        .animation(.spring(duration: 0.25, bounce: 0.25), value: isOn.wrappedValue)
-                )
-        }
-        .buttonStyle(.plain)
     }
 
     private func exportJSON() {

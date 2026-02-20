@@ -3,6 +3,7 @@ import SwiftUI
 struct StatsView: View {
     @Environment(AppStore.self) private var store
     @State private var viewModel = StatsViewModel()
+    @State private var animateCards = false
 
     private var completed: [Workout] {
         store.workouts.filter(\.completed).sorted { $0.date < $1.date }
@@ -79,12 +80,20 @@ struct StatsView: View {
                 Text("Stats")
                     .font(.display(40))
 
-                if completed.isEmpty {
+                if store.isLoading, completed.isEmpty {
+                    LoadingStateView(message: "Calculating stats...")
+                } else if completed.isEmpty {
                     emptyState
                 } else {
                     LoadRiskView(insight: loadInsight, trendPoints: loadTrendPoints)
+                        .opacity(animateCards ? 1 : 0)
+                        .offset(y: animateCards ? 0 : 12)
+                        .animation(BotanicalMotion.standard.delay(0.02), value: animateCards)
 
                     WeeklyFrequencyChart(points: weeklyFreqData)
+                        .opacity(animateCards ? 1 : 0)
+                        .offset(y: animateCards ? 0 : 12)
+                        .animation(BotanicalMotion.standard.delay(0.08), value: animateCards)
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text("WEEKLY VOLUME")
@@ -95,6 +104,9 @@ struct StatsView: View {
                     }
                     .padding(16)
                     .botanicalCard()
+                    .opacity(animateCards ? 1 : 0)
+                    .offset(y: animateCards ? 0 : 12)
+                    .animation(BotanicalMotion.standard.delay(0.14), value: animateCards)
 
                     if !selectableExercises.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
@@ -131,12 +143,21 @@ struct StatsView: View {
                         }
                         .padding(16)
                         .botanicalCard()
+                        .opacity(animateCards ? 1 : 0)
+                        .offset(y: animateCards ? 0 : 12)
+                        .animation(BotanicalMotion.standard.delay(0.20), value: animateCards)
                     }
 
                     WorkoutDurationChart(points: durationData)
+                        .opacity(animateCards ? 1 : 0)
+                        .offset(y: animateCards ? 0 : 12)
+                        .animation(BotanicalMotion.standard.delay(0.26), value: animateCards)
 
                     if !bodyPartDist.isEmpty {
                         BodyPartPieChart(values: bodyPartDist)
+                            .opacity(animateCards ? 1 : 0)
+                            .offset(y: animateCards ? 0 : 12)
+                            .animation(BotanicalMotion.standard.delay(0.32), value: animateCards)
                     }
                 }
             }
@@ -144,21 +165,24 @@ struct StatsView: View {
             .padding(.top, 20)
             .padding(.bottom, 120)
         }
+        .scrollIndicators(.hidden)
         .background(Color.botanicalBackground.ignoresSafeArea())
+        .refreshable {
+            await store.refreshData()
+        }
+        .onAppear {
+            animateCards = false
+            withAnimation(BotanicalMotion.standard) {
+                animateCards = true
+            }
+        }
     }
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "chart.bar.xaxis")
-                .font(.system(size: 40))
-                .foregroundStyle(Color.botanicalMuted)
-            Text("Complete workouts to see your stats")
-                .font(.botanicalBody(15))
-                .foregroundStyle(Color.botanicalTextSecondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
-        .botanicalCard()
+        EmptyStateView(
+            icon: "chart.bar.xaxis",
+            title: "No stats yet",
+            description: "Complete workouts to unlock volume, frequency and risk insights."
+        )
     }
 }
