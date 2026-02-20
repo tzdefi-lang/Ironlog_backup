@@ -4,6 +4,7 @@ enum BotanicalTheme {
     static let controlCornerRadius: CGFloat = 18
     static let cardCornerRadius: CGFloat = 24
     static let pagePadding: CGFloat = 24
+    static let workoutTitleFontSize: CGFloat = 34
     static let chartPalette: [Color] = [
         Color(hex: "8C9A84"),
         Color(hex: "7F9B97"),

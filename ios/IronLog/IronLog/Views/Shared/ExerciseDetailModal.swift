@@ -259,7 +259,7 @@ struct ExerciseDetailModal: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(.black.opacity(0.55))
+                    .background(Color.botanicalOverlay)
                     .clipShape(Capsule())
                     .padding(10)
             }

@@ -82,7 +82,7 @@ struct SetRowView: View {
                 .frame(maxWidth: .infinity)
 
             Text(unit.rawValue.uppercased())
-                .font(.system(size: 12, weight: .semibold))
+                .font(.botanicalSemibold(12))
                 .foregroundStyle(Color.botanicalTextSecondary)
         }
         .padding(.horizontal, 14)
@@ -105,7 +105,7 @@ struct SetRowView: View {
                 .frame(maxWidth: .infinity)
 
             Text("REPS")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.botanicalSemibold(12))
                 .foregroundStyle(Color.botanicalTextSecondary)
         }
         .padding(.horizontal, 14)

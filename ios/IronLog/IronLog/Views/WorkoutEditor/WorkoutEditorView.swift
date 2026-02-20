@@ -199,7 +199,7 @@ struct WorkoutEditorView: View {
                             get: { vm.workout.title },
                             set: { vm.setTitle($0) { workout in await persistWorkout(workout) } }
                         ))
-                        .font(.display(34))
+                        .font(.display(BotanicalTheme.workoutTitleFontSize))
                         .foregroundStyle(Color.botanicalTextPrimary)
                         .padding(.vertical, 4)
 

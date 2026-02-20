@@ -4,15 +4,7 @@ import SwiftUI
 struct BodyPartPieChart: View {
     let values: [(category: String, value: Double)]
 
-    private let colors: [Color] = [
-        Color(hex: "8C9A84"),
-        Color(hex: "7F9B97"),
-        Color(hex: "C27B66"),
-        Color(hex: "6F8D73"),
-        Color(hex: "AFBCAA"),
-        Color(hex: "9FB298"),
-        Color(hex: "D49B87"),
-    ]
+    private let colors = BotanicalTheme.chartPalette
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

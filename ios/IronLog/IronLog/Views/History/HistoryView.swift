@@ -32,15 +32,7 @@ struct HistoryView: View {
                 Text("History")
                     .font(.display(40))
 
-                TextField("Search workouts...", text: $viewModel.searchText)
-                    .textFieldStyle(.plain)
-                    .padding(12)
-                    .background(Color.botanicalSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.botanicalBorderSubtle, lineWidth: 1)
-                    )
+                BotanicalSearchField(placeholder: "Search workouts...", text: $viewModel.searchText)
 
                 HStack(spacing: 8) {
                     statusButton(title: "All", value: "all")
@@ -90,8 +82,8 @@ struct HistoryView: View {
                                 } label: {
                                     Image(systemName: "trash")
                                         .foregroundStyle(.white)
-                                        .frame(width: 42, height: 42)
-                                        .background(Color.red)
+                                        .frame(width: 44, height: 44)
+                                        .background(Color.botanicalDanger)
                                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 }
                                 .buttonStyle(.plain)

@@ -47,10 +47,15 @@ struct ProfileSettingsView: View {
                             .font(.botanicalBody(15))
                             .foregroundStyle(Color.botanicalTextPrimary)
                         Spacer()
-                        botanicalToggle(isOn: Binding(
-                            get: { prefs.notificationsEnabled },
-                            set: { store.setNotificationsEnabled($0) }
-                        ))
+                        BotanicalToggle(
+                            isOn: Binding(
+                                get: { prefs.notificationsEnabled },
+                                set: { store.setNotificationsEnabled($0) }
+                            ),
+                            onToggle: { _ in
+                                HapticManager.shared.light()
+                            }
+                        )
                     }
                 }
 
@@ -150,25 +155,6 @@ struct ProfileSettingsView: View {
             return "zh-Hans"
         }
         return raw
-    }
-
-    private func botanicalToggle(isOn: Binding<Bool>) -> some View {
-        Button {
-            isOn.wrappedValue.toggle()
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        } label: {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(isOn.wrappedValue ? Color.botanicalAccent : Color.botanicalMuted)
-                .frame(width: 50, height: 28)
-                .overlay(
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 22, height: 22)
-                        .offset(x: isOn.wrappedValue ? 11 : -11)
-                        .animation(.spring(duration: 0.25, bounce: 0.25), value: isOn.wrappedValue)
-                )
-        }
-        .buttonStyle(.plain)
     }
 
     private func exportJSON() {

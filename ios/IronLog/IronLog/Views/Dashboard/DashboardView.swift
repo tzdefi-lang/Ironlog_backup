@@ -55,29 +55,46 @@ struct DashboardView: View {
         .background(Color.botanicalBackground.ignoresSafeArea())
         .sheet(isPresented: $showTemplatePicker) {
             NavigationStack {
-                List {
-                    Section("Templates") {
-                        ForEach(store.templates) { template in
-                            Button {
-                                selectedTemplateId = template.id
-                            } label: {
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text(template.name)
-                                        Text("\(template.exercises.count) exercises")
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Templates")
+                            .font(.botanicalSemibold(15))
+                            .foregroundStyle(Color.botanicalTextSecondary)
+
+                        LazyVStack(spacing: 10) {
+                            ForEach(store.templates) { template in
+                                Button {
+                                    withAnimation(BotanicalMotion.quick) {
+                                        selectedTemplateId = template.id
                                     }
-                                    Spacer()
-                                    if selectedTemplateId == template.id {
-                                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.botanicalAccent)
+                                } label: {
+                                    BotanicalCard {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(template.name)
+                                                    .font(.botanicalSemibold(16))
+                                                    .foregroundStyle(Color.botanicalTextPrimary)
+                                                Text("\(template.exercises.count) exercises")
+                                                    .font(.botanicalBody(13))
+                                                    .foregroundStyle(Color.botanicalTextSecondary)
+                                            }
+                                            Spacer()
+                                            if selectedTemplateId == template.id {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundStyle(Color.botanicalAccent)
+                                            }
+                                        }
                                     }
                                 }
+                                .buttonStyle(.plain)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
                             }
                         }
                     }
                 }
-                .listStyle(.insetGrouped)
+                .padding(.horizontal, BotanicalTheme.pagePadding)
+                .padding(.vertical, 16)
+                .background(Color.botanicalBackground.ignoresSafeArea())
                 .navigationTitle("Template")
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {

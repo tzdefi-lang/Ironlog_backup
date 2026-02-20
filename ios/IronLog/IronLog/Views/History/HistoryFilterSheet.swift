@@ -12,15 +12,7 @@ struct HistoryFilterSheet: View {
                 Text("Filters")
                     .font(.display(32))
 
-                TextField("Workout title", text: $query)
-                    .textFieldStyle(.plain)
-                    .padding(12)
-                    .background(Color.botanicalSurface)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.botanicalBorderSubtle, lineWidth: 1)
-                    )
+                BotanicalSearchField(placeholder: "Workout title", text: $query)
 
                 HStack(spacing: 8) {
                     filterButton("All", value: "all")
