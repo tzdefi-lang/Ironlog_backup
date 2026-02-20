@@ -87,11 +87,34 @@ struct EditExerciseSheet: View {
                     .font(.botanicalSemibold(15))
                     .foregroundStyle(Color.botanicalTextSecondary)
 
-                BotanicalSegmentedControl(
-                    options: Constants.bodyPartOptions,
-                    selection: $draft.category,
-                    title: { $0 }
-                )
+                Menu {
+                    ForEach(Constants.bodyPartOptions, id: \.self) { option in
+                        Button {
+                            draft.category = option
+                            HapticManager.shared.selection()
+                        } label: {
+                            HStack {
+                                Text(option)
+                                if draft.category == option {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text(draft.category)
+                            .font(.botanicalSemibold(15))
+                            .foregroundStyle(Color.botanicalTextPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color.botanicalTextSecondary)
+                    }
+                    .padding(12)
+                    .background(Color.botanicalBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
             }
         }
     }

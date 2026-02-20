@@ -557,8 +557,8 @@ final class AppStore {
 
     func setRestTimerSeconds(_ seconds: Int) {
         guard var user else { return }
-        let options = [30, 60, 90, 120, 180]
-        user.preferences.restTimerSeconds = options.contains(seconds) ? seconds : 90
+        let clamped = max(10, min(300, seconds))
+        user.preferences.restTimerSeconds = clamped
         self.user = user
         savePreferences(user.preferences)
     }
@@ -574,6 +574,13 @@ final class AppStore {
     func setNotificationsEnabled(_ enabled: Bool) {
         guard var user else { return }
         user.preferences.notificationsEnabled = enabled
+        self.user = user
+        savePreferences(user.preferences)
+    }
+
+    func setAutoRestTimer(_ enabled: Bool) {
+        guard var user else { return }
+        user.preferences.autoRestTimer = enabled
         self.user = user
         savePreferences(user.preferences)
     }

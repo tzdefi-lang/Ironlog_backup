@@ -5,6 +5,8 @@ struct ProfileSettingsView: View {
     @Environment(AppStore.self) private var store
     @State private var showExporter = false
     @State private var exportURL: URL?
+    @State private var cacheSize: String = "…"
+    @State private var showClearCacheConfirm = false
     @AppStorage("ironlog_language") private var language = Locale.current.language.languageCode?.identifier ?? "en"
 
     private var prefs: UserPreferences { store.user?.preferences ?? .default }
@@ -59,6 +61,24 @@ struct ProfileSettingsView: View {
                     }
                 }
 
+                settingCard(title: "profile.restTimer") {
+                    HStack {
+                        Text("profile.autoRestTimer")
+                            .font(.botanicalBody(15))
+                            .foregroundStyle(Color.botanicalTextPrimary)
+                        Spacer()
+                        BotanicalToggle(
+                            isOn: Binding(
+                                get: { prefs.autoRestTimer },
+                                set: { store.setAutoRestTimer($0) }
+                            ),
+                            onToggle: { _ in
+                                HapticManager.shared.light()
+                            }
+                        )
+                    }
+                }
+
                 VStack(alignment: .leading, spacing: 12) {
                     Text("profile.exportData")
                         .font(.system(size: 11, weight: .bold))
@@ -71,16 +91,26 @@ struct ProfileSettingsView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("profile.account")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color.botanicalTextSecondary)
-                        .tracking(1.2)
+                settingCard(title: "profile.clearCacheTitle") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("profile.clearCacheHint")
+                                    .font(.botanicalBody(13))
+                                    .foregroundStyle(Color.botanicalTextSecondary)
+                            }
+                            Spacer()
+                            Text(cacheSize)
+                                .font(.botanicalSemibold(14))
+                                .foregroundStyle(Color.botanicalAccent)
+                        }
 
-                    BotanicalButton(title: "common.signOut", variant: .danger) {
-                        Task { await store.logout() }
+                        BotanicalButton(title: "profile.clearCacheTitle", variant: .danger) {
+                            showClearCacheConfirm = true
+                        }
                     }
                 }
+
             }
             .padding(.horizontal, 24)
             .padding(.top, 16)
@@ -89,6 +119,19 @@ struct ProfileSettingsView: View {
         .scrollIndicators(.hidden)
         .background(Color.botanicalBackground.ignoresSafeArea())
         .navigationTitle("profile.settingsTitle")
+        .onAppear { calculateCacheSize() }
+        .confirmationDialog(
+            Text("profile.clearCacheConfirmTitle"),
+            isPresented: $showClearCacheConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("profile.clearCacheConfirmAction", role: .destructive) {
+                clearCache()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("profile.clearCacheConfirmBody")
+        }
         .sheet(isPresented: $showExporter) {
             if let exportURL {
                 ShareSheet(items: [exportURL])
@@ -197,6 +240,65 @@ struct ProfileSettingsView: View {
         try? data.write(to: url)
         exportURL = url
         showExporter = true
+    }
+
+    private func calculateCacheSize() {
+        Task.detached(priority: .utility) {
+            let fm = FileManager.default
+            var totalBytes: Int64 = 0
+
+            // URLCache (network responses, images)
+            totalBytes += Int64(URLCache.shared.currentDiskUsage)
+
+            // Caches directory
+            if let cachesURL = fm.urls(for: .cachesDirectory, in: .userDomainMask).first {
+                totalBytes += Self.directorySize(at: cachesURL)
+            }
+
+            // Temp directory
+            let tmpURL = fm.temporaryDirectory
+            totalBytes += Self.directorySize(at: tmpURL)
+
+            let formatted = ByteCountFormatter.string(fromByteCount: totalBytes, countStyle: .file)
+            await MainActor.run {
+                cacheSize = formatted
+            }
+        }
+    }
+
+    private func clearCache() {
+        URLCache.shared.removeAllCachedResponses()
+
+        let fm = FileManager.default
+        if let cachesURL = fm.urls(for: .cachesDirectory, in: .userDomainMask).first,
+           let contents = try? fm.contentsOfDirectory(at: cachesURL, includingPropertiesForKeys: nil) {
+            for item in contents {
+                try? fm.removeItem(at: item)
+            }
+        }
+
+        let tmpURL = fm.temporaryDirectory
+        if let contents = try? fm.contentsOfDirectory(at: tmpURL, includingPropertiesForKeys: nil) {
+            for item in contents {
+                try? fm.removeItem(at: item)
+            }
+        }
+
+        calculateCacheSize()
+        store.pushToast("Cache cleared")
+        HapticManager.shared.success()
+    }
+
+    private static func directorySize(at url: URL) -> Int64 {
+        let fm = FileManager.default
+        guard let enumerator = fm.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey], options: [.skipsHiddenFiles]) else { return 0 }
+        var total: Int64 = 0
+        for case let fileURL as URL in enumerator {
+            if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                total += Int64(size)
+            }
+        }
+        return total
     }
 
     private func exportCSV() {

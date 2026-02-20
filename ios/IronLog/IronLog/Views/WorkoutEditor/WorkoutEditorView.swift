@@ -25,6 +25,7 @@ struct WorkoutEditorView: View {
 
     private var userUnit: Unit { store.user?.preferences.defaultUnit ?? .lbs }
     private var restTimerSeconds: Int { store.user?.preferences.restTimerSeconds ?? 90 }
+    private var autoRestTimer: Bool { store.user?.preferences.autoRestTimer ?? true }
 
     private var historicalPRs: [String: ExercisePR] {
         guard let viewModel else { return [:] }
@@ -58,9 +59,19 @@ struct WorkoutEditorView: View {
                 viewModel = WorkoutEditorViewModel(workout: draft)
             }
         }
+        .task {
+            // Pre-load exercise defs so the picker has data ready
+            if store.exerciseDefs.isEmpty {
+                await store.refreshData()
+            }
+            // If still empty (refreshData may have returned early), load official content directly
+            if store.exerciseDefs.isEmpty {
+                await store.refreshOfficialContent()
+            }
+        }
         .sheet(isPresented: $showExercisePicker) {
             ExercisePickerSheet(
-                defs: store.exerciseDefs,
+                store: store,
                 onSelect: { def in
                     viewModel?.addExercise(defId: def.id) { workout in
                         await persistWorkout(workout)
@@ -258,8 +269,13 @@ struct WorkoutEditorView: View {
                             },
                             onShowDetail: {
                                 detailExercise = ExerciseDetailPayload(id: exercise.id, exercise: exercise, def: def)
-                            }
+                            },
+                            onSetCompleted: autoRestTimer ? {
+                                showRestTimer = true
+                                restTimerRestartToken += 1
+                            } : nil
                         )
+                        .contentShape(.dragPreview, RoundedRectangle(cornerRadius: BotanicalTheme.cardCornerRadius, style: .continuous))
                         .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
@@ -279,7 +295,15 @@ struct WorkoutEditorView: View {
 
                 Section {
                     BotanicalButton(title: "Add Exercise", variant: .secondary) {
-                        showExercisePicker = true
+                        Task {
+                            if store.exerciseDefs.isEmpty {
+                                await store.refreshData()
+                            }
+                            if store.exerciseDefs.isEmpty {
+                                await store.refreshOfficialContent()
+                            }
+                            showExercisePicker = true
+                        }
                     }
                     .listRowSeparator(.hidden)
 

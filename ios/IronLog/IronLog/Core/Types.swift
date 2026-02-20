@@ -160,13 +160,33 @@ struct UserPreferences: Codable, Hashable, Sendable {
     var restTimerSeconds: Int
     var themeMode: ThemeMode
     var notificationsEnabled: Bool
+    var autoRestTimer: Bool
 
     static let `default` = UserPreferences(
         defaultUnit: .lbs,
         restTimerSeconds: 90,
         themeMode: .system,
-        notificationsEnabled: false
+        notificationsEnabled: false,
+        autoRestTimer: true
     )
+
+    // Support decoding from older data that lacks autoRestTimer
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        defaultUnit = try container.decode(Unit.self, forKey: .defaultUnit)
+        restTimerSeconds = try container.decode(Int.self, forKey: .restTimerSeconds)
+        themeMode = try container.decode(ThemeMode.self, forKey: .themeMode)
+        notificationsEnabled = try container.decode(Bool.self, forKey: .notificationsEnabled)
+        autoRestTimer = try container.decodeIfPresent(Bool.self, forKey: .autoRestTimer) ?? true
+    }
+
+    init(defaultUnit: Unit = .lbs, restTimerSeconds: Int = 90, themeMode: ThemeMode = .system, notificationsEnabled: Bool = false, autoRestTimer: Bool = true) {
+        self.defaultUnit = defaultUnit
+        self.restTimerSeconds = restTimerSeconds
+        self.themeMode = themeMode
+        self.notificationsEnabled = notificationsEnabled
+        self.autoRestTimer = autoRestTimer
+    }
 }
 
 struct UserProfile: Codable, Hashable, Sendable {

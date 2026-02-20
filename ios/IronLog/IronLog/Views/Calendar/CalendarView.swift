@@ -91,6 +91,8 @@ struct CalendarView: View {
                         ForEach(monthDays, id: \.self) { day in
                             let dayString = DateUtils.formatDate(day)
                             let hasWorkout = store.workouts.contains { $0.date == dayString }
+                            let isSelected = selectedDate == dayString
+                            let isToday = dayString == DateUtils.formatDate()
 
                             Button {
                                 selectedDate = dayString
@@ -99,12 +101,19 @@ struct CalendarView: View {
                                 VStack(spacing: 4) {
                                     Text(String(Calendar.current.component(.day, from: day)))
                                         .font(.botanicalBody(14))
+                                        .foregroundStyle(isToday && !isSelected ? Color.botanicalAccent : Color.botanicalTextPrimary)
                                     Circle()
                                         .fill(hasWorkout ? Color.botanicalAccent : Color.clear)
                                         .frame(width: 5, height: 5)
                                 }
                                 .frame(maxWidth: .infinity, minHeight: 44)
-                                .background(selectedDate == dayString ? Color.botanicalAccent.opacity(0.22) : Color.botanicalSurface)
+                                .background(
+                                    isSelected
+                                        ? Color.botanicalAccent.opacity(0.22)
+                                        : isToday
+                                            ? Color.botanicalAccent.opacity(0.08)
+                                            : Color.clear
+                                )
                                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             }
                             .buttonStyle(.plain)
@@ -155,8 +164,8 @@ struct CalendarView: View {
                 DayWorkoutListView(
                     workouts: selectedWorkouts,
                     onOpen: { store.openWorkout(id: $0.id) },
-                    onCopy: { workout in
-                        Task { await store.copyWorkout(workoutId: workout.id, targetDate: selectedDate) }
+                    onCopy: { workout, targetDate in
+                        Task { await store.copyWorkout(workoutId: workout.id, targetDate: targetDate) }
                     },
                     onDelete: { workout in
                         Task { await store.deleteWorkout(id: workout.id) }

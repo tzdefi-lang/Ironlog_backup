@@ -21,21 +21,24 @@ struct MainTabView: View {
             }
             .animation(.easeInOut(duration: 0.2), value: selectedTab)
 
-            VStack(spacing: 10) {
+            VStack(spacing: 0) {
+                Spacer()
+
                 if let toast = store.activeToast {
                     ToastView(message: toast.message)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .onTapGesture {
                             store.dismissToast()
                         }
+                        .padding(.bottom, 10)
                 }
 
                 CustomTabBar(selectedTab: $selectedTab) {
                     store.openNewWorkout()
                 }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 10)
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 10)
         }
         .animation(.easeOut(duration: 0.2), value: store.activeToast?.id)
         .background(Color.botanicalBackground.ignoresSafeArea())
@@ -48,6 +51,7 @@ struct MainTabView: View {
             NavigationStack {
                 WorkoutEditorView(workoutId: store.activeWorkoutID)
             }
+            .environment(store)
         }
     }
 

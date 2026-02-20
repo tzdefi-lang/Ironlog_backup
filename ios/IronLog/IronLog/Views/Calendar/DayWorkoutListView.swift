@@ -3,7 +3,7 @@ import SwiftUI
 struct DayWorkoutListView: View {
     let workouts: [Workout]
     let onOpen: (Workout) -> Void
-    let onCopy: (Workout) -> Void
+    let onCopy: (Workout, String) -> Void
     let onDelete: (Workout) -> Void
     var onStartWorkout: (() -> Void)?
 
@@ -22,7 +22,7 @@ struct DayWorkoutListView: View {
                     SwipeToDeleteWorkoutCard(
                         workout: workout,
                         onOpen: { onOpen(workout) },
-                        onCopy: { onCopy(workout) },
+                        onCopy: { date in onCopy(workout, date) },
                         onDelete: { onDelete(workout) }
                     )
                 }
@@ -35,11 +35,14 @@ struct DayWorkoutListView: View {
 private struct SwipeToDeleteWorkoutCard: View {
     let workout: Workout
     let onOpen: () -> Void
-    let onCopy: () -> Void
+    let onCopy: (String) -> Void
     let onDelete: () -> Void
 
     @State private var rowOffset: CGFloat = 0
     @State private var isDeleting = false
+    @State private var showDeleteConfirm = false
+    @State private var showCopyDatePicker = false
+    @State private var copyDate = Date()
 
     private let deleteTriggerDistance: CGFloat = 100
     private let maxSwipeOffset: CGFloat = 120
@@ -67,6 +70,47 @@ private struct SwipeToDeleteWorkoutCard: View {
                 .allowsHitTesting(!isDeleting)
         }
         .clipShape(RoundedRectangle(cornerRadius: BotanicalTheme.cardCornerRadius, style: .continuous))
+        .confirmationDialog("Delete Workout", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                performDelete()
+            }
+            Button("Cancel", role: .cancel) {
+                closeDeleteAction()
+            }
+        } message: {
+            Text("Are you sure you want to delete \"\(workout.title)\"? This action cannot be undone.")
+        }
+        .sheet(isPresented: $showCopyDatePicker) {
+            NavigationStack {
+                VStack(spacing: 16) {
+                    Text("Copy \"\(workout.title)\" to:")
+                        .font(.botanicalSemibold(17))
+                        .padding(.top, 8)
+
+                    DatePicker("Target Date", selection: $copyDate, displayedComponents: .date)
+                        .datePickerStyle(.graphical)
+                        .tint(Color.botanicalAccent)
+
+                    BotanicalButton(title: "Copy Workout", variant: .primary) {
+                        onCopy(DateUtils.formatDate(copyDate))
+                        showCopyDatePicker = false
+                    }
+                    .padding(.horizontal, 20)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .background(Color.botanicalBackground.ignoresSafeArea())
+                .navigationTitle("Copy Workout")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Cancel") { showCopyDatePicker = false }
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
     }
 
     private var tappableCardContent: some View {
@@ -118,8 +162,10 @@ private struct SwipeToDeleteWorkoutCard: View {
                 .foregroundStyle(Color.botanicalTextSecondary)
 
                 Menu {
-                    Button(action: onCopy) {
-                        Label("Copy", systemImage: "doc.on.doc")
+                    Button {
+                        showCopyDatePicker = true
+                    } label: {
+                        Label("Copy to Date...", systemImage: "doc.on.doc")
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -169,19 +215,17 @@ private struct SwipeToDeleteWorkoutCard: View {
 
                 if value.translation.width <= -deleteTriggerDistance,
                    abs(value.translation.width) > abs(value.translation.height) * 1.5 {
-                    triggerDelete()
+                    showDeleteConfirm = true
                 } else {
                     closeDeleteAction()
                 }
             }
     }
 
-    private func triggerDelete() {
-        guard !isDeleting else { return }
+    private func performDelete() {
         isDeleting = true
         HapticManager.shared.rigid()
         rowOffset = -360
-
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
             onDelete()
         }

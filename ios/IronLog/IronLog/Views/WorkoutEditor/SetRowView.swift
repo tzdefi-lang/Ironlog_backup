@@ -5,6 +5,7 @@ struct SetRowView: View {
     let unit: Unit
     let isPR: Bool
     let onDelete: () -> Void
+    var onSetCompleted: (() -> Void)?
 
     @State private var rowOffset: CGFloat = 0
     @State private var isDeleting = false
@@ -54,8 +55,13 @@ struct SetRowView: View {
                 // If partially swiped, treat tap as delete
                 triggerDelete()
             } else {
+                let wasCompleted = set.completed
                 set.completed.toggle()
                 HapticManager.shared.medium()
+                if !wasCompleted {
+                    // Set was just marked as completed
+                    onSetCompleted?()
+                }
             }
         } label: {
             ZStack {

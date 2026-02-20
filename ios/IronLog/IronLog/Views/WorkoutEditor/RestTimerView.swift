@@ -9,6 +9,9 @@ struct RestTimerView: View {
 
     @State private var remaining = 0
     @State private var task: Task<Void, Never>?
+    @State private var sliderValue: Double = 90
+
+    private let sliderRange: ClosedRange<Double> = 10...300
 
     private var progress: Double {
         durationSeconds > 0 ? Double(remaining) / Double(durationSeconds) : 0
@@ -18,7 +21,7 @@ struct RestTimerView: View {
         ZStack {
             Color.botanicalBackground.ignoresSafeArea()
 
-            VStack(spacing: 32) {
+            VStack(spacing: 28) {
                 Text("Rest Timer")
                     .font(.display(28))
                     .foregroundStyle(Color.botanicalTextPrimary)
@@ -50,9 +53,39 @@ struct RestTimerView: View {
                     }
                 }
 
+                // Duration slider
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("\(Int(sliderRange.lowerBound))s")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.botanicalTextSecondary)
+                        Spacer()
+                        Text("\(Int(sliderValue))s")
+                            .font(.botanicalSemibold(15))
+                            .foregroundStyle(Color.botanicalAccent)
+                            .contentTransition(.numericText())
+                        Spacer()
+                        Text("\(Int(sliderRange.upperBound))s")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.botanicalTextSecondary)
+                    }
+
+                    Slider(value: $sliderValue, in: sliderRange, step: 5) { editing in
+                        if !editing {
+                            let newDuration = Int(sliderValue)
+                            onDurationChange(newDuration)
+                            restart(duration: newDuration)
+                            HapticManager.shared.selection()
+                        }
+                    }
+                    .tint(Color.botanicalAccent)
+                }
+                .padding(.horizontal, 8)
+
                 HStack(spacing: 8) {
                     ForEach([30, 60, 90, 120, 180], id: \.self) { sec in
                         Button("\(sec)s") {
+                            sliderValue = Double(sec)
                             onDurationChange(sec)
                             restart(duration: sec)
                             HapticManager.shared.selection()
@@ -76,9 +109,18 @@ struct RestTimerView: View {
             }
             .padding(32)
         }
-        .onAppear { restart(duration: durationSeconds) }
-        .onChange(of: restartToken) { _, _ in restart(duration: durationSeconds) }
-        .onChange(of: durationSeconds) { _, newValue in restart(duration: newValue) }
+        .onAppear {
+            sliderValue = Double(durationSeconds)
+            restart(duration: durationSeconds)
+        }
+        .onChange(of: restartToken) { _, _ in
+            sliderValue = Double(durationSeconds)
+            restart(duration: durationSeconds)
+        }
+        .onChange(of: durationSeconds) { _, newValue in
+            sliderValue = Double(newValue)
+            restart(duration: newValue)
+        }
         .onDisappear { task?.cancel() }
     }
 

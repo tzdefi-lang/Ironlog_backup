@@ -9,6 +9,7 @@ struct ExerciseCardView: View {
     let onDeleteSet: (String) -> Void
     let onRemoveExercise: () -> Void
     let onShowDetail: () -> Void
+    var onSetCompleted: (() -> Void)?
 
     var body: some View {
         BotanicalCard {
@@ -53,9 +54,9 @@ struct ExerciseCardView: View {
                 }
 
                 ForEach($exercise.sets) { $set in
-                    SetRowView(set: $set, unit: unit, isPR: checkIfSetIsPR(set: set)) {
+                    SetRowView(set: $set, unit: unit, isPR: checkIfSetIsPR(set: set), onDelete: {
                         onDeleteSet(set.id)
-                    }
+                    }, onSetCompleted: onSetCompleted)
                     .transition(
                         .asymmetric(
                             insertion: .move(edge: .bottom).combined(with: .opacity),
