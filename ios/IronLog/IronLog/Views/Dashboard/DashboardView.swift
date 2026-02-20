@@ -143,7 +143,7 @@ struct DashboardView: View {
     }
 
     private var carousel: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 4) {
             TabView(selection: $selectedCardIndex) {
                 ForEach(Array(carouselItems.enumerated()), id: \.element.id) { index, item in
                     cardView(item)
@@ -155,19 +155,13 @@ struct DashboardView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
             .frame(height: 260)
 
-            HStack {
+            HStack(spacing: 6) {
                 ForEach(Array(carouselItems.indices), id: \.self) { index in
                     Capsule()
                         .fill(index == selectedCardIndex ? Color.botanicalAccent : Color.botanicalMuted)
                         .frame(width: index == selectedCardIndex ? 20 : 8, height: 8)
                         .animation(BotanicalMotion.quick, value: selectedCardIndex)
                 }
-
-                Spacer()
-
-                Text("\(min(selectedCardIndex + 1, carouselItems.count))/\(carouselItems.count)")
-                    .font(.botanicalSemibold(12))
-                    .foregroundStyle(Color.botanicalTextSecondary)
             }
             .padding(.horizontal, BotanicalTheme.pagePadding + 4)
         }
