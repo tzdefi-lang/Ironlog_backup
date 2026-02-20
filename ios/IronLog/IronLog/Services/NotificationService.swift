@@ -7,11 +7,13 @@ final class NotificationService {
         do {
             return try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound])
         } catch {
+            AppLogger.notification.error("Notification authorization failed: \((error as NSError).localizedDescription, privacy: .public)")
             return false
         }
     }
 
-    func schedulePendingWorkoutReminder(identifier: String, title: String, body: String, at date: Date) async {
+    @discardableResult
+    func schedulePendingWorkoutReminder(identifier: String, title: String, body: String, at date: Date) async -> Bool {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
@@ -21,6 +23,12 @@ final class NotificationService {
         let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
 
-        try? await UNUserNotificationCenter.current().add(request)
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+            return true
+        } catch {
+            AppLogger.notification.error("Failed to schedule reminder \(identifier, privacy: .public): \((error as NSError).localizedDescription, privacy: .public)")
+            return false
+        }
     }
 }

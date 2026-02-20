@@ -262,6 +262,11 @@ struct WorkoutEditorView: View {
                     }
                     .onMove { from, to in
                         vm.workout.exercises.move(fromOffsets: from, toOffset: to)
+                        vm.workout.exercises = vm.workout.exercises.enumerated().map { index, exercise in
+                            var updated = exercise
+                            updated.sortOrder = index
+                            return updated
+                        }
                         HapticManager.shared.medium()
                         Task { await persistWorkout(vm.workout) }
                     }

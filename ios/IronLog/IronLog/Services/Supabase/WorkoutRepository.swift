@@ -7,12 +7,17 @@ final class WorkoutRepository {
         self.provider = provider
     }
 
-    func fetchWorkouts() async throws -> [Workout] {
+    func fetchWorkouts(limit: Int = 200, offset: Int = 0) async throws -> [Workout] {
+        let safeLimit = max(1, limit)
+        let safeOffset = max(0, offset)
         let rows: [WorkoutRow] = try await provider.client.database
             .from("workouts")
             .select()
+            .order("date", ascending: false)
+            .range(from: safeOffset, to: safeOffset + safeLimit - 1)
             .execute()
             .value
+        AppLogger.repository.debug("Fetched workouts count=\(rows.count, privacy: .public) offset=\(safeOffset, privacy: .public) limit=\(safeLimit, privacy: .public)")
         return rows.map { $0.toDomain() }
     }
 

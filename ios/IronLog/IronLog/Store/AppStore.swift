@@ -16,6 +16,20 @@ private struct CachedUserIdentity: Codable, Sendable {
     var loginMethod: String?
 }
 
+private enum AppStoreSyncError: LocalizedError {
+    case invalidPayload(table: String, action: String)
+    case missingUserId(table: String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidPayload(let table, let action):
+            return "Invalid payload for sync item \(table).\(action)."
+        case .missingUserId(let table):
+            return "Missing user id for sync item \(table)."
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class AppStore {
@@ -194,42 +208,46 @@ final class AppStore {
 
     func refreshOfficialContent() async {
         do {
-            let official = try await officialRepo.fetch()
+            let official = try await officialRepo.fetch(forceRefresh: true)
             officialExerciseDefs = official.exerciseDefs
             officialTemplates = official.templates
             mergeDerivedCollections()
         } catch {
-            // Keep previous official content on transient failures.
+            AppLogger.appStore.error("Failed to refresh official content: \((error as NSError).localizedDescription, privacy: .public)")
         }
     }
 
     func addWorkout(_ workout: Workout) async {
-        workouts.append(workout)
+        let persisted = normalizedForPersistence(workout)
+        workouts.append(persisted)
         guard let user else { return }
 
         do {
-            try await workoutRepo.upsert(workout, userId: user.id)
+            try await workoutRepo.upsert(persisted, userId: user.id)
         } catch {
-            if networkMonitor.isConnected {
-                workouts.removeAll { $0.id == workout.id }
+            if shouldQueueForRetry(error) {
+                await queueOfflineOperation(table: "workouts", action: "upsert", payload: WorkoutRow.from(persisted, userId: user.id))
             } else {
-                await queueOfflineOperation(table: "workouts", action: "upsert", payload: WorkoutRow.from(workout, userId: user.id))
+                workouts.removeAll { $0.id == persisted.id }
+                handleStoreWriteFailure(error)
             }
         }
     }
 
     func updateWorkout(_ workout: Workout) async {
+        let persisted = normalizedForPersistence(workout)
         let previous = workouts
-        workouts = workouts.map { $0.id == workout.id ? workout : $0 }
+        workouts = workouts.map { $0.id == persisted.id ? persisted : $0 }
         guard let user else { return }
 
         do {
-            try await workoutRepo.upsert(workout, userId: user.id)
+            try await workoutRepo.upsert(persisted, userId: user.id)
         } catch {
-            if networkMonitor.isConnected {
-                workouts = previous
+            if shouldQueueForRetry(error) {
+                await queueOfflineOperation(table: "workouts", action: "upsert", payload: WorkoutRow.from(persisted, userId: user.id))
             } else {
-                await queueOfflineOperation(table: "workouts", action: "upsert", payload: WorkoutRow.from(workout, userId: user.id))
+                workouts = previous
+                handleStoreWriteFailure(error)
             }
         }
     }
@@ -242,10 +260,11 @@ final class AppStore {
         do {
             try await workoutRepo.delete(id: id)
         } catch {
-            if networkMonitor.isConnected {
-                workouts = previous
-            } else {
+            if shouldQueueForRetry(error) {
                 await queueOfflineOperation(table: "workouts", action: "delete", payload: ["id": id, "user_id": user.id])
+            } else {
+                workouts = previous
+                handleStoreWriteFailure(error)
             }
         }
     }
@@ -258,13 +277,14 @@ final class AppStore {
             date: targetDate,
             title: source.title,
             note: source.note,
-            exercises: source.exercises.map {
+            exercises: source.exercises.enumerated().map { index, exercise in
                 ExerciseInstance(
                     id: UUID().uuidString,
-                    defId: $0.defId,
-                    sets: $0.sets.map {
+                    defId: exercise.defId,
+                    sets: exercise.sets.map {
                         WorkoutSet(id: UUID().uuidString, weight: $0.weight, reps: $0.reps, completed: false)
-                    }
+                    },
+                    sortOrder: index
                 )
             },
             completed: false,
@@ -279,14 +299,19 @@ final class AppStore {
         guard let user else { return }
         guard def.source == .personal, !def.readOnly else { return }
 
+        let previous = personalExerciseDefs
         personalExerciseDefs.append(def)
         mergeDerivedCollections()
 
         do {
             try await exerciseRepo.upsert(def, userId: user.id)
         } catch {
-            if !networkMonitor.isConnected {
+            if shouldQueueForRetry(error) {
                 await queueOfflineOperation(table: "exercise_defs", action: "upsert", payload: ExerciseDefRow.from(def, userId: user.id))
+            } else {
+                personalExerciseDefs = previous
+                mergeDerivedCollections()
+                handleStoreWriteFailure(error)
             }
         }
     }
@@ -295,34 +320,45 @@ final class AppStore {
         guard let user else { return }
         guard def.source == .personal, !def.readOnly else { return }
 
+        let previous = personalExerciseDefs
         personalExerciseDefs = personalExerciseDefs.map { $0.id == def.id ? def : $0 }
         mergeDerivedCollections()
 
         do {
             try await exerciseRepo.upsert(def, userId: user.id)
         } catch {
-            if !networkMonitor.isConnected {
+            if shouldQueueForRetry(error) {
                 await queueOfflineOperation(table: "exercise_defs", action: "upsert", payload: ExerciseDefRow.from(def, userId: user.id))
+            } else {
+                personalExerciseDefs = previous
+                mergeDerivedCollections()
+                handleStoreWriteFailure(error)
             }
         }
     }
 
     func deleteExerciseDef(id: String) async {
         guard let user else { return }
+        let previous = personalExerciseDefs
         personalExerciseDefs.removeAll { $0.id == id }
         mergeDerivedCollections()
 
         do {
             try await exerciseRepo.delete(id: id)
         } catch {
-            if !networkMonitor.isConnected {
+            if shouldQueueForRetry(error) {
                 await queueOfflineOperation(table: "exercise_defs", action: "delete", payload: ["id": id, "user_id": user.id])
+            } else {
+                personalExerciseDefs = previous
+                mergeDerivedCollections()
+                handleStoreWriteFailure(error)
             }
         }
     }
 
     func addTemplateFromWorkout(name: String, workout: Workout) async {
         guard let user else { return }
+        let previous = personalTemplates
 
         var setsByDef: [String: Int] = [:]
         for exercise in workout.exercises {
@@ -346,8 +382,12 @@ final class AppStore {
         do {
             try await templateRepo.upsert(template, userId: user.id)
         } catch {
-            if !networkMonitor.isConnected {
+            if shouldQueueForRetry(error) {
                 await queueOfflineOperation(table: "workout_templates", action: "upsert", payload: WorkoutTemplateRow.from(template, userId: user.id))
+            } else {
+                personalTemplates = previous
+                mergeDerivedCollections()
+                handleStoreWriteFailure(error)
             }
         }
     }
@@ -427,11 +467,13 @@ final class AppStore {
         let defIds = Set(exerciseDefs.map(\.id))
         let instances = template.exercises
             .filter { defIds.contains($0.defId) }
-            .map { item in
+            .enumerated()
+            .map { index, item in
                 ExerciseInstance(
                     id: UUID().uuidString,
                     defId: item.defId,
-                    sets: Array(repeating: WorkoutSet(id: UUID().uuidString, weight: 0, reps: 0, completed: false), count: max(1, item.defaultSets))
+                    sets: Array(repeating: WorkoutSet(id: UUID().uuidString, weight: 0, reps: 0, completed: false), count: max(1, item.defaultSets)),
+                    sortOrder: index
                 )
             }
 
@@ -461,11 +503,12 @@ final class AppStore {
         do {
             try await templateRepo.delete(id: id)
         } catch {
-            if networkMonitor.isConnected {
+            if shouldQueueForRetry(error) {
+                await queueOfflineOperation(table: "workout_templates", action: "delete", payload: ["id": id, "user_id": user.id])
+            } else {
                 personalTemplates = previous
                 mergeDerivedCollections()
-            } else {
-                await queueOfflineOperation(table: "workout_templates", action: "delete", payload: ["id": id, "user_id": user.id])
+                handleStoreWriteFailure(error)
             }
         }
     }
@@ -587,6 +630,10 @@ final class AppStore {
         let finalPrivyDid = normalize(profile?.privyDid) ?? normalize(inMemory?.privyDid) ?? normalize(cached?.privyDid)
         let finalPhoto = normalize(profile?.photoUrl) ?? normalize(inMemory?.photoUrl) ?? normalize(cached?.photoUrl)
         let finalLoginMethod = normalize(profile?.loginMethod) ?? normalize(inMemory?.loginMethod) ?? normalize(cached?.loginMethod) ?? "privy"
+        let finalCreatedAt = inMemory?.createdAt
+        let finalSubscriptionTier = inMemory?.subscriptionTier
+        let finalSubscriptionStatus = inMemory?.subscriptionStatus
+        let nowISO = ISO8601DateFormatter().string(from: Date())
 
         user = UserProfile(
             id: userId,
@@ -595,7 +642,11 @@ final class AppStore {
             email: finalEmail,
             photoUrl: finalPhoto,
             loginMethod: finalLoginMethod,
-            preferences: saved
+            preferences: saved,
+            createdAt: finalCreatedAt ?? nowISO,
+            lastLoginAt: nowISO,
+            subscriptionTier: finalSubscriptionTier,
+            subscriptionStatus: finalSubscriptionStatus
         )
 
         saveCachedIdentity(
@@ -625,15 +676,49 @@ final class AppStore {
         templates = templatesById.values.sorted { $0.createdAt > $1.createdAt }
     }
 
+    private func shouldQueueForRetry(_ error: Error) -> Bool {
+        SyncErrorClassifier.disposition(for: error) == .retry
+    }
+
+    private func handleStoreWriteFailure(_ error: Error) {
+        let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        authError = message
+        AppLogger.appStore.error("Store write failed: \(message, privacy: .public)")
+    }
+
+    private func normalizedForPersistence(_ workout: Workout) -> Workout {
+        var normalized = workout
+        normalized.exercises = workout.exercises.enumerated().map { index, exercise in
+            var updated = exercise
+            updated.sortOrder = index
+            return updated
+        }
+        return normalized
+    }
+
     private func queueOfflineOperation<T: Encodable>(table: String, action: String, payload: T) async {
-        guard let user else { return }
-        guard !user.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        guard let data = try? JSONEncoder().encode(payload) else { return }
-        try? await syncQueue.enqueue(userId: user.id, table: table, action: action, payload: data)
+        guard let user else {
+            AppLogger.sync.warning("Skipping queue operation without active user. table=\(table, privacy: .public) action=\(action, privacy: .public)")
+            return
+        }
+
+        let trimmedUserId = user.id.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedUserId.isEmpty else {
+            AppLogger.sync.error("Skipping queue operation with empty user id. table=\(table, privacy: .public) action=\(action, privacy: .public)")
+            return
+        }
+
+        do {
+            let data = try JSONEncoder().encode(payload)
+            try await syncQueue.enqueue(userId: trimmedUserId, table: table, action: action, payload: data)
+        } catch {
+            AppLogger.sync.error("Failed to enqueue offline operation \(table, privacy: .public).\(action, privacy: .public): \((error as NSError).localizedDescription, privacy: .public)")
+        }
     }
 
     private func consumeSyncQueue() async {
         guard let user else { return }
+        AppLogger.sync.debug("Consuming sync queue for user \(user.id, privacy: .public)")
         await syncQueue.flush(userId: user.id) { [weak self] item in
             guard let self else { return }
             try await self.executeQueueItem(item)
@@ -646,52 +731,51 @@ final class AppStore {
             let row = try JSONDecoder().decode(WorkoutRow.self, from: item.payloadJSON)
             try await workoutRepo.upsert(row.toDomain(), userId: row.user_id)
         case ("workouts", "delete"):
-            let payload = try JSONSerialization.jsonObject(with: item.payloadJSON) as? [String: Any]
-            if let id = payload?["id"] as? String {
-                try await workoutRepo.delete(id: id)
-            }
+            let id = try extractID(from: item, key: "id")
+            try await workoutRepo.delete(id: id)
         case ("exercise_defs", "upsert"):
             let row = try JSONDecoder().decode(ExerciseDefRow.self, from: item.payloadJSON)
             guard let userId = resolvedUserId(row.user_id) else {
-                print("Skipping exercise_defs sync item with empty user id")
-                return
+                throw AppStoreSyncError.missingUserId(table: item.table)
             }
             try await exerciseRepo.upsert(row.toDomain(source: .personal), userId: userId)
         case ("exercise_defs", "delete"):
-            let payload = try JSONSerialization.jsonObject(with: item.payloadJSON) as? [String: Any]
-            if let id = payload?["id"] as? String {
-                try await exerciseRepo.delete(id: id)
-            }
+            let id = try extractID(from: item, key: "id")
+            try await exerciseRepo.delete(id: id)
         case ("workout_templates", "upsert"):
             let row = try JSONDecoder().decode(WorkoutTemplateRow.self, from: item.payloadJSON)
             guard let userId = resolvedUserId(row.user_id) else {
-                print("Skipping workout_templates sync item with empty user id")
-                return
+                throw AppStoreSyncError.missingUserId(table: item.table)
             }
             try await templateRepo.upsert(row.toDomain(source: .personal), userId: userId)
         case ("workout_templates", "delete"):
-            let payload = try JSONSerialization.jsonObject(with: item.payloadJSON) as? [String: Any]
-            if let id = payload?["id"] as? String {
-                try await templateRepo.delete(id: id)
-            }
+            let id = try extractID(from: item, key: "id")
+            try await templateRepo.delete(id: id)
         default:
-            break
+            AppLogger.sync.warning("Unsupported queued sync operation: table=\(item.table, privacy: .public) action=\(item.action, privacy: .public)")
         }
     }
 
     private func savePreferences(_ preferences: UserPreferences) {
         guard let user else { return }
-        if let data = try? JSONEncoder().encode(preferences) {
+        do {
+            let data = try JSONEncoder().encode(preferences)
             UserDefaults.standard.set(data, forKey: "ironlog_preferences_\(user.id)")
+        } catch {
+            AppLogger.appStore.error("Failed to save preferences: \((error as NSError).localizedDescription, privacy: .public)")
         }
     }
 
     private func loadPreferences(for userId: String) -> UserPreferences {
-        guard let data = UserDefaults.standard.data(forKey: "ironlog_preferences_\(userId)"),
-              let decoded = try? JSONDecoder().decode(UserPreferences.self, from: data) else {
+        guard let data = UserDefaults.standard.data(forKey: "ironlog_preferences_\(userId)") else {
             return .default
         }
-        return decoded
+        do {
+            return try JSONDecoder().decode(UserPreferences.self, from: data)
+        } catch {
+            AppLogger.appStore.error("Failed to decode preferences for user \(userId, privacy: .public): \((error as NSError).localizedDescription, privacy: .public)")
+            return .default
+        }
     }
 
     private func cachedIdentityKey(for userId: String) -> String {
@@ -699,16 +783,24 @@ final class AppStore {
     }
 
     private func saveCachedIdentity(_ identity: CachedUserIdentity, for userId: String) {
-        guard let data = try? JSONEncoder().encode(identity) else { return }
-        UserDefaults.standard.set(data, forKey: cachedIdentityKey(for: userId))
+        do {
+            let data = try JSONEncoder().encode(identity)
+            UserDefaults.standard.set(data, forKey: cachedIdentityKey(for: userId))
+        } catch {
+            AppLogger.appStore.error("Failed to save cached identity for user \(userId, privacy: .public): \((error as NSError).localizedDescription, privacy: .public)")
+        }
     }
 
     private func loadCachedIdentity(for userId: String) -> CachedUserIdentity? {
-        guard let data = UserDefaults.standard.data(forKey: cachedIdentityKey(for: userId)),
-              let identity = try? JSONDecoder().decode(CachedUserIdentity.self, from: data) else {
+        guard let data = UserDefaults.standard.data(forKey: cachedIdentityKey(for: userId)) else {
             return nil
         }
-        return identity
+        do {
+            return try JSONDecoder().decode(CachedUserIdentity.self, from: data)
+        } catch {
+            AppLogger.appStore.error("Failed to decode cached identity for user \(userId, privacy: .public): \((error as NSError).localizedDescription, privacy: .public)")
+            return nil
+        }
     }
 
     private func normalize(_ value: String?) -> String? {
@@ -741,8 +833,19 @@ final class AppStore {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            AppLogger.sync.log("Received network reconnect event")
             Task { await self?.consumeSyncQueue() }
         }
+    }
+
+    private func extractID(from item: SyncQueueItemModel, key: String) throws -> String {
+        let raw = try JSONSerialization.jsonObject(with: item.payloadJSON)
+        guard let payload = raw as? [String: Any],
+              let id = payload[key] as? String,
+              !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw AppStoreSyncError.invalidPayload(table: item.table, action: item.action)
+        }
+        return id
     }
 
     private func showNextToastIfNeeded() {
@@ -751,7 +854,11 @@ final class AppStore {
         guard let activeToast else { return }
 
         toastTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(activeToast.duration))
+            do {
+                try await Task.sleep(for: .seconds(activeToast.duration))
+            } catch {
+                return
+            }
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 self?.activeToast = nil

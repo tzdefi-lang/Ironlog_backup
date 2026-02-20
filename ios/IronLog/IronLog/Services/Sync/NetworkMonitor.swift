@@ -17,7 +17,9 @@ final class NetworkMonitor {
                 guard let self else { return }
                 let wasOffline = !self.isConnected
                 self.isConnected = path.status == .satisfied
+                AppLogger.network.debug("Network path updated. connected=\(self.isConnected, privacy: .public)")
                 if wasOffline && self.isConnected {
+                    AppLogger.network.log("Network reconnected")
                     NotificationCenter.default.post(name: .networkDidReconnect, object: nil)
                 }
             }
@@ -26,6 +28,9 @@ final class NetworkMonitor {
 
         DispatchQueue.main.async { [weak self] in
             self?.isConnected = self?.monitor.currentPath.status == .satisfied
+            if let isConnected = self?.isConnected {
+                AppLogger.network.debug("Initial network status connected=\(isConnected, privacy: .public)")
+            }
         }
     }
 

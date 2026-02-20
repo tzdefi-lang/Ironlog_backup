@@ -61,14 +61,17 @@ final class WorkoutEditorViewModel {
         let exercise = ExerciseInstance(
             id: UUID().uuidString,
             defId: defId,
-            sets: [WorkoutSet(id: UUID().uuidString, weight: 0, reps: 0, completed: false)]
+            sets: [WorkoutSet(id: UUID().uuidString, weight: 0, reps: 0, completed: false)],
+            sortOrder: workout.exercises.count
         )
         workout.exercises.append(exercise)
+        normalizeExerciseOrder()
         scheduleAutosave(onAutosave: onAutosave)
     }
 
     func removeExercise(exerciseId: String, onAutosave: @escaping (Workout) async -> Void) {
         workout.exercises.removeAll { $0.id == exerciseId }
+        normalizeExerciseOrder()
         scheduleAutosave(onAutosave: onAutosave)
     }
 
@@ -142,6 +145,14 @@ final class WorkoutEditorViewModel {
                 recalculateTime()
                 try? await Task.sleep(for: .seconds(1))
             }
+        }
+    }
+
+    private func normalizeExerciseOrder() {
+        workout.exercises = workout.exercises.enumerated().map { index, exercise in
+            var updated = exercise
+            updated.sortOrder = index
+            return updated
         }
     }
 }

@@ -67,4 +67,36 @@ final class TokenExchangeTests: XCTestCase {
         XCTAssertNil(keychain.get("ironlog_user_id"))
         XCTAssertNil(keychain.get("ironlog_jwt_expires_at"))
     }
+
+    func testExtractUserIdReturnsSubWhenJWTIsValid() throws {
+        let service = TokenExchangeService(keychain: MockKeychain())
+        let jwt = makeJWT(payload: ["sub": "user-123"])
+
+        let userId = try service.extractUserId(from: jwt)
+
+        XCTAssertEqual(userId, "user-123")
+    }
+
+    func testExtractUserIdThrowsWhenJWTMalformed() {
+        let service = TokenExchangeService(keychain: MockKeychain())
+
+        XCTAssertThrowsError(try service.extractUserId(from: "bad-token")) { error in
+            guard case TokenExchangeError.invalidJWT = error else {
+                return XCTFail("Expected invalidJWT error")
+            }
+        }
+    }
+
+    private func makeJWT(payload: [String: Any]) -> String {
+        let headerData = try! JSONSerialization.data(withJSONObject: ["alg": "HS256", "typ": "JWT"])
+        let payloadData = try! JSONSerialization.data(withJSONObject: payload)
+        return "\(base64URL(headerData)).\(base64URL(payloadData)).signature"
+    }
+
+    private func base64URL(_ data: Data) -> String {
+        data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
 }

@@ -1,6 +1,23 @@
 import Foundation
 import UIKit
 
+enum ExportServiceError: LocalizedError {
+    case encodingFailed
+    case fileWriteFailed(String)
+    case invalidCSVData
+
+    var errorDescription: String? {
+        switch self {
+        case .encodingFailed:
+            return "Could not encode export data."
+        case .fileWriteFailed(let details):
+            return "Could not write export file: \(details)"
+        case .invalidCSVData:
+            return "Could not build CSV export data."
+        }
+    }
+}
+
 @MainActor
 final class ExportService {
     func exportJSON(workouts: [Workout], exerciseDefs: [ExerciseDef], from viewController: UIViewController) {
@@ -10,11 +27,25 @@ final class ExportService {
             let exerciseDefs: [ExerciseDef]
         }
 
-        let payload = Payload(exportedAt: ISO8601DateFormatter().string(from: Date()), workouts: workouts, exerciseDefs: exerciseDefs)
-        guard let data = try? JSONEncoder().encode(payload) else { return }
-        let url = temporaryURL(name: "ironlog-export-\(timestamp()).json")
-        try? data.write(to: url)
-        present(url: url, from: viewController)
+        let payload = Payload(
+            exportedAt: ISO8601DateFormatter().string(from: Date()),
+            workouts: workouts,
+            exerciseDefs: exerciseDefs
+        )
+
+        do {
+            let data = try JSONEncoder().encode(payload)
+            let url = temporaryURL(name: "ironlog-export-\(timestamp()).json")
+            do {
+                try data.write(to: url)
+                present(url: url, from: viewController)
+            } catch {
+                throw ExportServiceError.fileWriteFailed((error as NSError).localizedDescription)
+            }
+        } catch {
+            let exportError = (error as? ExportServiceError) ?? ExportServiceError.encodingFailed
+            handleExportError(exportError, from: viewController)
+        }
     }
 
     func exportCSV(workouts: [Workout], exerciseDefs: [ExerciseDef], from viewController: UIViewController) {
@@ -41,8 +72,20 @@ final class ExportService {
 
         let text = lines.joined(separator: "\n")
         let url = temporaryURL(name: "ironlog-export-\(timestamp()).csv")
-        try? text.data(using: .utf8)?.write(to: url)
-        present(url: url, from: viewController)
+
+        do {
+            guard let data = text.data(using: .utf8) else {
+                throw ExportServiceError.invalidCSVData
+            }
+            do {
+                try data.write(to: url)
+                present(url: url, from: viewController)
+            } catch {
+                throw ExportServiceError.fileWriteFailed((error as NSError).localizedDescription)
+            }
+        } catch {
+            handleExportError(error, from: viewController)
+        }
     }
 
     private func present(url: URL, from viewController: UIViewController) {
@@ -63,5 +106,16 @@ final class ExportService {
 
     private func timestamp() -> String {
         ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
+    }
+
+    private func handleExportError(_ error: Error, from viewController: UIViewController) {
+        let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        AppLogger.export.error("Export failed: \(message, privacy: .public)")
+
+        let alert = UIAlertController(title: "Export Failed", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        if viewController.presentedViewController == nil {
+            viewController.present(alert, animated: true)
+        }
     }
 }

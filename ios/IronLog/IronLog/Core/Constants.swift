@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 
 enum Constants {
     private static let privyAppClientIdRaw = env(
@@ -64,4 +65,17 @@ enum Constants {
         }
         return fallback
     }
+}
+
+enum AppLogger {
+    private static let subsystem = "com.syntaxis.ironlog"
+
+    static let auth = Logger(subsystem: subsystem, category: "auth")
+    static let sync = Logger(subsystem: subsystem, category: "sync")
+    static let repository = Logger(subsystem: subsystem, category: "repository")
+    static let network = Logger(subsystem: subsystem, category: "network")
+    static let media = Logger(subsystem: subsystem, category: "media")
+    static let notification = Logger(subsystem: subsystem, category: "notification")
+    static let export = Logger(subsystem: subsystem, category: "export")
+    static let appStore = Logger(subsystem: subsystem, category: "app-store")
 }

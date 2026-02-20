@@ -10,6 +10,7 @@ struct TokenExchangeResult: Codable, Sendable {
 
 enum TokenExchangeError: Error {
     case invalidResponse
+    case invalidJWT
     case serverError(String)
 }
 
@@ -51,7 +52,13 @@ final class TokenExchangeService {
         if let cache,
            cache.sourceToken == privyToken,
            Date().timeIntervalSince1970 * 1000 < cache.expiresAt - 5 * 60 * 1000 {
-            return TokenExchangeResult(token: cache.token, userId: extractUserId(from: cache.token), expiresAt: cache.expiresAt)
+            do {
+                let userId = try extractUserId(from: cache.token)
+                return TokenExchangeResult(token: cache.token, userId: userId, expiresAt: cache.expiresAt)
+            } catch {
+                AppLogger.auth.error("Invalid cached token payload, refreshing token: \((error as NSError).localizedDescription, privacy: .public)")
+                self.cache = nil
+            }
         }
 
         var request = URLRequest(url: Constants.supabaseURL.appending(path: "/functions/v1/token-exchange"))
@@ -67,8 +74,8 @@ final class TokenExchangeService {
         }
 
         if http.statusCode < 200 || http.statusCode >= 300 {
-            let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
-            throw TokenExchangeError.serverError(message ?? "Token exchange failed")
+            let message = parseServerErrorMessage(from: data) ?? "Token exchange failed"
+            throw TokenExchangeError.serverError(message)
         }
 
         let result = try JSONDecoder().decode(TokenExchangeResult.self, from: data)
@@ -105,21 +112,44 @@ final class TokenExchangeService {
         return TokenExchangeResult(token: token, userId: userId, expiresAt: expiresAt)
     }
 
-    func extractUserId(from jwt: String) -> String {
+    func extractUserId(from jwt: String) throws -> String {
         let parts = jwt.split(separator: ".")
-        guard parts.count == 3 else { return "" }
+        guard parts.count == 3 else {
+            throw TokenExchangeError.invalidJWT
+        }
+
         var payload = String(parts[1])
         let remainder = payload.count % 4
         if remainder > 0 {
             payload += String(repeating: "=", count: 4 - remainder)
         }
         payload = payload.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-        guard let data = Data(base64Encoded: payload),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+
+        guard let data = Data(base64Encoded: payload) else {
+            throw TokenExchangeError.invalidJWT
+        }
+
+        let jsonObject = try JSONSerialization.jsonObject(with: data)
+        guard let json = jsonObject as? [String: Any],
               let sub = json["sub"] as? String else {
-            return ""
+            throw TokenExchangeError.invalidJWT
         }
         return sub
+    }
+
+    private func parseServerErrorMessage(from data: Data) -> String? {
+        do {
+            let object = try JSONSerialization.jsonObject(with: data)
+            guard let dictionary = object as? [String: Any],
+                  let message = dictionary["error"] as? String else {
+                return nil
+            }
+            let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        } catch {
+            AppLogger.auth.debug("Failed to parse token exchange error payload: \((error as NSError).localizedDescription, privacy: .public)")
+            return nil
+        }
     }
 
     static func privyDidToUUID(_ did: String) -> String {
